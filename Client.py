@@ -205,6 +205,7 @@ class MegaMixContext(CommonContext):
         self.mod_pv = find_mod_pv()
         self.jsonData = process_json_data(load_json_file("songData.json"))
         self.previous_received = []
+        self.sent_unlock_message = False
 
         self.items_handling = 0b001 | 0b010 | 0b100  #Receive items from other worlds, starting inv, and own items
         self.location_ids = None
@@ -233,6 +234,8 @@ class MegaMixContext(CommonContext):
     def on_package(self, cmd: str, args: dict):
 
         if cmd == "Connected":
+            self.sent_unlock_message = False
+            self.leeks_obtained = 0
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
@@ -256,6 +259,7 @@ class MegaMixContext(CommonContext):
             if not self.location_ids:
                 # Connected package not recieved yet, wait for datapackage request after connected package
                 return
+            self.leeks_obtained = 0
             self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["location_name_to_id"]
             self.location_name_to_ap_id = {
                 name: loc_id for name, loc_id in
@@ -301,7 +305,9 @@ class MegaMixContext(CommonContext):
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
-            logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
+            if not self.sent_unlock_message:
+                logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
+                self.sent_unlock_message = True
             song_unlock(self.mod_pv, self.goal_song, self.jsonData)
 
 def launch():
