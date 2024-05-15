@@ -217,7 +217,6 @@ class MegaMixContext(CommonContext):
 
         if cmd == "Connected":
             #Erase entire song list when connecting to AP
-            erase_song_list(self.jsonData, self.mod_pv)
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
 
@@ -246,6 +245,8 @@ class MegaMixContext(CommonContext):
             self.location_ap_id_to_name = {v: k for k, v in self.location_name_to_ap_id.items()}
             self.item_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["item_name_to_id"]
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
+
+            erase_song_list(self.jsonData, self.mod_pv)
 
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())
