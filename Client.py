@@ -216,6 +216,11 @@ class MegaMixContext(CommonContext):
         self.seed_name = None
         self.options = None
 
+        self.goal_song = None
+        self.leeks_needed = None
+        self.leeks_obtained = 0
+        self.grade_needed = None
+
         self.obtained_items_queue = asyncio.Queue()
         self.critical_section_lock = asyncio.Lock()
 
@@ -230,8 +235,11 @@ class MegaMixContext(CommonContext):
         if cmd == "Connected":
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
-
+            self.goal_song = self.options["victoryLocation"]
+            self.leeks_needed = self.options["leekWinCount"]
+            self.grade_needed = self.options["scoreGradeNeeded"]
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
+            self.check_goal()
 
             # if we dont have the seed name from the RoomInfo packet, wait until we do.
             while not self.seed_name:
@@ -239,7 +247,7 @@ class MegaMixContext(CommonContext):
 
         if cmd == "ReceivedItems":
             # If receiving an item, only append that item
-            asyncio.create_task(self.receive_item())
+            asyncio.create_task(self.receive_item("single"))
 
         if cmd == "RoomInfo":
             self.seed_name = args['seed_name']
@@ -260,7 +268,7 @@ class MegaMixContext(CommonContext):
             erase_song_list(self.mod_pv)
 
             # If receiving data package, resync previous items
-            asyncio.create_task(self.receive_item())
+            asyncio.create_task(self.receive_item("package"))
 
         elif cmd == "LocationInfo":
             if len(args["locations"]) > 1:
@@ -270,18 +278,31 @@ class MegaMixContext(CommonContext):
                 # request after an item is obtained
                 asyncio.create_task(self.obtained_items_queue.put(args["locations"][0]))
 
-    async def receive_item(self):
+    async def receive_item(self, type):
         async with self.critical_section_lock:
 
             if not self.item_ap_id_to_name:
                 await self.wait_for_initial_connection_info()
 
+            leek_fix = 0
+
             for network_item in self.items_received:
-                if network_item not in self.previous_received:
+                item_name = self.item_ap_id_to_name[network_item.item]
+                if item_name == "Leek":
+                    if leek_fix == 0:
+                        self.leeks_obtained += 1
+                        if type == "single":
+                            leek_fix += 1
+                        self.check_goal()
+
+                elif network_item not in self.previous_received:
                     self.previous_received.append(network_item)
-                    item_name = self.item_ap_id_to_name[network_item.item]
                     song_unlock(self.mod_pv, item_name, self.jsonData)
 
+    def check_goal(self):
+        if self.leeks_obtained >= self.leeks_needed:
+            logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
+            song_unlock(self.mod_pv, self.goal_song, self.jsonData)
 
 def launch():
     """
