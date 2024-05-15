@@ -8,22 +8,38 @@ from .Options import MegaMixOptions
 from .Items import MegaMixSongItem, MegaMixFixedItem
 from .Locations import MegaMixLocation
 from .MegaMixCollection import MegaMixCollections
+from worlds.LauncherComponents import Component, components, Type, launch_subprocess
 
+import settings
+import typing
+def launch_client():
+    from .Client import launch
+    launch_subprocess(launch, name="MegaMixClient")
 
+components.append(Component(
+    "Mega Mix Client",
+    "MegaMixClient",
+    func=launch_client,
+    component_type=Type.CLIENT
+))
+
+class MegaMixSettings(settings.Group):
+    class ModPath(settings.UserFilePath):
+        """Path to the archipelago mod"""
+
+    mod_path: ModPath = ModPath(
+        "C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods/SongHideTest/rom/mod_pv_db.txt")
 
 class MegaMixWorld(World):
     """Hatsune Miku: Project Diva Mega Mix+ is a rhythm game where you hit notes to the beat of one of 250+ songs.
     Play through a selection of randomly chosen songs, collecting leeks
     until you have enough to play and complete the goal song!"""
 
-    # FUTURE OPTIONS
-    # - Album Rando.
-    # - Added items for characters/elfin/portraits.
-    # - Support for blacklisting/plando-ing certain songs.
-
     # World Options
     game = "Hatsune Miku Project Diva Mega Mix+"
-    options_dataclass: ClassVar[Type[PerGameCommonOptions]] = MegaMixOptions
+
+    settings: typing.ClassVar[MegaMixSettings]
+    options_dataclass: typing.ClassVar[PerGameCommonOptions] = MegaMixOptions
     options: MegaMixOptions
 
     topology_present = False
