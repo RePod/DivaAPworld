@@ -36,7 +36,6 @@ def find_mod_pv():
 
     return mod_path
 
-#from TextReplace import replace_line_with_text
 
 def load_json_file(file_name: str) -> dict:
     """Import a JSON file from the package using pkgutil."""
@@ -53,10 +52,12 @@ def load_json_file(file_name: str) -> dict:
 
     return json_data
 
+
 def load_external_text_file(file_path: str) -> str:
     """Load a text file from outside the package."""
     with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
+
 
 def save_external_text_file(file_path: str, contents: str):
     """Save modified contents to a text file outside the package."""
@@ -89,19 +90,27 @@ def process_json_data(json_data):
 
     return processed_data
 
-def erase_song_list(processed_data, file_path):
-    difficulties = ["easy", "normal", "hard", "extreme", "exExtreme"]
 
-    for song_id in processed_data.keys():  # Iterate over unique song IDs
-        for difficulty in difficulties:
-            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
-            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
-            if difficulty == 'exExtreme':
-                search_text = search_text.replace("exExtreme", "extreme") + "2"
-                replace_text = replace_text.replace("exExtreme", "extreme")
-            else:
-                search_text += "1"
-            replace_line_with_text(file_path, search_text, replace_text)
+def erase_song_list(file_path):
+    difficulties = ["easy", "normal", "hard", "extreme", "exExtreme"]
+    difficulty_replacements = {
+        "easy.length=1": "easy.length=0",
+        "normal.length=1": "normal.length=0",
+        "hard.length=1": "hard.length=0",
+        "extreme.length=1": "extreme.length=0",
+        "extreme.length=2": "extreme.length=0",
+    }
+
+    with open(file_path, 'r', encoding='utf-8') as file:
+        file_data = file.read()
+
+    # Perform the replacements
+    for search_text, replace_text in difficulty_replacements.items():
+        file_data = file_data.replace(search_text, replace_text)
+
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(file_data)
+
 
 def replace_line_with_text(file_path, search_text, new_line):
     try:
@@ -128,6 +137,7 @@ def replace_line_with_text(file_path, search_text, new_line):
     # Write the modified content back to the file
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(''.join(lines))
+
 
 def convert_difficulty(difficulty):
     """Convert difficulty string to lowercase."""
@@ -171,6 +181,7 @@ def song_unlock(file_path, song_info, json_data):
     logger.info(f"Song '{song_name}' not found in the JSON data.")
     return
 
+
 def modify_mod_pv(file_path, song_id, difficulty):
     search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
     replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
@@ -182,6 +193,7 @@ def modify_mod_pv(file_path, song_id, difficulty):
         replace_text += "1"
 
     replace_line_with_text(file_path, search_text, replace_text)
+
 
 class MegaMixContext(CommonContext):
     """MegaMix Game Context"""
@@ -216,7 +228,6 @@ class MegaMixContext(CommonContext):
     def on_package(self, cmd: str, args: dict):
 
         if cmd == "Connected":
-            #Erase entire song list when connecting to AP
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
 
@@ -227,7 +238,7 @@ class MegaMixContext(CommonContext):
                 time.sleep(1)
 
         if cmd == "ReceivedItems":
-            #If receiving an item, only append that item
+            # If receiving an item, only append that item
             asyncio.create_task(self.receive_item())
 
         if cmd == "RoomInfo":
@@ -246,7 +257,7 @@ class MegaMixContext(CommonContext):
             self.item_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["item_name_to_id"]
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
 
-            erase_song_list(self.jsonData, self.mod_pv)
+            erase_song_list(self.mod_pv)
 
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())
