@@ -288,14 +288,14 @@ class MegaMixContext(CommonContext):
     def on_package(self, cmd: str, args: dict):
 
         if cmd == "Connected":
-
+            self.previous_received = []
             self.sent_unlock_message = False
             self.leeks_obtained = 0
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
             self.leeks_needed = self.options["leekWinCount"]
-            self.grade_needed = self.options["scoreGradeNeeded"]
+            self.grade_needed = int(self.options["scoreGradeNeeded"]) + 0  # Add 2 to match the games internals
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
@@ -343,22 +343,18 @@ class MegaMixContext(CommonContext):
             if not self.item_ap_id_to_name:
                 await self.wait_for_initial_connection_info()
 
-            leek_fix = 0
-
             for network_item in self.items_received:
-                item_name = self.item_ap_id_to_name[network_item.item]
-                if item_name == "Leek":
-                    if leek_fix == 0:
-                        self.leeks_obtained += 1
-                        if type == "single":
-                            leek_fix += 1
-                        self.check_goal()
-
-                elif network_item not in self.previous_received:
+                if network_item not in self.previous_received:
                     self.previous_received.append(network_item)
-                    song_unlock(self.mod_pv, item_name, self.jsonData)
+                    item_name = self.item_ap_id_to_name[network_item.item]
+                    if item_name == "Leek":
+                        self.leeks_obtained += 1
+                        self.check_goal()
+                    else:
+                        song_unlock(self.mod_pv, item_name, self.jsonData)
 
     def check_goal(self):
+        logger.info("You have " + str(self.leeks_obtained) + " Leeks")
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
@@ -384,11 +380,15 @@ class MegaMixContext(CommonContext):
             print(f"Watch task for {file_name} was canceled.")
     def receive_location_check(self, song_data):
         # Check if player got a good enough grade on the song
-        if song_data.get('scoreGrade') >= self.grade_needed:
+        if int(song_data.get('scoreGrade')) >= self.grade_needed:
             # Construct location name
             difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
             difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
             location_name = (song_data.get('pvName') + " " + difficulty + " " + difficulty_rating + " ★")
+            if location_name == self.goal_song:
+                asyncio.create_task(
+                    self.end_goal())
+                return
             loc_1 = location_name + "-0"
             loc_2 = location_name + "-1"
             # Check if loc_1 and loc_2 exist in location_name_to_ap_id
@@ -404,6 +404,10 @@ class MegaMixContext(CommonContext):
             asyncio.create_task(
                 self.send_checks())
 
+
+    async def end_goal(self):
+        message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
+        await self.send_msgs(message)
     async def send_checks(self):
         message = [{"cmd": 'LocationChecks', "locations": self.found_checks}]
         await self.send_msgs(message)
