@@ -295,7 +295,7 @@ class MegaMixContext(CommonContext):
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
             self.leeks_needed = self.options["leekWinCount"]
-            self.grade_needed = int(self.options["scoreGradeNeeded"]) + 0  # Add 2 to match the games internals
+            self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
