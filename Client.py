@@ -10,7 +10,6 @@ import time
 import hashlib
 import re
 
-import settings
 from settings import get_settings
 import tkinter as tk
 from tkinter import filedialog
@@ -25,6 +24,7 @@ from CommonClient import (
 
 from NetUtils import NetworkItem, ClientStatus
 
+
 def find_mod_pv():
     host = get_settings()
 
@@ -37,20 +37,37 @@ def find_mod_pv():
     return mod_path
 
 
+def load_zipped_json_file(file_name: str) -> dict:
+    """Import a JSON file, either from a zipped package or directly from the filesystem."""
+
+    try:
+        # Attempt to load the file as a zipped resource
+        import pkgutil
+        file_contents = pkgutil.get_data(__name__, file_name)
+        if file_contents is not None:
+            decoded_contents = file_contents.decode('utf-8')
+            return json.loads(decoded_contents)
+    except Exception as e:
+        logger.error(f"Error loading zipped JSON file '{file_name}': {e}")
+
+    try:
+        # Attempt to load the file directly from the filesystem
+        with open(file_name, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except Exception as e:
+        logger.error(f"Error loading JSON file '{file_name}': {e}")
+        return {}
+
 def load_json_file(file_name: str) -> dict:
-    """Import a JSON file from the package using pkgutil."""
+    """Import a JSON file, either from a zipped package or directly from the filesystem."""
 
-    import pkgutil
-    # Load the contents of the file
-    file_contents = pkgutil.get_data(__name__, file_name)
-
-    # Decode the contents (assuming it's encoded as UTF-8)
-    decoded_contents = file_contents.decode('utf-8')
-
-    # Parse the JSON string into a Python dictionary
-    json_data = json.loads(decoded_contents)
-
-    return json_data
+    try:
+        # Attempt to load the file directly from the filesystem
+        with open(file_name, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except Exception as e:
+        logger.error(f"Error loading JSON file '{file_name}': {e}")
+        return {}
 
 
 def load_external_text_file(file_path: str) -> str:
@@ -91,8 +108,33 @@ def process_json_data(json_data):
     return processed_data
 
 
+def difficulty_to_string(pv_difficulty):
+    """Convert difficulty integer to string representation."""
+    difficulty_map = {
+        0: '[EASY]',
+        1: '[NORMAL]',
+        2: '[HARD]',
+        3: '[EXTREME]',
+        4: '[EXEXTREME]'
+    }
+    return difficulty_map.get(pv_difficulty, None)
+
+
+def find_difficulty_rating(processed_data, pv_id, pv_difficulty):
+    """Find the difficulty rating for a specific song ID and difficulty."""
+    # Convert pv_difficulty from an integer to the corresponding string
+    difficulty_str = difficulty_to_string(pv_difficulty)
+    if not difficulty_str:
+        return None
+
+    # Search for the difficulty rating in the processed data
+    if pv_id in processed_data:
+        for song_data in processed_data[pv_id]:
+            if song_data['difficulty'] == difficulty_str:
+                return song_data['difficultyRating']
+    return None
+
 def erase_song_list(file_path):
-    difficulties = ["easy", "normal", "hard", "extreme", "exExtreme"]
     difficulty_replacements = {
         "easy.length=1": "easy.length=0",
         "normal.length=1": "normal.length=0",
@@ -101,15 +143,20 @@ def erase_song_list(file_path):
         "extreme.length=2": "extreme.length=0",
     }
 
+    # Read file content
     with open(file_path, 'r', encoding='utf-8') as file:
-        file_data = file.read()
+        file_data = file.readlines()
 
-    # Perform the replacements
-    for search_text, replace_text in difficulty_replacements.items():
-        file_data = file_data.replace(search_text, replace_text)
+    # Perform replacements
+    for i, line in enumerate(file_data):
+        if line.startswith("pv_144"):  # Skip lines starting with "pv_144"
+            continue
+        for search_text, replace_text in difficulty_replacements.items():
+            file_data[i] = file_data[i].replace(search_text, replace_text)
 
+    # Rewrite file with replacements
     with open(file_path, 'w', encoding='utf-8') as file:
-        file.write(file_data)
+        file.writelines(file_data)
 
 
 def replace_line_with_text(file_path, search_text, new_line):
@@ -202,8 +249,9 @@ class MegaMixContext(CommonContext):
         super().__init__(server_address, password)
 
         self.game = "Hatsune Miku Project Diva Mega Mix+"
-        self.mod_pv = find_mod_pv()
-        self.jsonData = process_json_data(load_json_file("songData.json"))
+        self.mod_pv = find_mod_pv() + "/rom/mod_pv_db.txt"
+        self.songResultsLocation = find_mod_pv() + "/results.json"
+        self.jsonData = process_json_data(load_zipped_json_file("songData.json"))
         self.previous_received = []
         self.sent_unlock_message = False
 
@@ -213,6 +261,7 @@ class MegaMixContext(CommonContext):
         self.location_ap_id_to_name = None
         self.item_name_to_ap_id = None
         self.item_ap_id_to_name = None
+        self.found_checks = []
 
         self.seed_name = None
         self.options = None
@@ -221,6 +270,11 @@ class MegaMixContext(CommonContext):
         self.leeks_needed = None
         self.leeks_obtained = 0
         self.grade_needed = None
+
+        self.watch_task = None
+        if not self.watch_task:
+            self.watch_task = asyncio.create_task(
+                self.watch_json_file(self.songResultsLocation))
 
         self.obtained_items_queue = asyncio.Queue()
         self.critical_section_lock = asyncio.Lock()
@@ -234,6 +288,7 @@ class MegaMixContext(CommonContext):
     def on_package(self, cmd: str, args: dict):
 
         if cmd == "Connected":
+
             self.sent_unlock_message = False
             self.leeks_obtained = 0
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
@@ -309,6 +364,50 @@ class MegaMixContext(CommonContext):
                 logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
                 self.sent_unlock_message = True
             song_unlock(self.mod_pv, self.goal_song, self.jsonData)
+
+    async def watch_json_file(self, file_name: str):
+        """Watch a JSON file for changes and call the callback function."""
+        file_path = os.path.join(os.path.dirname(__file__), file_name)
+        last_modified = os.path.getmtime(file_path)
+        try:
+            while True:
+                await asyncio.sleep(1)  # Wait for a short duration
+                modified = os.path.getmtime(file_path)
+                if modified != last_modified:
+                    last_modified = modified
+                    try:
+                        json_data = load_json_file(file_name)
+                        self.receive_location_check(json_data)
+                    except (FileNotFoundError, json.JSONDecodeError) as e:
+                        print(f"Error loading JSON file: {e}")
+        except asyncio.CancelledError:
+            print(f"Watch task for {file_name} was canceled.")
+    def receive_location_check(self, song_data):
+        # Check if player got a good enough grade on the song
+        if song_data.get('scoreGrade') >= self.grade_needed:
+            # Construct location name
+            difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
+            difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
+            location_name = (song_data.get('pvName') + " " + difficulty + " " + difficulty_rating + " ★")
+            loc_1 = location_name + "-0"
+            loc_2 = location_name + "-1"
+            # Check if loc_1 and loc_2 exist in location_name_to_ap_id
+            if loc_1 in self.location_name_to_ap_id:
+                self.found_checks.append(self.location_name_to_ap_id[loc_1])
+            else:
+                logger.error(f"{loc_1} not found in location_name_to_ap_id. Skipping.")
+
+            if loc_2 in self.location_name_to_ap_id:
+                self.found_checks.append(self.location_name_to_ap_id[loc_2])
+            else:
+                logger.error(f"{loc_2} not found in location_name_to_ap_id. Skipping.")
+            asyncio.create_task(
+                self.send_checks())
+
+    async def send_checks(self):
+        message = [{"cmd": 'LocationChecks', "locations": self.found_checks}]
+        await self.send_msgs(message)
+
 
 def launch():
     """

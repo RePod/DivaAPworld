@@ -28,11 +28,11 @@ components.append(Component(
 
 
 class MegaMixSettings(settings.Group):
-    class ModPath(settings.UserFilePath):
+    class ModPath(settings.LocalFolderPath):
         """Path to the archipelago mod"""
 
     mod_path: ModPath = ModPath(
-        "C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods/SongHideTest/rom/mod_pv_db.txt")
+        "C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods/ArchipelagoMod")
 
 
 class MegaMixWorld(World):
