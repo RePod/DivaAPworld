@@ -288,14 +288,13 @@ class MegaMixContext(CommonContext):
     def on_package(self, cmd: str, args: dict):
 
         if cmd == "Connected":
-            self.previous_received = []
             self.sent_unlock_message = False
             self.leeks_obtained = 0
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
             self.leeks_needed = self.options["leekWinCount"]
-            self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
+            self.grade_needed = int(self.options["scoreGradeNeeded"]) + 0  # Add 2 to match the games internals
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
@@ -315,6 +314,7 @@ class MegaMixContext(CommonContext):
                 # Connected package not recieved yet, wait for datapackage request after connected package
                 return
             self.leeks_obtained = 0
+            self.previous_received = []
             self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["location_name_to_id"]
             self.location_name_to_ap_id = {
                 name: loc_id for name, loc_id in
@@ -384,7 +384,16 @@ class MegaMixContext(CommonContext):
             # Construct location name
             difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
             difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
-            location_name = (song_data.get('pvName') + " " + difficulty + " " + difficulty_rating + " ★")
+            song_name = song_data.get('pvName')
+
+            # Special cases for songs with multiple titles
+            if song_name == "Nostalogic (MEIKO-SAN mix)" or song_name == "Nostalogic (LOLI-MEIKO mix)":
+                song_name = "Nostalogic"
+
+            if song_name == "Senbonzakura -F edition All Version-":
+                song_name = "Senbonzakura -F edition-"
+
+            location_name = (song_name + " " + difficulty + " " + difficulty_rating + " ★")
             if location_name == self.goal_song:
                 asyncio.create_task(
                     self.end_goal())

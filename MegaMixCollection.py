@@ -21,8 +21,8 @@ def load_json_file(file_name: str) -> dict:
 
 class MegaMixCollections:
 
-    """Contains all the data of Muse Dash, loaded from MuseDashData.txt."""
-    STARTING_CODE = 2900000
+    """Contains all the data of MegaMix, loaded from songData.json"""
+    STARTING_CODE = 39000000
 
     LEEK_NAME: str = "Leek"
     LEEK_CODE: int = STARTING_CODE
