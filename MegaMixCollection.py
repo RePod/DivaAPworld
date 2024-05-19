@@ -1,7 +1,9 @@
 from .Items import SongData
+from .SymbolFixer import fix_song_name
 from typing import Dict, List
 from collections import ChainMap
 import random
+
 def load_json_file(file_name: str) -> dict:
     """Import a JSON file from the package using pkgutil."""
 
@@ -40,7 +42,8 @@ class MegaMixCollections:
 
         for song in json_data:
             song_id = int(song['songID'])
-            song_name = song['songName'] + " " + song['difficulty'] + " " + song["difficultyRating"] + " ★"
+            song_name = fix_song_name(song['songName'])  # Fix song name if needed
+            song_name = song_name + " " + song['difficulty'] + " " + song["difficultyRating"]
             singers = song['singers']
             dlc = song['DLC'].lower() == "true"
             difficulty = song['difficulty']

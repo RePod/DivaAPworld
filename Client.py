@@ -1,18 +1,12 @@
 from typing import Optional
-import ast
 import asyncio
 import colorama
 import os
-import pymem
-from pathlib import Path
 import json
 import time
-import hashlib
 import re
-
+from .SymbolFixer import fix_song_name
 from settings import get_settings
-import tkinter as tk
-from tkinter import filedialog
 
 from CommonClient import (
     CommonContext,
@@ -90,7 +84,7 @@ def process_json_data(json_data):
     for entry in json_data:
         song_id = int(entry.get('songID'))
         song_data = {
-            'songName': entry.get('songName'),
+            'songName': fix_song_name(entry.get('songName')), # Fix song name if needed
             'singers': entry.get('singers'),
             'DLC': entry.get('DLC'),
             'difficulty': entry.get('difficulty'),
@@ -133,6 +127,7 @@ def find_difficulty_rating(processed_data, pv_id, pv_difficulty):
             if song_data['difficulty'] == difficulty_str:
                 return song_data['difficultyRating']
     return None
+
 
 def erase_song_list(file_path):
     difficulty_replacements = {
@@ -298,6 +293,8 @@ class MegaMixContext(CommonContext):
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
+            logger.info("You need " + str(self.leeks_needed) + " leeks to unlock the goal song " + self.goal_song)
+
             # if we dont have the seed name from the RoomInfo packet, wait until we do.
             while not self.seed_name:
                 time.sleep(1)
@@ -384,7 +381,7 @@ class MegaMixContext(CommonContext):
             # Construct location name
             difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
             difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
-            song_name = song_data.get('pvName')
+            song_name = fix_song_name(song_data.get('pvName'))
 
             # Special cases for songs with multiple titles
             if song_name == "Nostalogic (MEIKO-SAN mix)" or song_name == "Nostalogic (LOLI-MEIKO mix)":
@@ -393,7 +390,7 @@ class MegaMixContext(CommonContext):
             if song_name == "Senbonzakura -F edition All Version-":
                 song_name = "Senbonzakura -F edition-"
 
-            location_name = (song_name + " " + difficulty + " " + difficulty_rating + " ★")
+            location_name = (song_name + " " + difficulty + " " + difficulty_rating)
             if location_name == self.goal_song:
                 asyncio.create_task(
                     self.end_goal())

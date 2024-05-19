@@ -48,23 +48,29 @@ class DifficultyMode(Choice):
 
 
 # Todo: Investigate options to make this non randomizable
-class DifficultyModeOverrideMin(Range):
+class DifficultyModeOverrideMin(Choice):
     """Ensures that 1 difficulty has at least 1 this value or higher per song.
     - Difficulty Mode must be set to Manual."""
     display_name = "Manual Difficulty Min"
-    range_start = 0
-    range_end = 4
-    default = 2
+    option_Easy = 0
+    option_Normal = 1
+    option_Hard = 2
+    option_Extreme = 3
+    option_ExExtreme = 4
+    default = 0
 
 
 # Todo: Investigate options to make this non randomizable
-class DifficultyModeOverrideMax(Range):
+class DifficultyModeOverrideMax(Choice):
     """Ensures that 1 difficulty has at least 1 this value or lower per song.
     - Difficulty Mode must be set to Manual."""
     display_name = "Manual Difficulty Max"
-    range_start = 0
-    range_end = 4
-    default = 2
+    option_Easy = 0
+    option_Normal = 1
+    option_Hard = 2
+    option_Extreme = 3
+    option_ExExtreme = 4
+    default = 4
 
 class DifficultyModeRating(Choice):
     """Ensures that at least one of the song's available difficulties have a star rating that falls within these ranges.
