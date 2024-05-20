@@ -52,3 +52,4 @@ DLC can be toggled on in the options.
 
 - Whenever you get sent a song, to have it show up in the song list you must restart the game, it's not a bug if a song doesn't appear until after a restart. However if a song still doesn't appear after a restart please report it in the discord.
 - Make sure the client is connected when you beat a song or it won't count the location as checked until you do it again while connected.
+- Please make sure you're using the latest version of either Diva Mod Loader, or Diva Mod Manager
