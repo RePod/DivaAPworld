@@ -16,6 +16,20 @@ def replace_symbols(song_name):
     song_name = song_name.replace("♪", "")
     # Clean up extra spaces created by replacement
     song_name = re.sub(r'\s+', ' ', song_name).strip()
+
+    # Special cases for songs with multiple titles
+    if song_name == "Nostalogic (MEIKO-SAN mix)" or song_name == "Nostalogic (LOLI-MEIKO mix)":
+        song_name = "Nostalogic"
+
+    if song_name == "Senbonzakura -F edition All Version-":
+        song_name = "Senbonzakura -F edition-"
+
+    if song_name == "A Song of Wastelands, Forests, and Magic(Rin Ver.)" or song_name == "A Song of Wastelands, Forests, and Magic(Len Ver.)":
+        song_name = "A Song of Wastelands, Forests, and Magic"
+
+    if song_name == "Song of Life(Rin Ver.)" or song_name == "Song of Life(Len Ver.)":
+        song_name = "Song of Life"
+
     return song_name
 
 
@@ -38,7 +52,14 @@ offending_songs = [
     "Fire◎Flower",
     "Sadistic.Music∞Factory",
     "Negaposi＊Continues",
-    "Black★Rock Shooter"
+    "Black★Rock Shooter",
+    "A Song of Wastelands, Forests, and Magic(Rin Ver.)",
+    "A Song of Wastelands, Forests, and Magic(Len Ver.)",
+    "Song of Life(Rin Ver.)",
+    "Song of Life(Len Ver.)",
+    "Nostalogic (MEIKO-SAN mix)",
+    "Nostalogic (LOLI-MEIKO mix)",
+    "Senbonzakura -F edition All Version-"
 ]
 
 # Function to fix song names if they are in the offending songs list

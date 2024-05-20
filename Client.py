@@ -383,13 +383,6 @@ class MegaMixContext(CommonContext):
             difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
             song_name = fix_song_name(song_data.get('pvName'))
 
-            # Special cases for songs with multiple titles
-            if song_name == "Nostalogic (MEIKO-SAN mix)" or song_name == "Nostalogic (LOLI-MEIKO mix)":
-                song_name = "Nostalogic"
-
-            if song_name == "Senbonzakura -F edition All Version-":
-                song_name = "Senbonzakura -F edition-"
-
             location_name = (song_name + " " + difficulty + " " + difficulty_rating)
             if location_name == self.goal_song:
                 asyncio.create_task(
