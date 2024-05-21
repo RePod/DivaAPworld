@@ -62,7 +62,7 @@ class MegaMixCollections:
             location_id_index += 2
 
     def get_songs_with_settings(self, dlc: bool, allowed_diff: List[int],
-                                diff_lower: int, diff_higher: int) -> List[str]:
+                                diff_lower: float, diff_higher: float) -> List[str]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
 

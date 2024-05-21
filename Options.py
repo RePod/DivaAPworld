@@ -72,6 +72,7 @@ class DifficultyModeOverrideMax(Choice):
     option_ExExtreme = 4
     default = 4
 
+
 class DifficultyModeRating(Choice):
     """Ensures that at least one of the song's available difficulties have a star rating that falls within these ranges.
     - Any: All songs are available
@@ -92,22 +93,60 @@ class DifficultyModeRating(Choice):
     option_Manual = 6
     default = 0
 
-class DifficultyModeRatingOverrideMin(Range):
+
+class DifficultyModeRatingOverrideMin(Choice):
     """Ensures that at least one of the song's available difficulties have this star rating or higher
+    x5 = .5, Used since _5 causes issues
     - Difficulty Mode must be set to Manual."""
     display_name = "Manual Difficulty Min"
-    range_start = 1
-    range_end = 10
-    default = 4
+    option_1 = 0
+    option_1x5 = 1
+    option_2 = 2
+    option_2x5 = 3
+    option_3 = 4
+    option_3x5 = 5
+    option_4 = 6
+    option_4x5 = 7
+    option_5 = 8
+    option_5x5 = 9
+    option_6 = 10
+    option_6x5 = 11
+    option_7 = 12
+    option_7x5 = 13
+    option_8 = 14
+    option_8x5 = 15
+    option_9 = 16
+    option_9x5 = 17
+    option_10 = 18
+    default = 0
 
 
-class DifficultyModeRatingOverrideMax(Range):
+class DifficultyModeRatingOverrideMax(Choice):
     """Ensures that at least one of the song's available difficulties have this star rating or lower
+    x5 = .5, Used since _5 causes issues
     - Difficulty Mode must be set to Manual."""
     display_name = "Manual Difficulty Max"
-    range_start = 1
-    range_end = 10
-    default = 8
+    option_1 = 0
+    option_1x5 = 1
+    option_2 = 2
+    option_2x5 = 3
+    option_3 = 4
+    option_3x5 = 5
+    option_4 = 6
+    option_4x5 = 7
+    option_5 = 8
+    option_5x5 = 9
+    option_6 = 10
+    option_6x5 = 11
+    option_7 = 12
+    option_7x5 = 13
+    option_8 = 14
+    option_8x5 = 15
+    option_9 = 16
+    option_9x5 = 17
+    option_10 = 18
+    default = 18
+
 
 class ScoreGradeNeeded(Choice):
     """Completing a song will require a grade of this value or higher in order to unlock items.
@@ -146,13 +185,15 @@ class IncludeSongs(ItemSet):
     - Difficulty options will be skipped for these songs.
     - If there being too many included songs, songs will be randomly chosen without regard for difficulty.
     - If you want these songs immediately, use start_inventory instead.
+    IGNORE FOR NOW, THIS IS NOT IMPLEMENTED YET
     """
     verify_item_name = True
     display_name = "Include Songs"
 
 
 class ExcludeSongs(ItemSet):
-    """Any song listed here will be excluded from being a part of the seed."""
+    """Any song listed here will be excluded from being a part of the seed.
+    IGNORE FOR NOW, THIS IS NOT IMPLEMENTED YET"""
     verify_item_name = True
     display_name = "Exclude Songs"
 

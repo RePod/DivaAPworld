@@ -351,12 +351,14 @@ class MegaMixContext(CommonContext):
                         song_unlock(self.mod_pv, item_name, self.jsonData)
 
     def check_goal(self):
-        logger.info("You have " + str(self.leeks_obtained) + " Leeks")
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
                 self.sent_unlock_message = True
             song_unlock(self.mod_pv, self.goal_song, self.jsonData)
+        else:
+            logger.info("You need " + str(self.leeks_needed) + " leeks to unlock the goal song " + self.goal_song)
+            logger.info("You have " + str(self.leeks_obtained) + " Leeks")
 
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
@@ -376,33 +378,38 @@ class MegaMixContext(CommonContext):
         except asyncio.CancelledError:
             print(f"Watch task for {file_name} was canceled.")
     def receive_location_check(self, song_data):
-        # Check if player got a good enough grade on the song
-        if int(song_data.get('scoreGrade')) >= self.grade_needed:
-            # Construct location name
-            difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
-            difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
-            song_name = fix_song_name(song_data.get('pvName'))
 
-            location_name = (song_name + " " + difficulty + " " + difficulty_rating)
-            if location_name == self.goal_song:
+        # If song is not dummy song
+        if song_data.get('pvId') != 144:
+            # Check if player got a good enough grade on the song
+            if int(song_data.get('scoreGrade')) >= self.grade_needed:
+                logger.info("Cleared song with appropriate grade!")
+                # Construct location name
+                difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
+                difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
+                song_name = fix_song_name(song_data.get('pvName'))
+
+                location_name = (song_name + " " + difficulty + " " + difficulty_rating)
+                if location_name == self.goal_song:
+                    asyncio.create_task(
+                        self.end_goal())
+                    return
+                loc_1 = location_name + "-0"
+                loc_2 = location_name + "-1"
+                # Check if loc_1 and loc_2 exist in location_name_to_ap_id
+                if loc_1 in self.location_name_to_ap_id:
+                    self.found_checks.append(self.location_name_to_ap_id[loc_1])
+                else:
+                    logger.error(f"{loc_1} not found in location_name_to_ap_id. Skipping.")
+
+                if loc_2 in self.location_name_to_ap_id:
+                    self.found_checks.append(self.location_name_to_ap_id[loc_2])
+                else:
+                    logger.error(f"{loc_2} not found in location_name_to_ap_id. Skipping.")
                 asyncio.create_task(
-                    self.end_goal())
-                return
-            loc_1 = location_name + "-0"
-            loc_2 = location_name + "-1"
-            # Check if loc_1 and loc_2 exist in location_name_to_ap_id
-            if loc_1 in self.location_name_to_ap_id:
-                self.found_checks.append(self.location_name_to_ap_id[loc_1])
+                    self.send_checks())
             else:
-                logger.error(f"{loc_1} not found in location_name_to_ap_id. Skipping.")
-
-            if loc_2 in self.location_name_to_ap_id:
-                self.found_checks.append(self.location_name_to_ap_id[loc_2])
-            else:
-                logger.error(f"{loc_2} not found in location_name_to_ap_id. Skipping.")
-            asyncio.create_task(
-                self.send_checks())
-
+                logger.info("Song " + song_data.get('pvName') + " Was not beaten with a high enough grade")
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]

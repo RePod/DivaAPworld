@@ -245,8 +245,32 @@ class MegaMixWorld(World):
         leek_count = self.get_leek_count()
         return max(1, floor(leek_count * multiplier))
 
-    def get_difficulty_range(self) -> List[int]:
-        difficulty_rating = self.options.song_difficulty_rating
+    def get_difficulty_range(self) -> List[float]:
+
+        # This is ugly I know don't look at it
+        number_to_option_value = {
+            0: 1,
+            1: 1.5,
+            2: 2,
+            3: 2.5,
+            4: 3,
+            5: 3.5,
+            6: 4,
+            7: 4.5,
+            8: 5,
+            9: 5.5,
+            10: 6,
+            11: 6.5,
+            12: 7,
+            13: 7.5,
+            14: 8,
+            15: 8.5,
+            16: 9,
+            17: 9.5,
+            18: 10
+        }
+
+        difficulty_rating = int(self.options.song_difficulty_rating)
 
         # Valid difficulties are between 1 and 10.
         difficulty_bounds = [1, 10]
@@ -266,8 +290,8 @@ class MegaMixWorld(World):
             difficulty_bounds[0] = 8
             difficulty_bounds[1] = 10
         elif difficulty_rating == 6:
-            minimum_difficulty = self.options.song_difficulty_rating_min.value
-            maximum_difficulty = self.options.song_difficulty_rating_max.value
+            minimum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_min, None)
+            maximum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_max, None)
 
             difficulty_bounds[0] = min(minimum_difficulty, maximum_difficulty)
             difficulty_bounds[1] = max(minimum_difficulty, maximum_difficulty)

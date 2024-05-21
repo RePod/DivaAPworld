@@ -649,7 +649,7 @@
         ],
         "DLC": "True",
         "difficulty": "[EASY]",
-        "difficultyRating": "2.5"
+        "difficultyRating": "0"
     },
     {
         "songID": "17",
@@ -661,7 +661,7 @@
         ],
         "DLC": "True",
         "difficulty": "[NORMAL]",
-        "difficultyRating": "0"
+        "difficultyRating": "4"
     },
     {
         "songID": "17",
@@ -685,7 +685,7 @@
         ],
         "DLC": "True",
         "difficulty": "[EXTREME]",
-        "difficultyRating": "7"
+        "difficultyRating": "6.5"
     },
     {
         "songID": "17",
@@ -697,7 +697,7 @@
         ],
         "DLC": "True",
         "difficulty": "[EXEXTREME]",
-        "difficultyRating": "8.5"
+        "difficultyRating": "7.5"
     },
     {
         "songID": "18",
@@ -2087,7 +2087,10 @@
     {
         "songID": "58",
         "songName": "Cantarella",
-        "singers": "Megurine Luka",
+        "singers": [
+            "Hatsune Miku",
+            "KAITO"
+        ],
         "DLC": "False",
         "difficulty": "[EASY]",
         "difficultyRating": "3"
@@ -2095,7 +2098,10 @@
     {
         "songID": "58",
         "songName": "Cantarella",
-        "singers": "Megurine Luka",
+        "singers": [
+            "Hatsune Miku",
+            "KAITO"
+        ],
         "DLC": "False",
         "difficulty": "[NORMAL]",
         "difficultyRating": "4"
@@ -2103,7 +2109,10 @@
     {
         "songID": "58",
         "songName": "Cantarella",
-        "singers": "Megurine Luka",
+        "singers": [
+            "Hatsune Miku",
+            "KAITO"
+        ],
         "DLC": "False",
         "difficulty": "[HARD]",
         "difficultyRating": "5.5"
@@ -2111,7 +2120,10 @@
     {
         "songID": "58",
         "songName": "Cantarella",
-        "singers": "Megurine Luka",
+        "singers": [
+            "Hatsune Miku",
+            "KAITO"
+        ],
         "DLC": "False",
         "difficulty": "[EXTREME]",
         "difficultyRating": "7"
@@ -2119,7 +2131,10 @@
     {
         "songID": "58",
         "songName": "Cantarella",
-        "singers": "Megurine Luka",
+        "singers": [
+            "Hatsune Miku",
+            "KAITO"
+        ],
         "DLC": "False",
         "difficulty": "[EXEXTREME]",
         "difficultyRating": "8.5"
@@ -4667,7 +4682,10 @@
     {
         "songID": "234",
         "songName": "Deep Sea City Underground",
-        "singers": "Hatsune Miku",
+        "singers": [
+            "Kagamine Rin",
+            "Kagamine Len"
+        ],
         "DLC": "False",
         "difficulty": "[EASY]",
         "difficultyRating": "3"
@@ -4675,7 +4693,10 @@
     {
         "songID": "234",
         "songName": "Deep Sea City Underground",
-        "singers": "Hatsune Miku",
+        "singers": [
+            "Kagamine Rin",
+            "Kagamine Len"
+        ],
         "DLC": "False",
         "difficulty": "[NORMAL]",
         "difficultyRating": "4"
@@ -4683,7 +4704,10 @@
     {
         "songID": "234",
         "songName": "Deep Sea City Underground",
-        "singers": "Hatsune Miku",
+        "singers": [
+            "Kagamine Rin",
+            "Kagamine Len"
+        ],
         "DLC": "False",
         "difficulty": "[HARD]",
         "difficultyRating": "5"
@@ -4691,7 +4715,10 @@
     {
         "songID": "234",
         "songName": "Deep Sea City Underground",
-        "singers": "Hatsune Miku",
+        "singers": [
+            "Kagamine Rin",
+            "Kagamine Len"
+        ],
         "DLC": "False",
         "difficulty": "[EXTREME]",
         "difficultyRating": "7"
@@ -4699,7 +4726,10 @@
     {
         "songID": "234",
         "songName": "Deep Sea City Underground",
-        "singers": "Hatsune Miku",
+        "singers": [
+            "Kagamine Rin",
+            "Kagamine Len"
+        ],
         "DLC": "False",
         "difficulty": "[EXEXTREME]",
         "difficultyRating": "8.5"
@@ -5053,7 +5083,7 @@
         ],
         "DLC": "False",
         "difficulty": "[EASY]",
-        "difficultyRating": "3"
+        "difficultyRating": "2"
     },
     {
         "songID": "243",
@@ -7057,7 +7087,7 @@
         "singers": "Hatsune Miku",
         "DLC": "True",
         "difficulty": "[EXEXTREME]",
-        "difficultyRating": "0"
+        "difficultyRating": "8.5"
     },
     {
         "songID": "413",
@@ -8322,7 +8352,7 @@
         "singers": "MEIKO",
         "DLC": "True",
         "difficulty": "[EXEXTREME]",
-        "difficultyRating": "0"
+        "difficultyRating": "8.5"
     },
     {
         "songID": "442",
