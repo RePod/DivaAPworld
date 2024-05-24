@@ -18,7 +18,7 @@ DLC can be toggled on in the options.
 
 ### Modding Diva
 - Install the Archipelago mod, either manually or through the Diva Mod Manager, Mod can be found here: https://gamebanana.com/mods/514140
-- ExPatch mod also recommended if you are unsure if you have all songs & difficulties unlocked: https://gamebanana.com/mods/388083
+- ExPatch mod also REQUIRED if you do not have all songs & difficulties unlocked: https://gamebanana.com/mods/388083
 - If you are unfamiliar with Diva modding, here's a helpful guide, I recommend the mod manager over manual: https://docs.google.com/document/d/1jvG_RGMe_FtlduvD8WwXdfA85I1O4Tde0DfRDM4aeWk/edit
 
 ### Installing the APWorld
