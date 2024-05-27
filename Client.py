@@ -264,30 +264,20 @@ class MegaMixContext(CommonContext):
 
     async def remove_songs(self):
 
-        logger.info("Here we go again")
         # Create sets to store items ending with -0 and -1
         items_ending_with_0 = set()
         items_ending_with_1 = set()
 
-        logger.info("Here we go again 2")
         # Iterate over the list and categorize items
         for item in self.prev_found:
-            logger.info("Here we go again 3")
             location_name = self.location_ap_id_to_name[item]
-            logger.info(location_name)
-            logger.info("Here we go again 4")
             if location_name.endswith('-0'):
                 items_ending_with_0.add(location_name[:-2])  # Remove the suffix
             elif location_name.endswith('-1'):
                 items_ending_with_1.add(location_name[:-2])  # Remove the suffix
 
-            logger.info("Here we go again 5")
-
-        logger.info("Here we go again 6")
         # Check for matches
         for item in items_ending_with_0.intersection(items_ending_with_1):
-            logger.info("Here we go again 7")
-            logger.info(item)
             #Ignore the name, we are relocking it
             song_unlock(self.mod_pv, item, self.jsonData, True, logger)
 
