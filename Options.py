@@ -99,25 +99,25 @@ class DifficultyModeRatingOverrideMin(Choice):
     x5 = .5, Used since _5 causes issues
     - Difficulty Mode must be set to Manual."""
     display_name = "Manual Difficulty Min"
-    option_1 = 0
+    option_one = 0
     option_1x5 = 1
-    option_2 = 2
+    option_two = 2
     option_2x5 = 3
-    option_3 = 4
+    option_three = 4
     option_3x5 = 5
-    option_4 = 6
+    option_four = 6
     option_4x5 = 7
-    option_5 = 8
+    option_five = 8
     option_5x5 = 9
-    option_6 = 10
+    option_six = 10
     option_6x5 = 11
-    option_7 = 12
+    option_seven = 12
     option_7x5 = 13
-    option_8 = 14
+    option_eight = 14
     option_8x5 = 15
-    option_9 = 16
+    option_nine = 16
     option_9x5 = 17
-    option_10 = 18
+    option_ten = 18
     default = 0
 
 
@@ -126,25 +126,25 @@ class DifficultyModeRatingOverrideMax(Choice):
     x5 = .5, Used since _5 causes issues
     - Difficulty Mode must be set to Manual."""
     display_name = "Manual Difficulty Max"
-    option_1 = 0
+    option_one = 0
     option_1x5 = 1
-    option_2 = 2
+    option_two = 2
     option_2x5 = 3
-    option_3 = 4
+    option_three = 4
     option_3x5 = 5
-    option_4 = 6
+    option_four = 6
     option_4x5 = 7
-    option_5 = 8
+    option_five = 8
     option_5x5 = 9
-    option_6 = 10
+    option_six = 10
     option_6x5 = 11
-    option_7 = 12
+    option_seven = 12
     option_7x5 = 13
-    option_8 = 14
+    option_eight = 14
     option_8x5 = 15
-    option_9 = 16
+    option_nine = 16
     option_9x5 = 17
-    option_10 = 18
+    option_ten = 18
     default = 18
 
 
