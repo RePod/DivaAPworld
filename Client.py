@@ -197,12 +197,12 @@ class MegaMixContext(CommonContext):
                 difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
                 difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
                 song_name = fix_song_name(song_data.get('pvName'))
-
                 location_name = (song_name + " " + difficulty + " " + difficulty_rating)
                 if location_name == self.goal_song:
                     asyncio.create_task(
                         self.end_goal())
                     return
+
                 loc_1 = location_name + "-0"
                 loc_2 = location_name + "-1"
                 # Check if loc_1 and loc_2 exist in location_name_to_ap_id
@@ -210,7 +210,6 @@ class MegaMixContext(CommonContext):
                     self.found_checks.append(self.location_name_to_ap_id[loc_1])
                 else:
                     logger.error(f"{loc_1} not found in location_name_to_ap_id. Skipping.")
-
                 if loc_2 in self.location_name_to_ap_id:
                     self.found_checks.append(self.location_name_to_ap_id[loc_2])
                 else:
@@ -226,9 +225,9 @@ class MegaMixContext(CommonContext):
 
     async def send_checks(self):
         message = [{"cmd": 'LocationChecks', "locations": self.found_checks}]
+        await self.send_msgs(message)
         self.remove_found_checks()
         self.found_checks.clear()
-        await self.send_msgs(message)
 
     def remove_found_checks(self):
         self.prev_found += self.found_checks
