@@ -1,5 +1,7 @@
 import json
 import re
+import os
+import shutil
 from .SymbolFixer import fix_song_name
 
 
@@ -50,34 +52,90 @@ def save_external_text_file(file_path: str, contents: str):
         file.write(contents)
 
 
+def create_copies(file_paths):
+    for file_path in file_paths:
+        # Get the directory and filename from the file path
+        directory, filename = os.path.split(file_path)
+
+        # Create the new filename by appending "COPY" before the file extension
+        name, ext = os.path.splitext(filename)
+        new_filename = f"{name}COPY{ext}"
+
+        # Create the full path for the new file
+        new_file_path = os.path.join(directory, new_filename)
+
+        # Copy the file to the new path
+        shutil.copyfile(file_path, new_file_path)
+        print(f"Copied {file_path} to {new_file_path}")
+
+
+def restore_originals(original_file_paths):
+    for original_file_path in original_file_paths:
+        directory, filename = os.path.split(original_file_path)
+        name, ext = os.path.splitext(filename)
+        copy_filename = f"{name}COPY{ext}"
+        copy_file_path = os.path.join(directory, copy_filename)
+
+        if os.path.exists(copy_file_path):
+            shutil.copyfile(copy_file_path, original_file_path)
+            print(f"Restored {original_file_path} from {copy_file_path}")
+        else:
+            raise FileNotFoundError(f"The copy file {copy_file_path} does not exist.")
+
+
 # Data processing
-def process_json_data(json_data):
+def process_json_data(json_data, modded):
     """Process JSON data into a dictionary."""
     processed_data = {}
+    if not modded:
+        # Iterate over each entry in the JSON data
+        for entry in json_data:
+            song_id = int(entry.get('songID'))
+            song_data = {
+                'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
+                'singers': entry.get('singers'),
+                'DLC': entry.get('DLC'),
+                'difficulty': entry.get('difficulty'),
+                'difficultyRating': entry.get('difficultyRating')
+            }
 
-    # Iterate over each entry in the JSON data
-    for entry in json_data:
-        song_id = int(entry.get('songID'))
-        song_data = {
-            'songName': fix_song_name(entry.get('songName')), # Fix song name if needed
-            'singers': entry.get('singers'),
-            'DLC': entry.get('DLC'),
-            'difficulty': entry.get('difficulty'),
-            'difficultyRating': entry.get('difficultyRating')
-        }
+            # Check if song ID already exists in the dictionary
+            if song_id in processed_data:
+                # If yes, append the new song data to the existing list
+                processed_data[song_id].append(song_data)
+            else:
+                # If no, create a new list with the song data
+                processed_data[song_id] = [song_data]
+    else:
+        for song_pack in json_data:
+            pack_name = song_pack.get('packName')
+            for entry in song_pack["songs"]:
+                song_id = int(entry.get('songID'))
+                song_data = {
+                    'packName': pack_name,
+                    'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
+                    'difficulty': entry.get('difficulty'),
+                    'difficultyRating': entry.get('difficultyRating')
+                }
 
-        # Check if song ID already exists in the dictionary
-        if song_id in processed_data:
-            # If yes, append the new song data to the existing list
-            processed_data[song_id].append(song_data)
-        else:
-            # If no, create a new list with the song data
-            processed_data[song_id] = [song_data]
+                # Check if song ID already exists in the dictionary
+                if song_id in processed_data:
+                    # If yes, append the new song data to the existing list
+                    processed_data[song_id].append(song_data)
+                else:
+                    # If no, create a new list with the song data
+                    processed_data[song_id] = [song_data]
 
     return processed_data
 
 
-def erase_song_list(file_path):
+def generate_modded_paths(processed_data, base_path):
+    unique_pack_names = {song['packName'] for songs in processed_data.values() for song in songs}
+    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_pack_names}
+    return list(modded_paths)
+
+
+def erase_song_list(file_paths):
     difficulty_replacements = {
         "easy.length=1": "easy.length=0",
         "normal.length=1": "normal.length=0",
@@ -86,20 +144,21 @@ def erase_song_list(file_path):
         "extreme.length=2": "extreme.length=0",
     }
 
-    # Read file content
-    with open(file_path, 'r', encoding='utf-8') as file:
-        file_data = file.readlines()
+    for file_path in file_paths:
+        # Read file content
+        with open(file_path, 'r', encoding='utf-8') as file:
+            file_data = file.readlines()
 
-    # Perform replacements
-    for i, line in enumerate(file_data):
-        if line.startswith("pv_144"):  # Skip lines starting with "pv_144"
-            continue
-        for search_text, replace_text in difficulty_replacements.items():
-            file_data[i] = file_data[i].replace(search_text, replace_text)
+        # Perform replacements
+        for i, line in enumerate(file_data):
+            if line.startswith("pv_144"):  # Skip lines starting with "pv_144"
+                continue
+            for search_text, replace_text in difficulty_replacements.items():
+                file_data[i] = file_data[i].replace(search_text, replace_text)
 
-    # Rewrite file with replacements
-    with open(file_path, 'w', encoding='utf-8') as file:
-        file.writelines(file_data)
+        # Rewrite file with replacements
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.writelines(file_data)
 
 
 # Text Replacement
@@ -130,7 +189,7 @@ def replace_line_with_text(file_path, search_text, new_line):
         file.write(''.join(lines))
 
 
-def song_unlock(file_path, song_info, json_data, lock_status, logger):
+def song_unlock(file_path, song_info, json_data, lock_status, modded, logger):
     """Unlock a song based on its name and difficulty."""
     # Use regular expression to extract song name and difficulty
     match = re.match(r'([^\[\]]+)\s*\[(\w+)\]', song_info)
@@ -146,6 +205,7 @@ def song_unlock(file_path, song_info, json_data, lock_status, logger):
     if converted_difficulty is None:
         print(f"Invalid difficulty: {difficulty}")
         return None
+
     # Search for the song name in the JSON data
     for song_id, song_data_list in json_data.items():
         # Iterate over each song data dictionary in the list
@@ -153,12 +213,21 @@ def song_unlock(file_path, song_info, json_data, lock_status, logger):
             # Access the songName attribute
             json_name = song_data['songName']
             if json_name == song_name:
-                if not lock_status:
-                    modify_mod_pv(file_path, song_id, converted_difficulty)
+                if not modded:
+                    if not lock_status:
+                        modify_mod_pv(file_path, song_id, converted_difficulty)
+                    else:
+                        #Used for relocking songs
+                        remove_song(file_path, song_id, converted_difficulty)
+                    return
                 else:
-                    #Used for relocking songs
-                    remove_song(file_path, song_id, converted_difficulty)
-                return
+                    if not lock_status:
+                        file_path += "/" + song_data['packName'] + "/rom/mod_pv_db.txt"
+                        modify_mod_pv(file_path, song_id, converted_difficulty)
+                    else:
+                        # Used for relocking songs
+                        remove_song(file_path, song_id, converted_difficulty)
+                    return
 
     # If the song is not found
     logger.info(f"Song '{song_name}' not found in the JSON data.")
@@ -187,22 +256,6 @@ def remove_song(file_path, song_id, difficulty):
         replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
 
     replace_line_with_text(file_path, search_text, replace_text)
-
-
-# Difficulty sorting
-def find_difficulty_rating(processed_data, pv_id, pv_difficulty):
-    """Find the difficulty rating for a specific song ID and difficulty."""
-    # Convert pv_difficulty from an integer to the corresponding string
-    difficulty_str = difficulty_to_string(pv_difficulty)
-    if not difficulty_str:
-        return None
-
-    # Search for the difficulty rating in the processed data
-    if pv_id in processed_data:
-        for song_data in processed_data[pv_id]:
-            if song_data['difficulty'] == difficulty_str:
-                return song_data['difficultyRating']
-    return None
 
 
 def difficulty_to_string(pv_difficulty):

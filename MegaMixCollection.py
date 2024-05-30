@@ -39,11 +39,22 @@ class MegaMixCollections:
         item_id_index = self.STARTING_CODE + 50
 
         json_data = load_json_file("songData.json")
+        modded_json_data = load_json_file("moddedData.json")
+
+        # Create a set of song IDs in modded_json_data for faster lookup
+        modded_song_ids = set()
+
+        for song_pack in modded_json_data:
+            for song in song_pack["songs"]:
+                modded_song_ids.add(int(song['songID']))
 
         for song in json_data:
             song_id = int(song['songID'])
+            # Assumes that modded song is a cover, skips base version
+            if song_id in modded_song_ids:
+                continue
             song_name = fix_song_name(song['songName'])  # Fix song name if needed
-            song_name = song_name + " " + song['difficulty'] + " " + song["difficultyRating"]
+            song_name = song_name + " " + song['difficulty']
             singers = song['singers']
             dlc = song['DLC'].lower() == "true"
             difficulty = song['difficulty']
@@ -51,6 +62,18 @@ class MegaMixCollections:
 
             self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, dlc, difficulty, difficulty_rating)
             item_id_index += 1
+
+        for song_pack in modded_json_data:
+            for song in song_pack["songs"]:
+                song_id = int(song['songID'])
+                song_name = fix_song_name(song['songName'])  # Fix song name if needed
+                song_name = song_name + " " + song['difficulty']
+                singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
+                difficulty = song['difficulty']
+                difficulty_rating = float(song["difficultyRating"])
+
+                self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, False, difficulty, difficulty_rating)
+                item_id_index += 1
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 

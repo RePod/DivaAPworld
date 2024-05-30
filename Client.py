@@ -12,9 +12,11 @@ from .DataHandler import (
     load_json_file,
     process_json_data,
     difficulty_to_string,
-    find_difficulty_rating,
     erase_song_list,
-    song_unlock
+    song_unlock,
+    generate_modded_paths,
+    create_copies,
+    restore_originals
 )
 
 from CommonClient import (
@@ -42,6 +44,12 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         """Removes already cleared songs from the in-game song list"""
         asyncio.create_task(self.ctx.remove_songs())
 
+    def _cmd_restore_mods(self):
+        """Restores modpacks to their original state for intended use"""
+        logger.info("Restoring..")
+        asyncio.create_task(self.ctx.restore_songs())
+        logger.info("Mod Packs Restored")
+
 
 class MegaMixContext(CommonContext):
     """MegaMix Game Context"""
@@ -53,9 +61,14 @@ class MegaMixContext(CommonContext):
 
         self.game = "Hatsune Miku Project Diva Mega Mix+"
         self.path = settings.get_settings()["megamix_options"]["mod_path"]
-        self.mod_pv = self.path + "/rom/mod_pv_db.txt"
-        self.songResultsLocation = self.path + "/results.json"
-        self.jsonData = process_json_data(load_zipped_json_file("songData.json", logger))
+        self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
+        self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
+        self.jsonData = process_json_data(load_zipped_json_file("songData.json", logger), False)
+        self.modData = process_json_data(load_zipped_json_file("moddedData.json", logger), True)
+
+        self.mod_pv_list = generate_modded_paths(self.modData, self.path)
+        create_copies(self.mod_pv_list)
+        self.mod_pv_list.append(self.mod_pv)
         self.previous_received = []
         self.sent_unlock_message = False
 
@@ -94,6 +107,7 @@ class MegaMixContext(CommonContext):
     def on_package(self, cmd: str, args: dict):
 
         if cmd == "Connected":
+
             self.sent_unlock_message = False
             self.leeks_obtained = 0
             self.missing_checks = args["missing_locations"]
@@ -105,6 +119,7 @@ class MegaMixContext(CommonContext):
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
+
 
             # if we dont have the seed name from the RoomInfo packet, wait until we do.
             while not self.seed_name:
@@ -132,7 +147,7 @@ class MegaMixContext(CommonContext):
             self.item_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["item_name_to_id"]
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
 
-            erase_song_list(self.mod_pv)
+            erase_song_list(self.mod_pv_list)
 
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item("package"))
@@ -144,6 +159,14 @@ class MegaMixContext(CommonContext):
             else:
                 # request after an item is obtained
                 asyncio.create_task(self.obtained_items_queue.put(args["locations"][0]))
+
+    def is_item_in_modded_data(self, item_name):
+        for song_id, song_data_list in self.modData.items():  # Use .items() to iterate over key-value pairs
+            for song_data in song_data_list:
+                song_item_name = song_data['songName'] + " " + song_data['difficulty']
+                if song_item_name == item_name:
+                    return True
+        return False
 
     async def receive_item(self, type):
         async with self.critical_section_lock:
@@ -159,14 +182,21 @@ class MegaMixContext(CommonContext):
                         self.leeks_obtained += 1
                         self.check_goal()
                     else:
-                        song_unlock(self.mod_pv, item_name, self.jsonData, False, logger)
+                        if self.is_item_in_modded_data(item_name):
+                            song_unlock(self.path, item_name, self.modData, False, True, logger)
+                        else:
+                            song_unlock(self.mod_pv, item_name, self.jsonData, False, False, logger)
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
                 self.sent_unlock_message = True
-            song_unlock(self.mod_pv, self.goal_song, self.jsonData, False, logger)
+            if self.is_item_in_modded_data(self.goal_song):
+                song_unlock(self.path, self.goal_song, self.modData, False, True, logger)
+            else:
+                song_unlock(self.mod_pv, self.goal_song, self.jsonData, False, False, logger)
+
 
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
@@ -195,9 +225,8 @@ class MegaMixContext(CommonContext):
                 logger.info("Cleared song with appropriate grade!")
                 # Construct location name
                 difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
-                difficulty_rating = find_difficulty_rating(self.jsonData, song_data.get('pvId'), song_data.get('pvDifficulty'))
                 song_name = fix_song_name(song_data.get('pvName'))
-                location_name = (song_name + " " + difficulty + " " + difficulty_rating)
+                location_name = (song_name + " " + difficulty)
                 if location_name == self.goal_song:
                     asyncio.create_task(
                         self.end_goal())
@@ -278,9 +307,15 @@ class MegaMixContext(CommonContext):
         # Check for matches
         for item in items_ending_with_0.intersection(items_ending_with_1):
             #Ignore the name, we are relocking it
-            song_unlock(self.mod_pv, item, self.jsonData, True, logger)
+            if self.is_item_in_modded_data(item):
+                song_unlock(self.path, item, self.modData, True, True, logger)
+            else:
+                song_unlock(self.mod_pv, item, self.jsonData, True, False, logger)
 
         logger.info("Removed songs!")
+
+    async def restore_songs(self):
+        restore_originals(self.mod_pv_list)
 
 
 
