@@ -4,21 +4,25 @@ from typing import Dict, List
 from collections import ChainMap
 import random
 
+
 def load_json_file(file_name: str) -> dict:
     """Import a JSON file from the package using pkgutil."""
 
     import pkgutil
     import json
     # Load the contents of the file
+
     file_contents = pkgutil.get_data(__name__, file_name)
 
-    # Decode the contents (assuming it's encoded as UTF-8)
-    decoded_contents = file_contents.decode('utf-8')
+    # Check if file_contents is not empty
+    if file_contents:
+        # Decode the contents (assuming it's encoded as UTF-8)
+        decoded_contents = file_contents.decode('utf-8').strip()
 
-    # Parse the JSON string into a Python dictionary
-    json_data = json.loads(decoded_contents)
-
-    return json_data
+        # Check if decoded_contents is not empty
+        if decoded_contents:  # Check if decoded_contents is not just whitespace
+            # Parse the JSON string into a Python dictionary
+            return json.loads(decoded_contents)
 
 
 class MegaMixCollections:
@@ -44,9 +48,10 @@ class MegaMixCollections:
         # Create a set of song IDs in modded_json_data for faster lookup
         modded_song_ids = set()
 
-        for song_pack in modded_json_data:
-            for song in song_pack["songs"]:
-                modded_song_ids.add(int(song['songID']))
+        if modded_json_data is not None:
+            for song_pack in modded_json_data:
+                for song in song_pack["songs"]:
+                    modded_song_ids.add(int(song['songID']))
 
         for song in json_data:
             song_id = int(song['songID'])
@@ -63,17 +68,18 @@ class MegaMixCollections:
             self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, dlc, difficulty, difficulty_rating)
             item_id_index += 1
 
-        for song_pack in modded_json_data:
-            for song in song_pack["songs"]:
-                song_id = int(song['songID'])
-                song_name = fix_song_name(song['songName'])  # Fix song name if needed
-                song_name = song_name + " " + song['difficulty']
-                singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
-                difficulty = song['difficulty']
-                difficulty_rating = float(song["difficultyRating"])
+        if modded_json_data is not None:
+            for song_pack in modded_json_data:
+                for song in song_pack["songs"]:
+                    song_id = int(song['songID'])
+                    song_name = fix_song_name(song['songName'])  # Fix song name if needed
+                    song_name = song_name + " " + song['difficulty']
+                    singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
+                    difficulty = song['difficulty']
+                    difficulty_rating = float(song["difficultyRating"])
 
-                self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, False, difficulty, difficulty_rating)
-                item_id_index += 1
+                    self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, False, difficulty, difficulty_rating)
+                    item_id_index += 1
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
