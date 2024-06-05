@@ -4,7 +4,6 @@ import colorama
 import os
 import json
 import time
-import re
 import settings
 from .SymbolFixer import fix_song_name
 from .DataHandler import (
@@ -16,9 +15,9 @@ from .DataHandler import (
     song_unlock,
     generate_modded_paths,
     create_copies,
-    restore_originals
+    restore_originals,
+    get_song_ids_by_locations
 )
-
 from CommonClient import (
     CommonContext,
     ClientCommandProcessor,
@@ -27,7 +26,6 @@ from CommonClient import (
     server_loop,
     gui_enabled,
 )
-
 from NetUtils import NetworkItem, ClientStatus
 
 
@@ -43,6 +41,10 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
     def _cmd_remove_cleared(self):
         """Removes already cleared songs from the in-game song list"""
         asyncio.create_task(self.ctx.remove_songs())
+
+    def _cmd_bk_freeplay(self):
+        """Restores songs that aren't part of this AP run, and cleared songs"""
+        asyncio.create_task(self.ctx.bk_freeplay())
 
     def _cmd_restore_mods(self):
         """Restores modpacks to their original state for intended use"""
@@ -63,8 +65,9 @@ class MegaMixContext(CommonContext):
         self.path = settings.get_settings()["megamix_options"]["mod_path"]
         self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
         self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
-        self.jsonData = process_json_data(load_zipped_json_file("songData.json", logger), False)
-        self.modData = process_json_data(load_zipped_json_file("moddedData.json", logger), True)
+        self.jsonData = process_json_data(load_zipped_json_file("songData.json"), False)
+        self.modData = process_json_data(load_zipped_json_file("moddedData.json"), True)
+        #self.modData = process_json_data(load_json_file(select_modded_file()), True)
 
         self.mod_pv_list = generate_modded_paths(self.modData, self.path)
         create_copies(self.mod_pv_list)
@@ -78,6 +81,7 @@ class MegaMixContext(CommonContext):
         self.location_ap_id_to_name = None
         self.item_name_to_ap_id = None
         self.item_ap_id_to_name = None
+        self.checks_per_song = 2
         self.found_checks = []
         self.missing_checks = []  # Stores all location checks found, for filtering
         self.prev_found = []
@@ -197,7 +201,6 @@ class MegaMixContext(CommonContext):
             else:
                 song_unlock(self.mod_pv, self.goal_song, self.jsonData, False, False, logger)
 
-
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
         file_path = os.path.join(os.path.dirname(__file__), file_name)
@@ -209,7 +212,7 @@ class MegaMixContext(CommonContext):
                 if modified != last_modified:
                     last_modified = modified
                     try:
-                        json_data = load_json_file(file_name, logger)
+                        json_data = load_json_file(file_name)
                         self.receive_location_check(json_data)
                     except (FileNotFoundError, json.JSONDecodeError) as e:
                         print(f"Error loading JSON file: {e}")
@@ -232,17 +235,13 @@ class MegaMixContext(CommonContext):
                         self.end_goal())
                     return
 
-                loc_1 = location_name + "-0"
-                loc_2 = location_name + "-1"
-                # Check if loc_1 and loc_2 exist in location_name_to_ap_id
-                if loc_1 in self.location_name_to_ap_id:
-                    self.found_checks.append(self.location_name_to_ap_id[loc_1])
-                else:
-                    logger.error(f"{loc_1} not found in location_name_to_ap_id. Skipping.")
-                if loc_2 in self.location_name_to_ap_id:
-                    self.found_checks.append(self.location_name_to_ap_id[loc_2])
-                else:
-                    logger.error(f"{loc_2} not found in location_name_to_ap_id. Skipping.")
+                for i in range(self.checks_per_song):
+                    loc_name = f"{location_name}-{i}"
+                    if loc_name in self.location_name_to_ap_id:
+                        self.found_checks.append(self.location_name_to_ap_id[loc_name])
+                    else:
+                        logger.error(f"{loc_name} not found in location_name_to_ap_id. Skipping.")
+
                 asyncio.create_task(
                     self.send_checks())
             else:
@@ -273,10 +272,8 @@ class MegaMixContext(CommonContext):
             prev_items.append(item_name)
 
         for location in self.missing_checks:
-            location_name = self.location_ap_id_to_name[location]
             #Change location name to match item name
-            if location_name.endswith(('-1', '-0')):
-                location_name = location_name[:-2]
+            location_name = self.location_ap_id_to_name[location][:-2]
             if location_name not in missing_locations:
                 if location_name in prev_items:
                     missing_locations.append(location_name)
@@ -292,31 +289,37 @@ class MegaMixContext(CommonContext):
 
     async def remove_songs(self):
 
-        # Create sets to store items ending with -0 and -1
-        items_ending_with_0 = set()
-        items_ending_with_1 = set()
+        num_suffixes = self.checks_per_song
 
-        # Iterate over the list and categorize items
+        # Create sets to store items ending with each suffix
+        suffix_items = [set() for _ in range(num_suffixes)]
+
+        # Iterate over the list and categorize items based on suffixes
         for item in self.prev_found:
             location_name = self.location_ap_id_to_name[item]
-            if location_name.endswith('-0'):
-                items_ending_with_0.add(location_name[:-2])  # Remove the suffix
-            elif location_name.endswith('-1'):
-                items_ending_with_1.add(location_name[:-2])  # Remove the suffix
+            for i in range(num_suffixes):
+                suffix = f"-{i}"
+                if location_name.endswith(suffix):
+                    suffix_items[i].add(location_name[:-2])  # Remove the suffix and add to the corresponding set
 
-        # Check for matches
-        for item in items_ending_with_0.intersection(items_ending_with_1):
-            #Ignore the name, we are relocking it
-            if self.is_item_in_modded_data(item):
-                song_unlock(self.path, item, self.modData, True, True, logger)
+        # Check for matches where all suffixes have been found
+        for common_item in set.intersection(*suffix_items):
+            if self.is_item_in_modded_data(common_item):
+                song_unlock(self.path, common_item, self.modData, True, True, logger)
             else:
-                song_unlock(self.mod_pv, item, self.jsonData, True, False, logger)
+                song_unlock(self.mod_pv, common_item, self.jsonData, True, False, logger)
 
         logger.info("Removed songs!")
 
+    async def bk_freeplay(self):
+
+        location_names = list(set([self.location_ap_id_to_name[location][:-2] for location in self.location_ids]))
+        location_names.append(self.goal_song)
+        get_song_ids_by_locations(location_names, self.jsonData, self.mod_pv_list)
+        logger.info("Restored non-AP songs!")
+
     async def restore_songs(self):
         restore_originals(self.mod_pv_list)
-
 
 
 def launch():

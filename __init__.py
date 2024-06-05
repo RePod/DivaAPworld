@@ -1,17 +1,20 @@
+#AP
 from worlds.AutoWorld import World
-from BaseClasses import Region, Item, ItemClassification, Entrance, Tutorial
-from typing import List, ClassVar, Type
-from math import floor
+from worlds.LauncherComponents import Component, components, Type, launch_subprocess
+from BaseClasses import Region, Item, ItemClassification, Entrance, Tutorial, MultiWorld
 from Options import PerGameCommonOptions
+import settings
 
+#Local
 from .Options import MegaMixOptions
 from .Items import MegaMixSongItem, MegaMixFixedItem
 from .Locations import MegaMixLocation
 from .MegaMixCollection import MegaMixCollections
-from worlds.LauncherComponents import Component, components, Type, launch_subprocess
 
-import settings
+#Python
 import typing
+from typing import List
+from math import floor
 
 
 def launch_client():
@@ -63,6 +66,7 @@ class MegaMixWorld(World):
     location_count: int
 
     def generate_early(self):
+
         (lower_diff_threshold, higher_diff_threshold) = self.get_difficulty_range()
         allowed_difficulties = self.get_available_difficulties()
 
@@ -73,7 +77,7 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, allowed_difficulties, lower_diff_threshold, higher_diff_threshold)
+            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.options.using_modded_songs, allowed_difficulties, lower_diff_threshold, higher_diff_threshold)
 
             available_song_keys = self.handle_plando(available_song_keys)
 
@@ -154,8 +158,7 @@ class MegaMixWorld(World):
 
     def create_item(self, name: str) -> Item:
         if name == self.mm_collection.LEEK_NAME:
-            return MegaMixFixedItem(name, ItemClassification.progression_skip_balancing,
-                                     self.mm_collection.LEEK_CODE, self.player)
+            return MegaMixFixedItem(name, ItemClassification.progression_skip_balancing, self.mm_collection.LEEK_CODE, self.player)
 
         song = self.mm_collection.song_items.get(name)
         return MegaMixSongItem(name, self.player, song)
@@ -225,11 +228,12 @@ class MegaMixWorld(World):
             self.multiworld.regions.append(region)
             song_select_region.connect(region, name, lambda state, place=name: state.has(place, self.player))
 
-            # Mega mix requires 2 locations per song to be *interesting*. Balanced out by filler.
-            region.add_locations({
-                    name + "-0": self.mm_collection.song_locations[name + "-0"],
-                    name + "-1": self.mm_collection.song_locations[name + "-1"]
-            }, MegaMixLocation)
+            locations = {}
+            for j in range(2):
+                location_name = f"{name}-{j}"
+                locations[location_name] = self.mm_collection.song_locations[location_name]
+
+            region.add_locations(locations, MegaMixLocation)
 
     def set_rules(self) -> None:
         self.multiworld.completion_condition[self.player] = lambda state: \
@@ -246,55 +250,28 @@ class MegaMixWorld(World):
         return max(1, floor(leek_count * multiplier))
 
     def get_difficulty_range(self) -> List[float]:
-
-        # This is ugly I know don't look at it
-        number_to_option_value = {
-            0: 1,
-            1: 1.5,
-            2: 2,
-            3: 2.5,
-            4: 3,
-            5: 3.5,
-            6: 4,
-            7: 4.5,
-            8: 5,
-            9: 5.5,
-            10: 6,
-            11: 6.5,
-            12: 7,
-            13: 7.5,
-            14: 8,
-            15: 8.5,
-            16: 9,
-            17: 9.5,
-            18: 10
-        }
-
         difficulty_rating = int(self.options.song_difficulty_rating)
 
-        # Valid difficulties are between 1 and 10.
-        difficulty_bounds = [1, 10]
+        # Generate the number_to_option_value dictionary using the formula
+        number_to_option_value = {i: 1 + i * 0.5 if i % 2 != 0 else int(1 + i * 0.5) for i in range(19)}
+
+        difficulty_bounds = [1, 10]  # Default difficulty range
+
         if difficulty_rating == 1:
-            difficulty_bounds[0] = 1
-            difficulty_bounds[1] = 4
+            difficulty_bounds = [1, 4]
         elif difficulty_rating == 2:
-            difficulty_bounds[0] = 4
-            difficulty_bounds[1] = 6
+            difficulty_bounds = [4, 6]
         elif difficulty_rating == 3:
-            difficulty_bounds[0] = 6
-            difficulty_bounds[1] = 8
+            difficulty_bounds = [6, 8]
         elif difficulty_rating == 4:
-            difficulty_bounds[0] = 7
-            difficulty_bounds[1] = 9
+            difficulty_bounds = [7, 9]
         elif difficulty_rating == 5:
-            difficulty_bounds[0] = 8
-            difficulty_bounds[1] = 10
+            difficulty_bounds = [8, 10]
         elif difficulty_rating == 6:
             minimum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_min, None)
             maximum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_max, None)
-
-            difficulty_bounds[0] = min(minimum_difficulty, maximum_difficulty)
-            difficulty_bounds[1] = max(minimum_difficulty, maximum_difficulty)
+            difficulty_bounds = [min(minimum_difficulty, maximum_difficulty),
+                                 max(minimum_difficulty, maximum_difficulty)]
 
         return difficulty_bounds
 
@@ -302,31 +279,14 @@ class MegaMixWorld(World):
         difficulty_choice = int(self.options.song_difficulty_mode)
         available_difficulties = []
 
-        difficulty_bounds = [0, 4]
-        minimum_difficulty = 0
-        maximum_difficulty = 4
-
-        if difficulty_choice == 1:
-            available_difficulties.append(0)
-        elif difficulty_choice == 2:
-            available_difficulties.append(1)
-        elif difficulty_choice == 3:
-            available_difficulties.append(2)
-        elif difficulty_choice == 4:
-            available_difficulties.append(3)
-        elif difficulty_choice == 5:
-            available_difficulties.append(4)
+        if difficulty_choice == 0:
+            available_difficulties.extend(range(5))  # Add difficulties 0 through 4
         elif difficulty_choice == 6:
-
-            minimum_difficulty = self.options.song_difficulty_min.value
-            maximum_difficulty = self.options.song_difficulty_max.value
-
-        if difficulty_choice == 0 or difficulty_choice == 6:
-            difficulty_bounds[0] = min(minimum_difficulty, maximum_difficulty)
-            difficulty_bounds[1] = max(minimum_difficulty, maximum_difficulty)
-
-            for difficulty in range(difficulty_bounds[0], difficulty_bounds[1] + 1):
-                available_difficulties.append(difficulty)
+            min_diff = min(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
+            max_diff = max(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
+            available_difficulties.extend(range(min_diff, max_diff + 1))
+        else:
+            available_difficulties.append(difficulty_choice - 1)
 
         return available_difficulties
 

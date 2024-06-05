@@ -26,6 +26,11 @@ class AdditionalSongs(Range):
     display_name = "Additional Song Count"
 
 
+class UsingModdedSongs(Toggle):
+    """Whether you are using modded songs or not."""
+    display_name = "Using Modded Songs"
+
+
 class DifficultyMode(Choice):
     """Ensures that at all songs have this difficulty available.
     - Any: Song can be beaten on any difficulty
@@ -201,6 +206,7 @@ class ExcludeSongs(ItemSet):
 @dataclass
 class MegaMixOptions(PerGameCommonOptions):
     allow_megamix_dlc_songs: AllowMegaMixDLCSongs
+    using_modded_songs: UsingModdedSongs
     starting_song_count: StartingSongs
     additional_song_count: AdditionalSongs
     song_difficulty_mode: DifficultyMode

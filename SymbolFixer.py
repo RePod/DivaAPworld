@@ -1,5 +1,64 @@
 import re
 
+def unicode_to_plain_text(text):
+    mapping = {
+        '＋': 'plus',
+        '♂': 'maleSign',
+        '♀': 'femaleSign',
+        '♠': 'spade',
+        '♣': 'club',
+        '♥': 'heart',
+        '♦': 'diamond',
+        '♪': 'musicalNote',
+        '♫': 'musicalNotes',
+        '☀': 'sun',
+        '☁': 'cloud',
+        '☂': 'umbrella',
+        '☃': 'snowman',
+        '☄': 'comet',
+        '★': 'star',
+        '☆': 'star',
+        '☎': 'telephone',
+        '☏': 'telephone',
+        '☑': 'checkBox',
+        '☒': 'checkBox',
+        '☞': 'pointingRight',
+        '☜': 'pointingLeft',
+        '☝': 'pointingUp',
+        '☟': 'pointingDown'
+        # Add more mappings for special characters here
+    }
+
+    special_characters = set(mapping.keys())
+
+    plain_text = []
+    word_buffer = ''
+
+    for char in text:
+        if char in special_characters:
+            if word_buffer:
+                plain_text.append(word_buffer)
+                word_buffer = ''
+            plain_text.append(mapping[char])
+        elif char.isalnum():
+            word_buffer += char
+        elif char.isspace():
+            if word_buffer:
+                plain_text.append(word_buffer)
+                word_buffer = ''
+            plain_text.append(' ')
+
+    # Add the last buffered word
+    if word_buffer:
+        plain_text.append(word_buffer)
+
+    return ''.join(plain_text)
+
+
+def replace_non_ascii_with_space(text):
+    return ''.join(char if ord(char) < 128 or char == '_' else ' ' for char in text)
+
+
 # Function to replace symbols in song names
 def replace_symbols(song_name):
     # Replace × with "x"
@@ -33,7 +92,6 @@ def replace_symbols(song_name):
     return song_name
 
 
-
 # List of offending song names
 offending_songs = [
     "Beware of the Miku Miku Germs♪",
@@ -62,8 +120,15 @@ offending_songs = [
     "Senbonzakura -F edition All Version-"
 ]
 
+
 # Function to fix song names if they are in the offending songs list
 def fix_song_name(song_name):
+
     if song_name in offending_songs:
         return replace_symbols(song_name)
-    return song_name
+
+    # Clean up for modded songs
+    cleaned_song_name = unicode_to_plain_text(song_name)  # Try to convert unicode to plain text
+    cleaned_song_name = replace_non_ascii_with_space(cleaned_song_name)  # After conversion, replace any remainders with blanks
+
+    return cleaned_song_name

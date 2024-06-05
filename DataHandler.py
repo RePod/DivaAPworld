@@ -3,10 +3,29 @@ import re
 import os
 import shutil
 from .SymbolFixer import fix_song_name
+import tkinter as tk
+from tkinter import filedialog
 
 
 # File Handling
-def load_zipped_json_file(file_name: str, logger) -> dict:
+def select_modded_file():
+    """
+    Opens a file dialog for the user to select a modded JSON file.
+
+    Returns:
+        str: Path of the selected modded JSON file, or None if no file selected.
+    """
+    # Create a Tkinter root window
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+
+    # Ask user to select a file
+    modded_file_path = filedialog.askopenfilename(title="Select Modded File", filetypes=[("JSON files", "*.json")])
+
+    return modded_file_path
+
+
+def load_zipped_json_file(file_name: str) -> dict:
     """Import a JSON file, either from a zipped package or directly from the filesystem."""
 
     try:
@@ -17,18 +36,18 @@ def load_zipped_json_file(file_name: str, logger) -> dict:
             decoded_contents = file_contents.decode('utf-8')
             return json.loads(decoded_contents)
     except Exception as e:
-        logger.error(f"Error loading zipped JSON file '{file_name}': {e}")
+        print(f"Error loading zipped JSON file '{file_name}': {e}")
 
     try:
         # Attempt to load the file directly from the filesystem
         with open(file_name, 'r', encoding='utf-8') as file:
             return json.load(file)
     except Exception as e:
-        logger.error(f"Error loading JSON file '{file_name}': {e}")
+        print(f"Error loading JSON file '{file_name}': {e}")
         return {}
 
 
-def load_json_file(file_name: str, logger) -> dict:
+def load_json_file(file_name: str) -> dict:
     """Import a JSON file, either from a zipped package or directly from the filesystem."""
 
     try:
@@ -36,7 +55,7 @@ def load_json_file(file_name: str, logger) -> dict:
         with open(file_name, 'r', encoding='utf-8') as file:
             return json.load(file)
     except Exception as e:
-        logger.error(f"Error loading JSON file '{file_name}': {e}")
+        print(f"Error loading JSON file '{file_name}': {e}")
         return {}
 
 
@@ -64,9 +83,13 @@ def create_copies(file_paths):
         # Create the full path for the new file
         new_file_path = os.path.join(directory, new_filename)
 
-        # Copy the file to the new path
-        shutil.copyfile(file_path, new_file_path)
-        print(f"Copied {file_path} to {new_file_path}")
+        # Check if the file already exists
+        if not os.path.exists(new_file_path):
+            # Copy the file to the new path
+            shutil.copyfile(file_path, new_file_path)
+            print(f"Copied {file_path} to {new_file_path}")
+        else:
+            print(f"File {new_file_path} already exists. Skipping...")
 
 
 def restore_originals(original_file_paths):
@@ -94,7 +117,6 @@ def process_json_data(json_data, modded):
             song_data = {
                 'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
                 'singers': entry.get('singers'),
-                'DLC': entry.get('DLC'),
                 'difficulty': entry.get('difficulty'),
                 'difficultyRating': entry.get('difficultyRating')
             }
@@ -135,6 +157,54 @@ def generate_modded_paths(processed_data, base_path):
     return list(modded_paths)
 
 
+def restore_song_list(file_paths, skip_ids):
+    skip_ids.extend(["144", "700", "701"])  # Append 144, 700, and 701 to the skip_ids list
+    for file_path in file_paths:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            modified_lines = []
+            for line in file:
+                if line.startswith("pv_"):
+                    song_numeric_id = re.search(r'pv_(\d+)', line)
+                    if song_numeric_id:
+                        song_numeric_id = song_numeric_id.group(1)
+                        if song_numeric_id in skip_ids:
+                            modified_lines.append(line)
+                            continue
+                        line = re.sub(r'(\.difficulty\.(easy|normal|hard)\.length)=\d+', r'\1=1', line)
+                        line = re.sub(r'(\.difficulty\.extreme\.length)=\d+', r'\1=2', line)
+                modified_lines.append(line)
+
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.writelines(modified_lines)
+
+
+def get_song_ids_by_locations(location_names, json_data, file_path):
+    import re
+    """Get song IDs based on a list of location names."""
+    song_ids = []
+    for location_name in location_names:
+        # Extract song name using regex
+        match = re.match(r'([^\[\]]+)', location_name)
+        if not match:
+            print(f"Invalid location name format: {location_name}")
+            continue
+
+        song_name = match.group(0).strip()
+        # Search for the song name in the JSON data
+        for song_id, song_data_list in json_data.items():
+            for song_data in song_data_list:
+                if song_data['songName'] == song_name:
+                    song_ids.append(song_id)
+
+        if not song_ids:
+            print(f"No songs found for location name '{location_name}'")
+
+    # Remove duplicates from song_ids
+    song_ids = list(set(str(id) for id in song_ids))
+    restore_song_list(file_path, song_ids)
+    return
+
+
 def erase_song_list(file_paths):
     difficulty_replacements = {
         "easy.length=1": "easy.length=0",
@@ -171,35 +241,30 @@ def replace_line_with_text(file_path, search_text, new_line):
         print(f"Error: Unable to decode file '{file_path}' with UTF-8 encoding.")
         return
 
-    # Find the line containing the search text
-    found = False
+    # Find and replace the line containing the search text
     for i, line in enumerate(lines):
         if search_text in line:
             lines[i] = new_line + '\n'
-            found = True
             break
-
-    # If the search text was not found, print an error and return
-    if not found:
+    else:
+        # If the search text was not found, print an error and return
         print(f"Error: '{search_text}' not found in the file.")
         return
 
     # Write the modified content back to the file
     with open(file_path, 'w', encoding='utf-8') as file:
-        file.write(''.join(lines))
+        file.writelines(lines)
 
 
 def song_unlock(file_path, song_info, json_data, lock_status, modded, logger):
     """Unlock a song based on its name and difficulty."""
     # Use regular expression to extract song name and difficulty
     match = re.match(r'([^\[\]]+)\s*\[(\w+)\]', song_info)
-    if match:
-        song_name = match.group(1).strip()
-        difficulty = match.group(2)
-    else:
+    if not match:
         logger.info("Invalid song info format.")
         return None
 
+    song_name, difficulty = match.group(1).strip(), match.group(2)
     converted_difficulty = convert_difficulty(f"[{difficulty.upper()}]")
 
     if converted_difficulty is None:
@@ -211,23 +276,14 @@ def song_unlock(file_path, song_info, json_data, lock_status, modded, logger):
         # Iterate over each song data dictionary in the list
         for song_data in song_data_list:
             # Access the songName attribute
-            json_name = song_data['songName']
-            if json_name == song_name:
-                if not modded:
-                    if not lock_status:
-                        modify_mod_pv(file_path, song_id, converted_difficulty)
-                    else:
-                        #Used for relocking songs
-                        remove_song(file_path, song_id, converted_difficulty)
-                    return
-                else:
-                    if not lock_status:
-                        file_path += "/" + song_data['packName'] + "/rom/mod_pv_db.txt"
-                        modify_mod_pv(file_path, song_id, converted_difficulty)
-                    else:
-                        # Used for relocking songs
-                        remove_song(file_path, song_id, converted_difficulty)
-                    return
+            if song_data['songName'] == song_name:
+                # Select the appropriate action based on lock status
+                action = modify_mod_pv if not lock_status else remove_song
+                if modded:
+                    file_path = f"{file_path}/{song_data['packName']}/rom/mod_pv_db.txt"
+                # Perform the action
+                action(file_path, song_id, converted_difficulty)
+                return
 
     # If the song is not found
     logger.info(f"Song '{song_name}' not found in the JSON data.")

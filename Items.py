@@ -9,6 +9,7 @@ class SongData(NamedTuple):
     songName: str
     singers: List[str]
     DLC: bool
+    modded: bool
     difficulty: Optional[str]
     difficultyRating: Optional[float]
 
