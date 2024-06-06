@@ -81,10 +81,10 @@ def replace_symbols(song_name):
         song_name = "Nostalogic"
 
     if song_name == "Senbonzakura -F edition All Version-":
-        song_name = "Senbonzakura -F edition-"
+        song_name = "Senbonzakura F edition"
 
     if song_name == "A Song of Wastelands, Forests, and Magic(Rin Ver.)" or song_name == "A Song of Wastelands, Forests, and Magic(Len Ver.)":
-        song_name = "A Song of Wastelands, Forests, and Magic"
+        song_name = "A Song of Wastelands Forests, and Magic"
 
     if song_name == "Song of Life(Rin Ver.)" or song_name == "Song of Life(Len Ver.)":
         song_name = "Song of Life"
