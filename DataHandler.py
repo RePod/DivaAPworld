@@ -25,23 +25,35 @@ def select_modded_file():
     return modded_file_path
 
 
+import json
+import pkgutil
+
+
 def load_zipped_json_file(file_name: str) -> dict:
     """Import a JSON file, either from a zipped package or directly from the filesystem."""
 
     try:
         # Attempt to load the file as a zipped resource
-        import pkgutil
         file_contents = pkgutil.get_data(__name__, file_name)
         if file_contents is not None:
             decoded_contents = file_contents.decode('utf-8')
-            return json.loads(decoded_contents)
+            if decoded_contents.strip():  # Check if the contents are not empty
+                return json.loads(decoded_contents)
+            else:
+               # print(f"Error: Zipped JSON file '{file_name}' is empty.")
+                return {}
     except Exception as e:
         print(f"Error loading zipped JSON file '{file_name}': {e}")
 
     try:
         # Attempt to load the file directly from the filesystem
         with open(file_name, 'r', encoding='utf-8') as file:
-            return json.load(file)
+            file_contents = file.read().strip()
+            if file_contents:  # Check if the file is not empty
+                return json.loads(file_contents)
+            else:
+                #print(f"Error: JSON file '{file_name}' is empty.")
+                return {}
     except Exception as e:
         print(f"Error loading JSON file '{file_name}': {e}")
         return {}
@@ -172,6 +184,9 @@ def restore_song_list(file_paths, skip_ids):
                             continue
                         line = re.sub(r'(\.difficulty\.(easy|normal|hard)\.length)=\d+', r'\1=1', line)
                         line = re.sub(r'(\.difficulty\.extreme\.length)=\d+', r'\1=2', line)
+                        # Only modify the line if it ends with an equals sign
+                        if re.match(r'(pv_\d+\.difficulty\.extreme\.0\.script_file_name)=$', line.strip()):
+                            line = f"pv_{song_numeric_id}.difficulty.extreme.0.script_file_name=rom/script/pv_{song_numeric_id}_extreme_0.dsc\n"
                 modified_lines.append(line)
 
         with open(file_path, 'w', encoding='utf-8') as file:
@@ -301,6 +316,17 @@ def modify_mod_pv(file_path, song_id, difficulty):
         replace_text += "1"
 
     replace_line_with_text(file_path, search_text, replace_text)
+
+    if difficulty == 'exExtreme':
+        # Disable regular extreme
+        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(song_id) + "_extreme.dsc"
+        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
+        replace_line_with_text(file_path, search_text, replace_text)
+    elif difficulty == 'extreme':
+        # Restore extreme
+        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
+        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(song_id) + "_extreme.dsc"
+        replace_line_with_text(file_path, search_text, replace_text)
 
 
 def remove_song(file_path, song_id, difficulty):
