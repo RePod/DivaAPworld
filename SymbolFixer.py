@@ -1,4 +1,5 @@
 import re
+from .Translator import transliterate
 
 def unicode_to_plain_text(text):
     mapping = {
@@ -129,6 +130,35 @@ def fix_song_name(song_name):
 
     # Clean up for modded songs
     cleaned_song_name = unicode_to_plain_text(song_name)  # Try to convert unicode to plain text
+    cleaned_song_name = transliterate(cleaned_song_name)
     cleaned_song_name = replace_non_ascii_with_space(cleaned_song_name)  # After conversion, replace any remainders with blanks
 
     return cleaned_song_name
+
+def main():
+    test_songs = [
+        "Beware of the Miku Miku Germs♪",
+        "Colorful × Melody",
+        "VOiCE -DIVA　MIX-",
+        "Clover♣Club",
+        "Luka Luka ★ Night Fever",
+        "Piano × Forte × Scandal",
+        "Starlite★Lydian",
+        "So Much Loving You★ -DIVA Edit-",
+        "Gothic and Loneliness ～I'm the very DIVA～",
+        "Monochrome∞Blue Sky",
+        "Negaposi＊Continues",
+        "Black★Rock Shooter",
+        "A Song of Wastelands, Forests, and Magic(Rin Ver.)",
+        "Song of Life(Len Ver.)",
+        "Senbonzakura -F edition All Version-",
+        "Regular Song Name",
+        "88☆彡"
+    ]
+
+    for song in test_songs:
+        fixed_song = fix_song_name(song)
+        print(f"Original: {song} -> Fixed: {fixed_song}")
+
+if __name__ == "__main__":
+    main()
