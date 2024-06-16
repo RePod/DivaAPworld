@@ -9,6 +9,7 @@ from collections import ChainMap
 
 from .DataHandler import (
     load_zipped_json_file,
+    load_all_modded_json_files
 )
 
 
@@ -23,17 +24,23 @@ class MegaMixCollections:
     song_locations: Dict[str, int] = {}
 
     def __init__(self) -> None:
-
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)
 
         item_id_index = self.STARTING_CODE + 50
 
         json_data = load_zipped_json_file("songData.json")
-        modded_json_data = load_zipped_json_file("moddedData.json")
+        modded_json_files = load_all_modded_json_files("./diva")
+
+        modded_song_ids = set()
+
         # Create a set of song IDs in modded_json_data for faster lookup
-        modded_song_ids = {int(song['songID']) for song_pack in modded_json_data for song in
-                           song_pack["songs"]} if modded_json_data else set()
+        for modded_json_data in modded_json_files:
+            for song_pack in modded_json_data["jsonData"]:
+                modded_song_ids.update(
+                    {int(song['songID']) for song in
+                     song_pack["songs"]}
+                )
 
         for song in json_data:
             song_id = int(song['songID'])
@@ -47,23 +54,23 @@ class MegaMixCollections:
             difficulty = song['difficulty']
             difficulty_rating = float(song["difficultyRating"])
 
-            self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, dlc, False, difficulty,
-                                                  difficulty_rating)
+            self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, dlc, False, "BaseGame", difficulty, difficulty_rating)
             item_id_index += 1
 
-        if modded_json_data is not None:
-            for song_pack in modded_json_data:
-                for song in song_pack["songs"]:
-                    song_id = int(song['songID'])
-                    song_name = fix_song_name(song['songName'])  # Fix song name if needed
-                    song_name = song_name + " " + song['difficulty']
-                    singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
-                    difficulty = song['difficulty']
-                    difficulty_rating = float(song["difficultyRating"])
+        if modded_json_files:
+            for modded_data in modded_json_files:
+                player = modded_data["filename_prefix"]
+                for jsonData in modded_data['jsonData']:
+                    for song in jsonData["songs"]:
+                        song_id = int(song['songID'])
+                        song_name = fix_song_name(song['songName'])  # Fix song name if needed
+                        song_name = song_name + " " + song['difficulty']
+                        singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
+                        difficulty = song['difficulty']
+                        difficulty_rating = float(song["difficultyRating"])
 
-                    self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, False, True,
-                                                          difficulty, difficulty_rating)
-                    item_id_index += 1
+                        self.song_items[song_name] = SongData(item_id_index, song_id, song_name, singers, False, True, player, difficulty, difficulty_rating)
+                        item_id_index += 1
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
@@ -76,9 +83,8 @@ class MegaMixCollections:
             # Increment location_id_index based on the number of items
             location_id_index += 2  # self.options.checks_per_song.value  # Increment by checks for each item
 
-    def get_songs_with_settings(self, dlc: bool, modded: bool, allowed_diff: List[int],
+    def get_songs_with_settings(self, dlc: bool, modded: bool, player_name: str, allowed_diff: List[int],
                                 diff_lower: float, diff_higher: float) -> List[str]:
-
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
 
@@ -91,6 +97,10 @@ class MegaMixCollections:
 
             #If song is a mod and player wants vanilla
             if songData.modded and not modded:
+                continue
+
+            #Skip modded song if not intended for this player
+            if songData.modded and songData.player != player_name:
                 continue
 
             song_id = songData.songID

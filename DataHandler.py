@@ -1,32 +1,24 @@
 import json
+import pkgutil
 import re
 import os
 import shutil
 from .SymbolFixer import fix_song_name
-import tkinter as tk
-from tkinter import filedialog
+from typing import Dict, List, Any
 
 
 # File Handling
-def select_modded_file():
-    """
-    Opens a file dialog for the user to select a modded JSON file.
 
-    Returns:
-        str: Path of the selected modded JSON file, or None if no file selected.
-    """
-    # Create a Tkinter root window
-    root = tk.Tk()
-    root.withdraw()  # Hide the root window
-
-    # Ask user to select a file
-    modded_file_path = filedialog.askopenfilename(title="Select Modded File", filetypes=[("JSON files", "*.json")])
-
-    return modded_file_path
-
-
-import json
-import pkgutil
+def load_all_modded_json_files(directory: str) -> List[Dict[str, Any]]:
+    """Loads all JSON files from the given directory and returns their content along with filenames"""
+    modded_data = []
+    for filename in os.listdir(directory):
+        if filename.endswith(".json"):
+            filepath = os.path.join(directory, filename)
+            data = load_json_file(filepath)
+            filename_prefix = os.path.splitext(filename)[0]
+            modded_data.append({"filename_prefix": filename_prefix, "jsonData": data})
+    return modded_data
 
 
 def load_zipped_json_file(file_name: str) -> dict:

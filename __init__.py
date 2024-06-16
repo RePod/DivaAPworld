@@ -77,7 +77,7 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.options.using_modded_songs, allowed_difficulties, lower_diff_threshold, higher_diff_threshold)
+            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.options.using_modded_songs, self.multiworld.get_player_name(self.player), allowed_difficulties, lower_diff_threshold, higher_diff_threshold)
 
             available_song_keys = self.handle_plando(available_song_keys)
 
