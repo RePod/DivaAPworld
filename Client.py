@@ -7,6 +7,7 @@ import time
 import settings
 from .SymbolFixer import fix_song_name
 from .DataHandler import (
+    select_json_file,
     load_zipped_json_file,
     load_json_file,
     process_json_data,
@@ -66,7 +67,7 @@ class MegaMixContext(CommonContext):
         self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
         self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
         self.jsonData = process_json_data(load_zipped_json_file("songData.json"), False)
-        self.modData = process_json_data(load_zipped_json_file("moddedData.json"), True)
+        self.modData = process_json_data(load_zipped_json_file(select_json_file()), True)
         #self.modData = process_json_data(load_json_file(select_modded_file()), True)
 
         self.mod_pv_list = generate_modded_paths(self.modData, self.path)

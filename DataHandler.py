@@ -3,11 +3,20 @@ import pkgutil
 import re
 import os
 import shutil
+import tkinter as tk
+from tkinter import filedialog
 from .SymbolFixer import fix_song_name
 from typing import Dict, List, Any
 
 
 # File Handling
+def select_json_file():
+    root = tk.Tk()
+    root.withdraw()
+    return filedialog.askopenfilename(
+        title="Select your modded JSON file",
+        filetypes=[("JSON files", "*.json")]
+    )
 
 def load_all_modded_json_files(directory: str) -> List[Dict[str, Any]]:
     """Loads all JSON files from the given directory and returns their content along with filenames"""
