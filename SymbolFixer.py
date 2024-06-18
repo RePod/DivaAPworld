@@ -132,5 +132,5 @@ def fix_song_name(song_name):
     cleaned_song_name = unicode_to_plain_text(song_name)  # Try to convert unicode to plain text
     cleaned_song_name = transliterate(cleaned_song_name)
     cleaned_song_name = replace_non_ascii_with_space(cleaned_song_name)  # After conversion, replace any remainders with blanks
-
+    cleaned_song_name = cleaned_song_name.rstrip()
     return cleaned_song_name
