@@ -53,7 +53,7 @@ DLC can be toggled on in the options.
 - On your first launch, the client should ask you to select your Diva archipelago mod install folder on steam (this can be changed later via the host.yaml file in your Archipelago base folder).
 - Connect to the room via the room URL.
 - Launch Mega Mix after connecting
-- If your song list in game has changed to the starting songs from archipelago, you're ready to go!
+- If your song list in game has changed to the starting songs from archipelago, you're ready to go! If not, try pressing the reload key and checking the song list again.
 
 ## Troubleshooting
 
