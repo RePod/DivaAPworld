@@ -3,7 +3,7 @@
 ## What Does Randomization do to this Game?
 - You will be given a number of starting songs. The number of which depends on your options.
 - Completing any song will give you 2 rewards.
-- The rewards for completing songs will songs, and **Leeks**.
+- The items you can receive are Leeks and Songs. You may receive duplicate songs, they are used as filler.
 
 ## What is the Goal of Mega Mix in Archipelago
 
