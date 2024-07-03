@@ -69,6 +69,7 @@ class MegaMixWorld(World):
 
         (lower_diff_threshold, higher_diff_threshold) = self.get_difficulty_range()
         allowed_difficulties = self.get_available_difficulties()
+        disallowed_singers = self.options.exclude_singers.value
 
         # The minimum amount of songs to make an ok rando would be Starting Songs + 10 interim songs + Goal song.
         # - Interim songs being equal to max starting song count.
@@ -77,8 +78,7 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.options.using_modded_songs, self.multiworld.get_player_name(self.player), allowed_difficulties, lower_diff_threshold, higher_diff_threshold)
-
+            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.options.using_modded_songs, self.player_name, allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
             available_song_keys = self.handle_plando(available_song_keys)
 
             count_needed_for_start = max(0, starter_song_count - len(self.starting_songs))

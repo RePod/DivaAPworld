@@ -190,18 +190,22 @@ class IncludeSongs(ItemSet):
     - Difficulty options will be skipped for these songs.
     - If there being too many included songs, songs will be randomly chosen without regard for difficulty.
     - If you want these songs immediately, use start_inventory instead.
-    IGNORE FOR NOW, THIS IS NOT IMPLEMENTED YET
     """
     verify_item_name = True
     display_name = "Include Songs"
 
 
 class ExcludeSongs(ItemSet):
-    """Any song listed here will be excluded from being a part of the seed.
-    IGNORE FOR NOW, THIS IS NOT IMPLEMENTED YET"""
+    """Any song listed here will be excluded from being a part of the seed."""
     verify_item_name = True
     display_name = "Exclude Songs"
 
+
+class ExcludeSinger(OptionSet):
+    """Songs including singers listed here will not be included. Does not affect any modded songs regardless.
+    Available Singers: Hatsune Miku, Kagamine Rin, Kagamine Len, Megurine Luka, KAITO, MEIKO"""
+    display_name = "Exclude Singer"
+    default = {}
 
 @dataclass
 class MegaMixOptions(PerGameCommonOptions):
@@ -220,3 +224,4 @@ class MegaMixOptions(PerGameCommonOptions):
     leek_win_count_percentage: LeekWinCountPercentage
     include_songs: IncludeSongs
     exclude_songs: ExcludeSongs
+    exclude_singers: ExcludeSinger

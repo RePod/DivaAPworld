@@ -83,14 +83,19 @@ class MegaMixCollections:
             # Increment location_id_index based on the number of items
             location_id_index += 2  # self.options.checks_per_song.value  # Increment by checks for each item
 
-    def get_songs_with_settings(self, dlc: bool, modded: bool, player_name: str, allowed_diff: List[int],
+    def get_songs_with_settings(self, dlc: bool, modded: bool, player_name: str, allowed_diff: List[int], disallowed_singer: List[str],
                                 diff_lower: float, diff_higher: float) -> List[str]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
 
         song_groups = {}
 
+        singer_found = False
+
         for songKey, songData in self.song_items.items():
+
+            singer_found = False
+
             # If song is DLC and DLC is disabled, skip song
             if songData.DLC and not dlc:
                 continue
@@ -102,6 +107,14 @@ class MegaMixCollections:
             #Skip modded song if not intended for this player
             if songData.modded and songData.player != player_name:
                 continue
+
+            #Skip song if disallowed singer is found
+            if not songData.modded:
+                for singer in disallowed_singer:
+                    if singer in songData.singers:
+                        singer_found = True
+                if singer_found:
+                    continue
 
             song_id = songData.songID
 
