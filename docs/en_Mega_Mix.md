@@ -21,6 +21,7 @@ DLC can be toggled on in the options.
 - ExPatch mod also recommended if you are unsure if you have all songs & difficulties unlocked: https://gamebanana.com/mods/388083
 - If you are unfamiliar with Diva modding, here's a helpful guide, I recommend the mod manager over manual: https://docs.google.com/document/d/1jvG_RGMe_FtlduvD8WwXdfA85I1O4Tde0DfRDM4aeWk/edit
 - To play AP with modded songs, follow this guide here: https://docs.google.com/document/d/17NwFcPzmt5fnXz0GBvrJTlF40fCNcv052kWpM0OQ66o/edit?usp=sharing
+- If using Eden Core, Eden Core must be at the end of the mod loading order after Archipelago.
 
 ### Useful Information
 
