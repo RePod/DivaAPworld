@@ -24,7 +24,7 @@ class MegaMixCollections:
     song_locations: Dict[str, int] = {}
     
     filler_item_names: Dict[str, int] = {
-        "SAFE": STARTING_CODE + 1,
+        "SAFE": STARTING_CODE - 1,
     }
     filler_item_weights: Dict[str, int] = {
         "SAFE": 1,
