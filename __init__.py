@@ -157,6 +157,7 @@ class MegaMixWorld(World):
         self.location_count = 2 * (len(self.starting_songs) + len(self.included_songs))
 
     def create_item(self, name: str) -> Item:
+
         if name == self.mm_collection.LEEK_NAME:
             return MegaMixFixedItem(name, ItemClassification.progression_skip_balancing, self.mm_collection.LEEK_CODE, self.player)
 

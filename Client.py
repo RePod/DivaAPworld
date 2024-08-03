@@ -16,6 +16,7 @@ from .DataHandler import (
     song_unlock,
     generate_modded_paths,
     create_copies,
+    another_song_replacement,
     restore_originals,
     get_song_ids_by_locations
 )
@@ -68,10 +69,10 @@ class MegaMixContext(CommonContext):
         self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
         self.jsonData = process_json_data(load_zipped_json_file("songData.json"), False)
         self.modData = process_json_data(load_zipped_json_file(select_json_file()), True)
-        #self.modData = process_json_data(load_json_file(select_modded_file()), True)
 
         self.mod_pv_list = generate_modded_paths(self.modData, self.path)
         create_copies(self.mod_pv_list)
+        another_song_replacement(self.mod_pv_list)
         self.mod_pv_list.append(self.mod_pv)
         self.previous_received = []
         self.sent_unlock_message = False
