@@ -52,7 +52,7 @@ DLC can be toggled on in the options.
 
 - Navigate to your archipelago base folder (default C:\ProgramData\Archipelago).
 - Run ArchipelagoLauncher.exe and click "Mega Mix Client".
-- On your first launch, the client should ask you to select your Diva archipelago mod install folder on steam (this can be changed later via the host.yaml file in your Archipelago base folder).
+- On your first launch, the client should ask you to select your Diva mod install folder (example: D:\SteamLibrary\steamapps\common\Hatsune Miku Project DIVA Mega Mix Plus) on steam (this can be changed later via the host.yaml file in your Archipelago base folder).
 - Connect to the room via the room URL.
 - Launch Mega Mix after connecting
 - If your song list in game has changed to the starting songs from archipelago, you're ready to go! If not, try pressing the reload key and checking the song list again.
