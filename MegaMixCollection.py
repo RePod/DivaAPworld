@@ -48,7 +48,7 @@ class MegaMixCollections:
             if song_id in modded_song_ids:
                 continue
             song_name = fix_song_name(song['songName'])  # Fix song name if needed
-            song_name = song_name + " " + song['difficulty']
+            song_name = song_name + " " + song['difficulty'] + " (" + str(song_id) + ")"
             singers = song['singers']
             dlc = song['DLC'].lower() == "true"
             difficulty = song['difficulty']
@@ -64,7 +64,7 @@ class MegaMixCollections:
                     for song in jsonData["songs"]:
                         song_id = int(song['songID'])
                         song_name = fix_song_name(song['songName'])  # Fix song name if needed
-                        song_name = song_name + " " + song['difficulty']
+                        song_name = song_name + " " + song['difficulty'] + " (" + str(song_id) + ")"
                         singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
                         difficulty = song['difficulty']
                         difficulty_rating = float(song["difficultyRating"])

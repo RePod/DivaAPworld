@@ -194,26 +194,17 @@ def restore_song_list(file_paths, skip_ids):
             file.writelines(modified_lines)
 
 
-def get_song_ids_by_locations(location_names, json_data, file_path):
+def get_song_ids_by_locations(location_names, file_path):
     import re
     """Get song IDs based on a list of location names."""
     song_ids = []
     for location_name in location_names:
         # Extract song name using regex
-        match = re.match(r'([^\[\]]+)', location_name)
+        match = re.search(r'\((\d+)\)', location_name)
         if not match:
             print(f"Invalid location name format: {location_name}")
             continue
-
-        song_name = match.group(0).strip()
-        # Search for the song name in the JSON data
-        for song_id, song_data_list in json_data.items():
-            for song_data in song_data_list:
-                if song_data['songName'] == song_name:
-                    song_ids.append(song_id)
-
-        if not song_ids:
-            print(f"No songs found for location name '{location_name}'")
+        song_ids.append(match.group(1))
 
     # Remove duplicates from song_ids
     song_ids = list(set(str(id) for id in song_ids))
@@ -315,37 +306,27 @@ def replace_line_with_text(file_path, search_text, new_line):
         file.writelines(lines)
 
 
-def song_unlock(file_path, song_info, json_data, lock_status, modded, logger):
+def song_unlock(file_path, song_info, json_data, lock_status, modded, song_pack, logger):
     """Unlock a song based on its name and difficulty."""
     # Use regular expression to extract song name and difficulty
-    match = re.match(r'([^\[\]]+)\s*\[(\w+)\]', song_info)
+    match = re.match(r'([^\[\]]+)\s*\[(\w+)\]\s*\((\d+)\)', song_info)
     if not match:
         logger.info("Invalid song info format.")
         return None
 
-    song_name, difficulty = match.group(1).strip(), match.group(2)
+    song_name, difficulty, song_id = match.group(1).strip(), match.group(2), match.group(3)
     converted_difficulty = convert_difficulty(f"[{difficulty.upper()}]")
 
     if converted_difficulty is None:
         print(f"Invalid difficulty: {difficulty}")
         return None
 
-    # Search for the song name in the JSON data
-    for song_id, song_data_list in json_data.items():
-        # Iterate over each song data dictionary in the list
-        for song_data in song_data_list:
-            # Access the songName attribute
-            if song_data['songName'] == song_name:
-                # Select the appropriate action based on lock status
-                action = modify_mod_pv if not lock_status else remove_song
-                if modded:
-                    file_path = f"{file_path}/{song_data['packName']}/rom/mod_pv_db.txt"
-                # Perform the action
-                action(file_path, song_id, converted_difficulty)
-                return
-
-    # If the song is not found
-    logger.info(f"Song '{song_name}' not found in the JSON data.")
+    # Select the appropriate action based on lock status
+    action = modify_mod_pv if not lock_status else remove_song
+    if modded:
+        file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
+    # Perform the action
+    action(file_path, int(song_id), converted_difficulty)
     return
 
 

@@ -169,7 +169,7 @@ class ScoreGradeNeeded(Choice):
 
 class LeekCountPercentage(Range):
     """Controls how many Leeks are added to the pool based on the number of songs, including starting songs.
-    Higher numbers leads to more consistent game lengths, but will cause individual music sheets to be less important.
+    Higher numbers leads to more consistent game lengths, but will cause individual leeks to be less important.
     """
     range_start = 10
     range_end = 40
@@ -182,7 +182,7 @@ class LeekWinCountPercentage(Range):
     range_start = 50
     range_end = 100
     default = 80
-    display_name = "Leeks Needed to Win"
+    display_name = "Leek Percentage Needed to Win"
 
 
 class IncludeSongs(ItemSet):
