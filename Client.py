@@ -196,7 +196,7 @@ class MegaMixContext(CommonContext):
                 if network_item not in self.previous_received:
                     self.previous_received.append(network_item)
                     if network_item.item == 1:
-                        self.leeks_obtained += 7
+                        self.leeks_obtained += 1
                         self.check_goal()
                     else:
                         if self.modded:
