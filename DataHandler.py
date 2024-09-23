@@ -5,11 +5,31 @@ import os
 import shutil
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 from .SymbolFixer import fix_song_name
 from typing import Dict, List, Any
-
+from collections import defaultdict
 
 # File Handling
+
+
+def ask_modded():
+    # Initialize the tkinter root window
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+
+    # Show a message box with a Yes/No question
+    result = messagebox.askyesno("Diva Mod Check", "Are you using modded songs?")
+
+    # Output the result in the console
+    if result:
+        return True
+
+    # Destroy the root window
+    root.destroy()
+    return False
+
+
 def select_json_file():
     root = tk.Tk()
     root.withdraw()
@@ -17,6 +37,7 @@ def select_json_file():
         title="Select your modded JSON file",
         filetypes=[("JSON files", "*.json")]
     )
+
 
 def load_all_modded_json_files(directory: str) -> List[Dict[str, Any]]:
     """Loads all JSON files from the given directory and returns their content along with filenames"""
@@ -194,24 +215,6 @@ def restore_song_list(file_paths, skip_ids):
             file.writelines(modified_lines)
 
 
-def get_song_ids_by_locations(location_names, file_path):
-    import re
-    """Get song IDs based on a list of location names."""
-    song_ids = []
-    for location_name in location_names:
-        # Extract song name using regex
-        match = re.search(r'\((\d+)\)', location_name)
-        if not match:
-            print(f"Invalid location name format: {location_name}")
-            continue
-        song_ids.append(match.group(1))
-
-    # Remove duplicates from song_ids
-    song_ids = list(set(str(id) for id in song_ids))
-    restore_song_list(file_path, song_ids)
-    return
-
-
 def erase_song_list(file_paths):
     difficulty_replacements = {
         "easy.length=1": "easy.length=0",
@@ -306,27 +309,18 @@ def replace_line_with_text(file_path, search_text, new_line):
         file.writelines(lines)
 
 
-def song_unlock(file_path, song_info, json_data, lock_status, modded, song_pack, logger):
-    """Unlock a song based on its name and difficulty."""
-    # Use regular expression to extract song name and difficulty
-    match = re.match(r'([^\[\]]+)\s*\[(\w+)\]\s*\((\d+)\)', song_info)
-    if not match:
-        logger.info("Invalid song info format.")
-        return None
+def song_unlock(file_path, item_id, lock_status, modded, song_pack):
+    """Unlock a song based on its id"""
 
-    song_name, difficulty, song_id = match.group(1).strip(), match.group(2), match.group(3)
-    converted_difficulty = convert_difficulty(f"[{difficulty.upper()}]")
-
-    if converted_difficulty is None:
-        print(f"Invalid difficulty: {difficulty}")
-        return None
+    song_id = int(item_id) // 10
+    difficulty = convert_difficulty(int(item_id) % 10)
 
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
     if modded:
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
     # Perform the action
-    action(file_path, int(song_id), converted_difficulty)
+    action(file_path, int(song_id), difficulty)
     return
 
 
@@ -365,25 +359,45 @@ def remove_song(file_path, song_id, difficulty):
     replace_line_with_text(file_path, search_text, replace_text)
 
 
-def difficulty_to_string(pv_difficulty):
-    """Convert difficulty integer to string representation."""
-    difficulty_map = {
-        0: '[EASY]',
-        1: '[NORMAL]',
-        2: '[HARD]',
-        3: '[EXTREME]',
-        4: '[EXEXTREME]'
-    }
-    return difficulty_map.get(pv_difficulty, None)
-
-
 def convert_difficulty(difficulty):
     """Convert difficulty string to lowercase."""
     difficulty_map = {
-        '[EASY]': 'easy',
-        '[NORMAL]': 'normal',
-        '[HARD]': 'hard',
-        '[EXTREME]': 'extreme',
-        '[EXEXTREME]': 'exExtreme'
+        0: 'easy',
+        2: 'normal',
+        4: 'hard',
+        6: 'extreme',
+        8: 'exExtreme'
     }
     return difficulty_map.get(difficulty, None)
+
+
+def find_linked_numbers(number_list):
+    grouped_numbers = defaultdict(list)
+
+    # Define the links between the last digits
+    link_map = {
+        0: 1, 1: 0,
+        2: 3, 3: 2,
+        4: 5, 5: 4,
+        6: 7, 7: 6,
+        8: 9, 9: 8
+    }
+
+    # Group numbers by their prefix (all but the last digit)
+    for num in number_list:
+        prefix = num // 10  # Get all but the last digit
+        last_digit = num % 10  # Get the last digit
+        grouped_numbers[prefix].append(last_digit)
+
+    # Now check for matches in each group
+    lower_numbers = set()  # Use a set to avoid duplicates
+
+    for prefix, last_digits in grouped_numbers.items():
+        # Check for linked pairs within the last digits
+        for digit in last_digits:
+            linked_digit = link_map.get(digit)
+            if linked_digit in last_digits:
+                # Only add the lower of the two numbers in the pair
+                lower_numbers.add(min(prefix * 10 + digit, prefix * 10 + linked_digit))
+
+    return list(lower_numbers)

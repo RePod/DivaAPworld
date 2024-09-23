@@ -26,14 +26,9 @@ class AdditionalSongs(Range):
     display_name = "Additional Song Count"
 
 
-class UsingModdedSongs(Toggle):
-    """Whether you are using modded songs or not."""
-    display_name = "Using Modded Songs"
-
-
 class DifficultyMode(Choice):
-    """Ensures that at all songs have this difficulty available.
-    - Any: Song can be beaten on any difficulty
+    """Difficulty Select, All songs will be of the selected difficulty (Manual allows a range, Any gives a random difficulty for each song)
+    - Any: Each song will be of a randomly chosen difficulty
     - Easy: Only Easy Charts
     - Normal: Only Normal Charts
     - Hard: Only Hard Charts
@@ -52,7 +47,6 @@ class DifficultyMode(Choice):
     default = 0
 
 
-# Todo: Investigate options to make this non randomizable
 class DifficultyModeOverrideMin(Choice):
     """Ensures that 1 difficulty has at least 1 this value or higher per song.
     - Difficulty Mode must be set to Manual."""
@@ -65,7 +59,6 @@ class DifficultyModeOverrideMin(Choice):
     default = 0
 
 
-# Todo: Investigate options to make this non randomizable
 class DifficultyModeOverrideMax(Choice):
     """Ensures that 1 difficulty has at least 1 this value or lower per song.
     - Difficulty Mode must be set to Manual."""
@@ -167,9 +160,10 @@ class ScoreGradeNeeded(Choice):
     default = 0
 
 
-class LeekCountPercentage(Range):
+class TotalLeeksAvailable(Range):
     """Controls how many Leeks are added to the pool based on the number of songs, including starting songs.
     Higher numbers leads to more consistent game lengths, but will cause individual leeks to be less important.
+    Range is a percentage.
     """
     range_start = 10
     range_end = 40
@@ -177,7 +171,7 @@ class LeekCountPercentage(Range):
     display_name = "Leek Percentage"
 
 
-class LeekWinCountPercentage(Range):
+class LeeksRequiredPercentage(Range):
     """The percentage of Leeks in the item pool that are needed to unlock the winning song."""
     range_start = 50
     range_end = 100
@@ -210,7 +204,6 @@ class ExcludeSinger(OptionSet):
 @dataclass
 class MegaMixOptions(PerGameCommonOptions):
     allow_megamix_dlc_songs: AllowMegaMixDLCSongs
-    using_modded_songs: UsingModdedSongs
     starting_song_count: StartingSongs
     additional_song_count: AdditionalSongs
     song_difficulty_mode: DifficultyMode
@@ -220,8 +213,8 @@ class MegaMixOptions(PerGameCommonOptions):
     song_difficulty_rating_min: DifficultyModeRatingOverrideMin
     song_difficulty_rating_max: DifficultyModeRatingOverrideMax
     grade_needed: ScoreGradeNeeded
-    leek_count_percentage: LeekCountPercentage
-    leek_win_count_percentage: LeekWinCountPercentage
+    leek_count_percentage: TotalLeeksAvailable
+    leek_win_count_percentage: LeeksRequiredPercentage
     include_songs: IncludeSongs
     exclude_songs: ExcludeSongs
     exclude_singers: ExcludeSinger

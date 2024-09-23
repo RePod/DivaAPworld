@@ -12,6 +12,8 @@ from .Locations import MegaMixLocation
 from .MegaMixCollection import MegaMixCollections
 
 #Python
+import re
+import random
 import typing
 from typing import List
 from math import floor
@@ -60,6 +62,7 @@ class MegaMixWorld(World):
 
     # Working Data
     victory_song_name: str = ""
+    victory_song_id: int
     starting_songs: List[str]
     included_songs: List[str]
     needed_token_count: int
@@ -78,7 +81,29 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.options.using_modded_songs, self.player_name, allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
+            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.player_name, allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
+
+            # Choose victory song from current available keys so we can access the song id
+            chosen_song_index = random.randrange(0, len(available_song_keys))
+            self.victory_song_name = available_song_keys[chosen_song_index]
+
+            difficulty_mapping = {
+                "[EASY]": 0,
+                "[NORMAL]": 2,
+                "[HARD]": 4,
+                "[EXTREME]": 6,
+                "[EXEXTREME]": 8
+            }
+
+            # Use regex to find the difficulty
+            match = re.search(r'\[(EASY|NORMAL|HARD|EXTREME|EXEXTREME)\]', self.victory_song_name)
+            if match:
+                difficulty_key = f"[{match.group(1)}]"
+                victory_difficulty_value = difficulty_mapping[difficulty_key]
+                self.victory_song_id = (int(song_ids[chosen_song_index]) * 10) + victory_difficulty_value
+
+            del available_song_keys[chosen_song_index]
+
             available_song_keys = self.handle_plando(available_song_keys)
 
             count_needed_for_start = max(0, starter_song_count - len(self.starting_songs))
@@ -122,23 +147,12 @@ class MegaMixWorld(World):
         # First, we must double check if the player has included too many guaranteed songs
         included_song_count = len(self.included_songs)
         if included_song_count > additional_song_count:
-            # If so, we want to thin the list, thus let's get the goal song and starter songs while we are at it.
+            # If so, we want to thin the list, thus let's get starter songs while we are at it.
             self.random.shuffle(self.included_songs)
-            self.victory_song_name = self.included_songs.pop()
             while len(self.included_songs) > additional_song_count:
                 next_song = self.included_songs.pop()
                 if len(self.starting_songs) < starting_song_count:
                     self.starting_songs.append(next_song)
-        else:
-            # If not, choose a random victory song from the available songs
-            chosen_song = self.random.randrange(0, len(available_song_keys) + included_song_count)
-            if chosen_song < included_song_count:
-                self.victory_song_name = self.included_songs[chosen_song]
-                del self.included_songs[chosen_song]
-            else:
-                self.victory_song_name = available_song_keys[chosen_song - included_song_count]
-                del available_song_keys[chosen_song - included_song_count]
-
         # Next, make sure the starting songs are fufilled
         if len(self.starting_songs) < starting_song_count:
             for _ in range(len(self.starting_songs), starting_song_count):
@@ -294,6 +308,7 @@ class MegaMixWorld(World):
     def fill_slot_data(self):
         return {
             "victoryLocation": self.victory_song_name,
+            "victoryID": self.victory_song_id,
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
         }

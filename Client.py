@@ -8,18 +8,19 @@ import settings
 import re
 from .SymbolFixer import fix_song_name
 from .DataHandler import (
+    ask_modded,
     select_json_file,
     load_zipped_json_file,
     load_json_file,
     process_json_data,
-    difficulty_to_string,
     erase_song_list,
     song_unlock,
     generate_modded_paths,
     create_copies,
     another_song_replacement,
     restore_originals,
-    get_song_ids_by_locations
+    restore_song_list,
+    find_linked_numbers
 )
 from CommonClient import (
     CommonContext,
@@ -69,11 +70,16 @@ class MegaMixContext(CommonContext):
         self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
         self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
         self.jsonData = process_json_data(load_zipped_json_file("songData.json"), False)
-        self.modData = process_json_data(load_zipped_json_file(select_json_file()), True)
+        self.modData = None
+        self.modded = False
+        self.mod_pv_list = []
+        if ask_modded():
+            self.modded = True
+            self.modData = process_json_data(load_zipped_json_file(select_json_file()), True)
+            self.mod_pv_list = generate_modded_paths(self.modData, self.path)
+            create_copies(self.mod_pv_list)
+            another_song_replacement(self.mod_pv_list)
 
-        self.mod_pv_list = generate_modded_paths(self.modData, self.path)
-        create_copies(self.mod_pv_list)
-        another_song_replacement(self.mod_pv_list)
         self.mod_pv_list.append(self.mod_pv)
         self.previous_received = []
         self.sent_unlock_message = False
@@ -93,6 +99,7 @@ class MegaMixContext(CommonContext):
         self.options = None
 
         self.goal_song = None
+        self.goal_id = None
         self.leeks_needed = None
         self.leeks_obtained = 0
         self.grade_needed = None
@@ -122,6 +129,7 @@ class MegaMixContext(CommonContext):
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
+            self.goal_id = self.options["victoryID"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
@@ -167,9 +175,8 @@ class MegaMixContext(CommonContext):
                 # request after an item is obtained
                 asyncio.create_task(self.obtained_items_queue.put(args["locations"][0]))
 
-    def is_item_in_modded_data(self, item_name):
-        match = re.match(r'([^\[\]]+)\s*\[(\w+)\]\s*\((\d+)\)', item_name)
-        target_song_id = int(match.group(3))
+    def is_item_in_modded_data(self, item_id):
+        target_song_id = int(item_id) // 10
 
         #If song id is found in modded data, return true
         if target_song_id in self.modData:
@@ -188,28 +195,34 @@ class MegaMixContext(CommonContext):
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
                     self.previous_received.append(network_item)
-                    item_name = self.item_ap_id_to_name[network_item.item]
-                    if item_name == "Leek":
-                        self.leeks_obtained += 1
+                    if network_item.item == 1:
+                        self.leeks_obtained += 7
                         self.check_goal()
                     else:
-                        found, song_pack = self.is_item_in_modded_data(item_name)
-                        if found:
-                            song_unlock(self.path, item_name, self.modData, False, True, song_pack, logger)
+                        if self.modded:
+                            found, song_pack = self.is_item_in_modded_data(network_item.item)
                         else:
-                            song_unlock(self.mod_pv, item_name, self.jsonData, False, False, song_pack, logger)
+                            found = False
+                            song_pack = None
+                        if found:
+                            song_unlock(self.path, network_item.item, False, True, song_pack)
+                        else:
+                            song_unlock(self.mod_pv, network_item.item, False, False, song_pack)
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
                 self.sent_unlock_message = True
-
-            found, song_pack = self.is_item_in_modded_data(self.goal_song)
-            if found:
-                song_unlock(self.path, self.goal_song, self.modData, False, True, song_pack, logger)
+            if self.modded:
+                found, song_pack = self.is_item_in_modded_data(self.goal_id)
             else:
-                song_unlock(self.mod_pv, self.goal_song, self.jsonData, False, False, song_pack, logger)
+                found = False
+                song_pack = None
+            if found:
+                song_unlock(self.path, self.goal_id, False, True, song_pack)
+            else:
+                song_unlock(self.mod_pv, self.goal_id, False, False, song_pack)
 
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
@@ -237,20 +250,15 @@ class MegaMixContext(CommonContext):
             if int(song_data.get('scoreGrade')) >= self.grade_needed:
                 logger.info("Cleared song with appropriate grade!")
                 # Construct location name
-                difficulty = difficulty_to_string(song_data.get('pvDifficulty'))
-                song_name = fix_song_name(song_data.get('pvName'))
-                location_name = (song_name + " " + difficulty + " (" + str(song_data.get('pvId')) + ")")
-                if location_name == self.goal_song:
+                difficulty = int(song_data.get('pvDifficulty')) * 2
+                location_id = (int(song_data.get('pvId')) * 10) + difficulty
+                if location_id == self.goal_id:
                     asyncio.create_task(
                         self.end_goal())
                     return
 
-                for i in range(self.checks_per_song):
-                    loc_name = f"{location_name}-{i}"
-                    if loc_name in self.location_name_to_ap_id:
-                        self.found_checks.append(self.location_name_to_ap_id[loc_name])
-                    else:
-                        logger.error(f"{loc_name} not found in location_name_to_ap_id. Skipping.")
+                for i in range(2):
+                    self.found_checks.append(location_id + i)
 
                 asyncio.create_task(
                     self.send_checks())
@@ -274,20 +282,30 @@ class MegaMixContext(CommonContext):
     async def get_uncleared(self):
 
         prev_items = []
-        missing_locations = []
+        missing_locations = set()  # Convert to set if it's not already
+        logged_pairs = set()  # To keep track of logged pairs
 
         # Get a list of all item names that have been received
         for network_item in self.previous_received:
-            item_name = self.item_ap_id_to_name[network_item.item]
-            prev_items.append(item_name)
+            item_id = network_item.item // 10
+            prev_items.append(item_id)
 
         for location in self.missing_checks:
-            #Change location name to match item name
-            location_name = self.location_ap_id_to_name[location][:-2]
-            if location_name not in missing_locations:
-                if location_name in prev_items:
-                    missing_locations.append(location_name)
-                    logger.info(location_name + " is uncleared")
+            # Change location name to match item name
+            if location not in missing_locations:
+                if location // 10 in prev_items:
+                    missing_locations.add(location)
+
+        # Now log pairs of locations
+        for location in missing_locations:
+            pair_last_digit = location % 2
+            paired_location = location - pair_last_digit + (1 - pair_last_digit)  # Flip last digit
+
+            # Only log if the pair hasn't been logged yet
+            pair_key = (min(location, paired_location), max(location, paired_location))
+            if pair_key not in logged_pairs:
+                logger.info(self.location_ap_id_to_name[location][:-2] + " is uncleared")
+                logged_pairs.add(pair_key)
 
         # Check if missingLocations is empty
         if not missing_locations:
@@ -298,35 +316,27 @@ class MegaMixContext(CommonContext):
         logger.info("You need " + str(self.leeks_needed) + " Leeks total to unlock the goal song " + self.goal_song)
 
     async def remove_songs(self):
-
-        num_suffixes = self.checks_per_song
-
-        # Create sets to store items ending with each suffix
-        suffix_items = [set() for _ in range(num_suffixes)]
-
-        # Iterate over the list and categorize items based on suffixes
-        for item in self.prev_found:
-            location_name = self.location_ap_id_to_name[item]
-            for i in range(num_suffixes):
-                suffix = f"-{i}"
-                if location_name.endswith(suffix):
-                    suffix_items[i].add(location_name[:-2])  # Remove the suffix and add to the corresponding set
+        finished_songs = find_linked_numbers(self.prev_found)
 
         # Check for matches where all suffixes have been found
-        for common_item in set.intersection(*suffix_items):
-            found, song_pack = self.is_item_in_modded_data(common_item)
-            if found:
-                song_unlock(self.path, common_item, self.modData, True, True, song_pack, logger)
+        for item in finished_songs:
+            if self.modded:
+                found, song_pack = self.is_item_in_modded_data(item)
             else:
-                song_unlock(self.mod_pv, common_item, self.jsonData, True, False, song_pack, logger)
+                found = False
+                song_pack = None
+            if found:
+                song_unlock(self.path, item, True, True, song_pack)
+            else:
+                song_unlock(self.mod_pv, item, True, False, song_pack)
 
         logger.info("Removed songs!")
 
     async def bk_freeplay(self):
 
-        location_names = list(set([self.location_ap_id_to_name[location][:-2] for location in self.location_ids]))
-        location_names.append(self.goal_song)
-        get_song_ids_by_locations(location_names, self.mod_pv_list)
+        song_ids = list(set(int(location) // 10 for location in self.location_ids))
+        song_ids.append(self.goal_id)
+        restore_song_list(self.mod_pv_list, song_ids)
         logger.info("Restored non-AP songs!")
 
     async def restore_songs(self):
