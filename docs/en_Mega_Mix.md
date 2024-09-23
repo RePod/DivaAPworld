@@ -18,11 +18,14 @@ DLC can be toggled on in the options.
 
 ### Modding Diva
 - Install the Archipelago mod, either manually or through the Diva Mod Manager, Mod can be found here: https://gamebanana.com/mods/514140
-- ExPatch mod also recommended if you are unsure if you have all songs & difficulties unlocked: https://gamebanana.com/mods/388083
+- If not using Diva Mod Manager, make sure to install Diva Mod Loader beforehand
+- ExPatch mod also required if you are unsure if you have all songs & difficulties unlocked: https://gamebanana.com/mods/388083
 - If you are unfamiliar with Diva modding, here's a helpful guide, I recommend the mod manager over manual: https://docs.google.com/document/d/1jvG_RGMe_FtlduvD8WwXdfA85I1O4Tde0DfRDM4aeWk/edit
 - To play AP with modded songs, follow this guide here: https://docs.google.com/document/d/17NwFcPzmt5fnXz0GBvrJTlF40fCNcv052kWpM0OQ66o/edit?usp=sharing
+
+###Eden Core Specifics (Modded)
 - If using Eden Core, Eden Core must be at the end of the mod loading order after Archipelago.
-- If using Eden Core, and it is included in your modded Json, it goes before Archipelago like other mods.
+- If using Eden Core, and it is included in your modded Json, it goes before Archipelago in the mod load order like other mods
 
 ### Useful Information
 
@@ -34,9 +37,10 @@ DLC can be toggled on in the options.
 - Download and install the latest archipelago release from the archipelago releases page.
 - Download megamix.apworld
 - Navigate to your archipelago installation (default C:\ProgramData\Archipelago).
-- Navigate to \lib\worlds under your archipelago base folder.
+- Navigate to custom_worlds under your archipelago base folder.
 - Move megamix.apworld into this folder.
 - Lastly, create a folder called "diva" in your Archipelago installation folder (default C:\ProgramData\Archipelago), this is used for modded songs, but the folder is required for generation
+- This folder is created automatically if generating without one, but if you are using modded songs it is recommended to create it beforehand since you will need to place your modded json in there
 
 ### Generating a game
 
@@ -53,6 +57,7 @@ DLC can be toggled on in the options.
 - Navigate to your archipelago base folder (default C:\ProgramData\Archipelago).
 - Run ArchipelagoLauncher.exe and click "Mega Mix Client".
 - On your first launch, the client should ask you to select your Diva mod install folder (example: D:\SteamLibrary\steamapps\common\Hatsune Miku Project DIVA Mega Mix Plus) on steam (this can be changed later via the host.yaml file in your Archipelago base folder).
+- If you are using modded songs in this run, select yes to the box pop up, then select your modded json file, if not then select no
 - Connect to the room via the room URL.
 - Launch Mega Mix after connecting
 - If your song list in game has changed to the starting songs from archipelago, you're ready to go! If not, try pressing the reload key and checking the song list again.
