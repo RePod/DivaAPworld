@@ -66,6 +66,11 @@ Hatsune Miku Project Diva Mega Mix+:
     'false': 50
     'true': 0
 
+  auto_remove_songs:
+    # If true, automatically removes cleared songs from the song list on refresh
+    'false': 50
+    'true': 0
+
   starting_song_count:
     # The number of songs that will be automatically unlocked at the start of a run.
     #

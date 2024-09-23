@@ -2,9 +2,15 @@ from typing import Dict
 from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions
 from dataclasses import dataclass
 
+
 class AllowMegaMixDLCSongs(Toggle):
     """Whether Extra Song Pack DLC Songs can be chosen as randomised songs."""
     display_name = "Allow Extra Song Pack DLC Songs"
+
+
+class AutoRemoveCleared(Toggle):
+    """If true, automatically removes cleared songs from the song list on refresh"""
+    display_name = "Auto Remove Songs"
 
 
 class StartingSongs(Range):
@@ -201,9 +207,11 @@ class ExcludeSinger(OptionSet):
     display_name = "Exclude Singer"
     default = {}
 
+
 @dataclass
 class MegaMixOptions(PerGameCommonOptions):
     allow_megamix_dlc_songs: AllowMegaMixDLCSongs
+    auto_remove_songs: AutoRemoveCleared
     starting_song_count: StartingSongs
     additional_song_count: AdditionalSongs
     song_difficulty_mode: DifficultyMode

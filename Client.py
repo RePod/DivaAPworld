@@ -100,6 +100,7 @@ class MegaMixContext(CommonContext):
 
         self.goal_song = None
         self.goal_id = None
+        self.autoRemove = False
         self.leeks_needed = None
         self.leeks_obtained = 0
         self.grade_needed = None
@@ -130,6 +131,9 @@ class MegaMixContext(CommonContext):
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
             self.goal_id = self.options["victoryID"]
+            self.autoRemove = self.options["autoRemove"]
+            if self.autoRemove:
+                asyncio.create_task(self.remove_songs())
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
@@ -188,9 +192,6 @@ class MegaMixContext(CommonContext):
 
     async def receive_item(self, type):
         async with self.critical_section_lock:
-
-            if not self.item_ap_id_to_name:
-                await self.wait_for_initial_connection_info()
 
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
@@ -267,6 +268,8 @@ class MegaMixContext(CommonContext):
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
+        if self.autoRemove:
+            await self.remove_songs()
         await self.send_msgs(message)
 
     async def send_checks(self):
@@ -274,6 +277,8 @@ class MegaMixContext(CommonContext):
         await self.send_msgs(message)
         self.remove_found_checks()
         self.found_checks.clear()
+        if self.autoRemove:
+            await self.remove_songs()
 
     def remove_found_checks(self):
         self.prev_found += self.found_checks

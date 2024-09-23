@@ -311,4 +311,5 @@ class MegaMixWorld(World):
             "victoryID": self.victory_song_id,
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
+            "autoRemove": bool(self.options.auto_remove_songs),
         }
