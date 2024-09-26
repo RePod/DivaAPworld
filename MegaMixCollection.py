@@ -35,10 +35,20 @@ class MegaMixCollections:
             "[EXEXTREME]": 8
         }
 
-        # Create diva folder if it doesn't exist
-        diva_path = "./diva"
-        if not os.path.exists(diva_path):
-            os.makedirs(diva_path)
+        # Define paths
+        archipelago_path = "../Archipelago"
+        diva_path = os.path.join(archipelago_path, "diva")
+
+        # Check if Archipelago folder exists
+        if os.path.exists(archipelago_path):
+            # Check if diva folder exists, if not create it
+            if not os.path.exists(diva_path):
+                os.makedirs(diva_path)
+                print(f"Created 'diva' folder in {archipelago_path}")
+            else:
+                print(f"'diva' folder already exists in {archipelago_path}")
+        else:
+            print("The 'Archipelago' folder does not exist.")
 
         json_data = load_zipped_json_file("songData.json")
         modded_json_files = load_all_modded_json_files(diva_path)
