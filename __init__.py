@@ -10,6 +10,7 @@ from .Options import MegaMixOptions
 from .Items import MegaMixSongItem, MegaMixFixedItem
 from .Locations import MegaMixLocation
 from .MegaMixCollection import MegaMixCollections
+from .DataHandler import get_player_specific_ids
 
 #Python
 import re
@@ -81,7 +82,7 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.player_name, allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
+            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.mod_data), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
 
             # Choose victory song from current available keys so we can access the song id
             chosen_song_index = random.randrange(0, len(available_song_keys))
@@ -144,7 +145,7 @@ class MegaMixWorld(World):
 
         self.random.shuffle(available_song_keys)
 
-        # First, we must double check if the player has included too many guaranteed songs
+        # First, we must double-check if the player has included too many guaranteed songs
         included_song_count = len(self.included_songs)
         if included_song_count > additional_song_count:
             # If so, we want to thin the list, thus let's get starter songs while we are at it.
@@ -197,7 +198,6 @@ class MegaMixWorld(World):
         items_left = self.location_count - item_count
         if items_left <= 0:
             return
-
         # All remaining spots are filled with duplicate songs. Duplicates are set to useful instead of progression
         # to cut down on the number of progression items that Mega mix puts into the pool.
 
@@ -246,6 +246,7 @@ class MegaMixWorld(World):
             locations = {}
             for j in range(2):
                 location_name = f"{name}-{j}"
+                print(location_name)
                 locations[location_name] = self.mm_collection.song_locations[location_name]
 
             region.add_locations(locations, MegaMixLocation)
@@ -312,4 +313,5 @@ class MegaMixWorld(World):
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),
+            "modData": str(self.options.mod_data),
         }

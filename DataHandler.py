@@ -3,54 +3,11 @@ import pkgutil
 import re
 import os
 import shutil
-import tkinter as tk
-from tkinter import filedialog
-from tkinter import messagebox
 from .SymbolFixer import fix_song_name
-from typing import Dict, List, Any
 from collections import defaultdict
 
+
 # File Handling
-
-
-def ask_modded():
-    # Initialize the tkinter root window
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window
-
-    # Show a message box with a Yes/No question
-    result = messagebox.askyesno("Diva Mod Check", "Are you using modded songs?")
-
-    # Output the result in the console
-    if result:
-        return True
-
-    # Destroy the root window
-    root.destroy()
-    return False
-
-
-def select_json_file():
-    root = tk.Tk()
-    root.withdraw()
-    return filedialog.askopenfilename(
-        title="Select your modded JSON file",
-        filetypes=[("JSON files", "*.json")]
-    )
-
-
-def load_all_modded_json_files(directory: str) -> List[Dict[str, Any]]:
-    """Loads all JSON files from the given directory and returns their content along with filenames"""
-    modded_data = []
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            filepath = os.path.join(directory, filename)
-            data = load_json_file(filepath)
-            filename_prefix = os.path.splitext(filename)[0]
-            modded_data.append({"filename_prefix": filename_prefix, "jsonData": data})
-    return modded_data
-
-
 def load_zipped_json_file(file_name: str) -> dict:
     """Import a JSON file, either from a zipped package or directly from the filesystem."""
 
@@ -62,7 +19,7 @@ def load_zipped_json_file(file_name: str) -> dict:
             if decoded_contents.strip():  # Check if the contents are not empty
                 return json.loads(decoded_contents)
             else:
-               # print(f"Error: Zipped JSON file '{file_name}' is empty.")
+                # print(f"Error: Zipped JSON file '{file_name}' is empty.")
                 return {}
     except Exception as e:
         print(f"Error loading zipped JSON file '{file_name}': {e}")
@@ -74,7 +31,6 @@ def load_zipped_json_file(file_name: str) -> dict:
             if file_contents:  # Check if the file is not empty
                 return json.loads(file_contents)
             else:
-                #print(f"Error: JSON file '{file_name}' is empty.")
                 return {}
     except Exception as e:
         print(f"Error loading JSON file '{file_name}': {e}")
@@ -91,18 +47,6 @@ def load_json_file(file_name: str) -> dict:
     except Exception as e:
         print(f"Error loading JSON file '{file_name}': {e}")
         return {}
-
-
-def load_external_text_file(file_path: str) -> str:
-    """Load a text file from outside the package."""
-    with open(file_path, 'r', encoding='utf-8') as file:
-        return file.read()
-
-
-def save_external_text_file(file_path: str, contents: str):
-    """Save modified contents to a text file outside the package."""
-    with open(file_path, 'w', encoding='utf-8') as file:
-        file.write(contents)
 
 
 def create_copies(file_paths):
@@ -141,53 +85,33 @@ def restore_originals(original_file_paths):
 
 
 # Data processing
-def process_json_data(json_data, modded):
+def process_json_data(json_data):
     """Process JSON data into a dictionary."""
     processed_data = {}
-    if not modded:
-        # Iterate over each entry in the JSON data
-        for entry in json_data:
-            song_id = int(entry.get('songID'))
-            song_data = {
-                'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
-                'singers': entry.get('singers'),
-                'difficulty': entry.get('difficulty'),
-                'difficultyRating': entry.get('difficultyRating')
-            }
+    # Iterate over each entry in the JSON data
+    for entry in json_data:
+        song_id = int(entry.get('songID'))
+        song_data = {
+            'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
+            'singers': entry.get('singers'),
+            'difficulty': entry.get('difficulty'),
+            'difficultyRating': entry.get('difficultyRating')
+        }
 
-            # Check if song ID already exists in the dictionary
-            if song_id in processed_data:
-                # If yes, append the new song data to the existing list
-                processed_data[song_id].append(song_data)
-            else:
-                # If no, create a new list with the song data
-                processed_data[song_id] = [song_data]
-    else:
-        for song_pack in json_data:
-            pack_name = song_pack.get('packName')
-            for entry in song_pack["songs"]:
-                song_id = int(entry.get('songID'))
-                song_data = {
-                    'packName': pack_name,
-                    'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
-                    'difficulty': entry.get('difficulty'),
-                    'difficultyRating': entry.get('difficultyRating')
-                }
-
-                # Check if song ID already exists in the dictionary
-                if song_id in processed_data:
-                    # If yes, append the new song data to the existing list
-                    processed_data[song_id].append(song_data)
-                else:
-                    # If no, create a new list with the song data
-                    processed_data[song_id] = [song_data]
+        # Check if song ID already exists in the dictionary
+        if song_id in processed_data:
+            # If yes, append the new song data to the existing list
+            processed_data[song_id].append(song_data)
+        else:
+            # If no, create a new list with the song data
+            processed_data[song_id] = [song_data]
 
     return processed_data
 
 
 def generate_modded_paths(processed_data, base_path):
-    unique_pack_names = {song['packName'] for songs in processed_data.values() for song in songs}
-    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_pack_names}
+    unique_song_packs = set(item["songPack"] for item in processed_data)
+    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_song_packs}
     return list(modded_paths)
 
 
@@ -231,7 +155,8 @@ def erase_song_list(file_paths):
 
         # Perform replacements
         for i, line in enumerate(file_data):
-            if line.startswith("pv_144") or line.startswith("pv_700") or line.startswith("pv_701"):  # Skip lines starting with "pv_144", and skip tutorial
+            if line.startswith("pv_144") or line.startswith("pv_700") or line.startswith(
+                    "pv_701"):  # Skip lines starting with "pv_144", and skip tutorial
                 continue
             for search_text, replace_text in difficulty_replacements.items():
                 file_data[i] = file_data[i].replace(search_text, replace_text)
@@ -313,7 +238,14 @@ def song_unlock(file_path, item_id, lock_status, modded, song_pack):
     """Unlock a song based on its id"""
 
     song_id = int(item_id) // 10
-    difficulty = convert_difficulty(int(item_id) % 10)
+
+    # Odd number = ID for cover song, so we need to remove 1
+    if (int(item_id) % 10) % 2 == 0:
+        real_diff = int(item_id) % 10
+    else:
+        real_diff = (int(item_id) % 10) - 1
+
+    difficulty = convert_difficulty(real_diff)
 
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
@@ -338,13 +270,17 @@ def modify_mod_pv(file_path, song_id, difficulty):
 
     if difficulty == 'exExtreme':
         # Disable regular extreme
-        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(song_id) + "_extreme.dsc"
+        search_text = "pv_" + '{:03d}'.format(
+            song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(
+            song_id) + "_extreme.dsc"
         replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
         replace_line_with_text(file_path, search_text, replace_text)
     elif difficulty == 'extreme':
         # Restore extreme
         search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
-        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(song_id) + "_extreme.dsc"
+        replace_text = "pv_" + '{:03d}'.format(
+            song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(
+            song_id) + "_extreme.dsc"
         replace_line_with_text(file_path, search_text, replace_text)
 
 
@@ -401,3 +337,30 @@ def find_linked_numbers(number_list):
                 lower_numbers.add(min(prefix * 10 + digit, prefix * 10 + linked_digit))
 
     return list(lower_numbers)
+
+
+def get_player_specific_ids(player_data):
+    # Return an empty list if the input data is empty
+
+    player_data = str(player_data)
+    if player_data == "ModData()":
+        return []
+
+    items = player_data.split('][')
+
+    # Clean up the first and last items by removing extra brackets if they exist
+    items[0] = items[0].lstrip('[')
+    items[-1] = items[-1].rstrip(']')
+
+    # Initialize a list to store the ids
+    ids = []
+
+    # Loop through each item
+    for item in items:
+        # Split the item by commas
+        elements = item.split(',')
+
+        # Extract the third element (ID) and convert to integer
+        ids.append(int(elements[2]))
+
+    return ids
