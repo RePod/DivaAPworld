@@ -5,11 +5,7 @@ import os
 import json
 import time
 import settings
-import re
-from .SymbolFixer import fix_song_name
 from .DataHandler import (
-    ask_modded,
-    select_json_file,
     load_zipped_json_file,
     load_json_file,
     process_json_data,
@@ -22,6 +18,9 @@ from .DataHandler import (
     restore_song_list,
     find_linked_numbers
 )
+
+from .JSONCreator import process_mod_data
+
 from CommonClient import (
     CommonContext,
     ClientCommandProcessor,
@@ -42,9 +41,9 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         """Tells you how many Leeks you have, and how many you need for the goal song"""
         asyncio.create_task(self.ctx.get_leek_info())
 
-    def _cmd_remove_cleared(self):
-        """Removes already cleared songs from the in-game song list"""
-        asyncio.create_task(self.ctx.remove_songs())
+    def _cmd_toggle_remove_cleared(self):
+        """Toggle to automatically remove already cleared songs from the in-game song list after a song clear"""
+        asyncio.create_task(self.ctx.toggle_remove_songs())
 
     def _cmd_bk_freeplay(self):
         """Restores songs that aren't part of this AP run, and cleared songs"""
@@ -69,18 +68,10 @@ class MegaMixContext(CommonContext):
         self.path = settings.get_settings()["megamix_options"]["mod_path"]
         self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
         self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
-        self.jsonData = process_json_data(load_zipped_json_file("songData.json"), False)
+        self.jsonData = process_json_data(load_zipped_json_file("songData.json"))
         self.modData = None
         self.modded = False
         self.mod_pv_list = []
-        if ask_modded():
-            self.modded = True
-            self.modData = process_json_data(load_zipped_json_file(select_json_file()), True)
-            self.mod_pv_list = generate_modded_paths(self.modData, self.path)
-            create_copies(self.mod_pv_list)
-            another_song_replacement(self.mod_pv_list)
-
-        self.mod_pv_list.append(self.mod_pv)
         self.previous_received = []
         self.sent_unlock_message = False
 
@@ -132,21 +123,25 @@ class MegaMixContext(CommonContext):
             self.goal_song = self.options["victoryLocation"]
             self.goal_id = self.options["victoryID"]
             self.autoRemove = self.options["autoRemove"]
-            if self.autoRemove:
-                asyncio.create_task(self.remove_songs())
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
+            self.modData = process_mod_data(str(self.options["modData"][8:]))
+            if self.modData:
+                self.modded = True
+            self.mod_pv_list = generate_modded_paths(self.modData, self.path)
+            create_copies(self.mod_pv_list)
+            another_song_replacement(self.mod_pv_list)
+            self.mod_pv_list.append(self.mod_pv)
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
-
-            # if we dont have the seed name from the RoomInfo packet, wait until we do.
+            # if we don't have the seed name from the RoomInfo packet, wait until we do.
             while not self.seed_name:
                 time.sleep(1)
 
         if cmd == "ReceivedItems":
             # If receiving an item, only append that item
-            asyncio.create_task(self.receive_item("single"))
+            asyncio.create_task(self.receive_item())
 
         if cmd == "RoomInfo":
             self.seed_name = args['seed_name']
@@ -167,9 +162,11 @@ class MegaMixContext(CommonContext):
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
 
             erase_song_list(self.mod_pv_list)
+            if self.autoRemove:
+                asyncio.create_task(self.remove_songs())
 
             # If receiving data package, resync previous items
-            asyncio.create_task(self.receive_item("package"))
+            asyncio.create_task(self.receive_item())
 
         elif cmd == "LocationInfo":
             if len(args["locations"]) > 1:
@@ -182,15 +179,13 @@ class MegaMixContext(CommonContext):
     def is_item_in_modded_data(self, item_id):
         target_song_id = int(item_id) // 10
 
-        #If song id is found in modded data, return true
-        if target_song_id in self.modData:
-            song_data = self.modData[target_song_id]
-            song_pack = song_data[0]['packName'] if song_data else None
-            return True, song_pack
-        else:
-            return False, None
+        for entry in self.modData:
+            if int(entry.get("songID")) == target_song_id:
+                song_pack = entry.get("songPack")
+                return True, song_pack
+        return False, None
 
-    async def receive_item(self, type):
+    async def receive_item(self):
         async with self.critical_section_lock:
 
             for network_item in self.items_received:
@@ -322,6 +317,15 @@ class MegaMixContext(CommonContext):
     async def get_leek_info(self):
         logger.info("You have " + str(self.leeks_obtained) + " Leeks")
         logger.info("You need " + str(self.leeks_needed) + " Leeks total to unlock the goal song " + self.goal_song)
+
+    async def toggle_remove_songs(self):
+        self.autoRemove = not self.autoRemove
+
+        if self.autoRemove:
+            logger.info("Auto Remove Set to On")
+            await self.remove_songs()
+        else:
+            logger.info("Auto Remove Set to Off")
 
     async def remove_songs(self):
         finished_songs = find_linked_numbers(self.prev_found)

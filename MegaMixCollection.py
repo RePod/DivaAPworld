@@ -1,16 +1,15 @@
 # Local
 from .Items import SongData
 from .SymbolFixer import fix_song_name
+from .JSONCreator import extract_mod_data_to_json
 
 # Python
 import random
-import os
 from typing import Dict, List, Tuple
 from collections import ChainMap
 
 from .DataHandler import (
     load_zipped_json_file,
-    load_all_modded_json_files
 )
 
 
@@ -41,40 +40,13 @@ class MegaMixCollections:
             "[EXTREME]": 6,
             "[EXEXTREME]": 8
         }
-
-        # Define paths
-        archipelago_path = "../Archipelago"
-        diva_path = os.path.join(archipelago_path, "diva")
-
-        # Check if Archipelago folder exists
-        if os.path.exists(archipelago_path):
-            # Check if diva folder exists, if not create it
-            if not os.path.exists(diva_path):
-                os.makedirs(diva_path)
-                print(f"Created 'diva' folder in {archipelago_path}")
-            else:
-                print(f"'diva' folder already exists in {archipelago_path}")
-        else:
-            print("The 'Archipelago' folder does not exist.")
-
         json_data = load_zipped_json_file("songData.json")
-        modded_json_files = load_all_modded_json_files(diva_path)
-
-        modded_song_ids = set()
-
-        # Create a set of song IDs in modded_json_data for faster lookup
-        for modded_json_data in modded_json_files:
-            for song_pack in modded_json_data["jsonData"]:
-                modded_song_ids.update(
-                    {int(song['songID']) for song in
-                     song_pack["songs"]}
-                )
+        mod_data = extract_mod_data_to_json("Players")
+        base_game_ids = set()
 
         for song in json_data:
             song_id = int(song['songID'])
-            # Assumes that modded song is a cover, skips base version
-            if song_id in modded_song_ids:
-                continue
+            base_game_ids.add(song_id)  # Get list of all base game ids
             song_name = fix_song_name(song['songName'])  # Fix song name if needed
             song_name = song_name + " " + song['difficulty']
             singers = song['singers']
@@ -84,31 +56,42 @@ class MegaMixCollections:
             # item_id = song_id x 10, ex: id 420 becomes 4200
             item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
 
-            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, "BaseGame", difficulty, difficulty_rating)
+            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, difficulty,
+                                                  difficulty_rating)
 
-        if modded_json_files:
-            for modded_data in modded_json_files:
-                player = modded_data["filename_prefix"]
-                for jsonData in modded_data['jsonData']:
-                    for song in jsonData["songs"]:
-                        song_id = int(song['songID'])
-                        song_name = fix_song_name(song['songName'])  # Fix song name if needed
-                        song_name = song_name + " " + song['difficulty']
-                        singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
-                        difficulty = song['difficulty']
-                        difficulty_rating = float(song["difficultyRating"])
-                        # item_id = song_id x 10, ex: id 420 becomes 4200
-                        item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
+        if mod_data:
+            for song in mod_data:
+                cover_song = False
+                song_id = int(song['songID'])
+                if song_id in base_game_ids:
+                    cover_song = True
+                song_name = fix_song_name(song['songName'])  # Fix song name if needed
+                song_name = song_name + " " + song['difficulty']
+                singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
+                difficulty = song['difficulty']
+                difficulty_rating = float(song["difficultyRating"])
+                # item_id = song_id x 10, ex: id 420 becomes 4200
+                if not cover_song:
+                    item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
+                else:
+                    item_id = (song_id * 10) + difficulty_mapping.get(difficulty,
+                                                                      "Difficulty not found") + 1  # Give cover songs the same ids but make it odd
 
-                        self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, player, difficulty, difficulty_rating)
+                self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, difficulty,
+                                                      difficulty_rating)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
         for song_name, song_data in self.song_items.items():
+            if song_data.code % 2 != 0:  # Fix code for covers
+                for i in range(2):
+                    self.song_locations[f"{song_name}-{i}"] = (song_data.code + i - 1)
+                continue
+
             for i in range(2):
                 self.song_locations[f"{song_name}-{i}"] = (song_data.code + i)
 
-    def get_songs_with_settings(self, dlc: bool, player_name: str, allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> Tuple[List[str], List[int]]:
+    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> Tuple[List[str], List[int]]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
         id_list = []
@@ -117,24 +100,27 @@ class MegaMixCollections:
         for songKey, songData in self.song_items.items():
 
             singer_found = False
+            song_id = songData.songID
 
             # If song is DLC and DLC is disabled, skip song
             if songData.DLC and not dlc:
                 continue
 
-            #Skip modded song if not intended for this player
-            if songData.modded and songData.player != player_name:
+            # Skip modded song if not intended for this player
+            if songData.modded and song_id not in mod_ids:
                 continue
 
-            #Skip song if disallowed singer is found
+            # Do not give base game version if modded cover available for this player
+            if not songData.modded and song_id in mod_ids:
+                continue
+
+            # Skip song if disallowed singer is found
             if not songData.modded:
                 for singer in disallowed_singer:
                     if singer in songData.singers:
                         singer_found = True
                 if singer_found:
                     continue
-
-            song_id = songData.songID
 
             # Check if a group for this songID already exists
             if song_id in song_groups:

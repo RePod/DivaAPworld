@@ -31,5 +31,6 @@ transliteration_map = {
     '雪': 'xue', '星': 'xing', '太阳': 'taiyang', '月亮': 'yueliang'
 }
 
+
 def transliterate(text):
     return ''.join(transliteration_map.get(char, char) for char in text)
