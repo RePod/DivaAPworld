@@ -39,8 +39,6 @@ DLC can be toggled on in the options.
 - Navigate to your archipelago installation (default C:\ProgramData\Archipelago).
 - Navigate to custom_worlds under your archipelago base folder.
 - Move megamix.apworld into this folder.
-- Lastly, create a folder called "diva" in your Archipelago installation folder (default C:\ProgramData\Archipelago), this is used for modded songs, but the folder is required for generation
-- This folder is created automatically if generating without one, but if you are using modded songs it is recommended to create it beforehand since you will need to place your modded json in there
 
 ### Generating a game
 
