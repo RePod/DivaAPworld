@@ -3,6 +3,7 @@ import pkgutil
 import re
 import os
 import shutil
+from pathlib import Path
 from .SymbolFixer import fix_song_name
 from collections import defaultdict
 
@@ -110,8 +111,29 @@ def process_json_data(json_data):
 
 
 def generate_modded_paths(processed_data, base_path):
-    unique_song_packs = set(item["songPack"] for item in processed_data)
-    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_song_packs}
+
+    base_path = Path(str(base_path))
+    # Get a list of all direct subfolders
+    subfolders = [f.name for f in base_path.iterdir() if f.is_dir()]
+
+    # Create a separate list with the processed names
+    processed_subfolders = [fix_song_name(name) for name in subfolders]
+
+    # Get cleaned song packs
+    unique_song_packs = set(fix_song_name(item["songPack"]) for item in processed_data)
+
+    # List to store original subfolder names that match processed song packs
+    matching_subfolders = []
+
+    # Iterate through processed subfolders and unique song packs
+    for processed_subfolder in processed_subfolders:
+        if processed_subfolder in unique_song_packs:
+            # Find the original subfolder name
+            original_subfolder = subfolders[processed_subfolders.index(processed_subfolder)]
+            matching_subfolders.append(original_subfolder)
+
+    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in matching_subfolders}
+
     return list(modded_paths)
 
 
@@ -247,10 +269,36 @@ def song_unlock(file_path, item_id, lock_status, modded, song_pack):
 
     difficulty = convert_difficulty(real_diff)
 
+    matching_subfolder = None
+
+    if modded:
+
+        base_path = Path(str(file_path))
+
+        # Get a list of all direct subfolders
+        subfolders = [f.name for f in base_path.iterdir() if f.is_dir()]
+
+        # Create a separate list with the processed names
+        processed_subfolders = [fix_song_name(name) for name in subfolders]
+
+        # Get cleaned pack name
+        song_pack = fix_song_name(song_pack)
+
+        # Find the original subfolder if the processed version matches
+
+        for original, processed in zip(subfolders, processed_subfolders):
+            if processed == song_pack:
+                matching_subfolder = original
+                break
+
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
     if modded:
-        file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
+        if matching_subfolder is not None:
+            file_path = f"{file_path}/{matching_subfolder}/rom/mod_pv_db.txt"
+        else:
+            print(f"Error: No match found for '{matching_subfolder}' in the mod folders.")
+
     # Perform the action
     action(file_path, int(song_id), difficulty)
     return

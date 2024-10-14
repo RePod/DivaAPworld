@@ -4,30 +4,6 @@ from typing import List, Dict, Any
 from .SymbolFixer import fix_song_name  # Use absolute import
 
 
-def sanitize_song_pack_name(song_pack: str) -> str:
-    """
-    Sanitizes the song pack name to make it safe for use as a Windows folder name.
-    Allows characters that are valid in Windows folder names, while removing some potentially dangerous characters.
-
-    Args:
-    song_pack (str): The original song pack name.
-
-    Returns:
-    str: The sanitized song pack name.
-    """
-    # Define allowed characters for Windows folder names
-    allowed_characters = r'[^a-zA-Z0-9 !#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~]'  # Spaces and common special characters allowed in folder names
-
-    # Remove illegal characters
-    sanitized_name = re.sub(allowed_characters, '', song_pack)
-
-    # Normalize whitespace: replace multiple spaces with a single space
-    sanitized_name = re.sub(r'\s+', ' ', sanitized_name).strip()
-
-    # Ensure it's not empty after sanitization
-    return sanitized_name if sanitized_name else "Untitled"
-
-
 def process_mod_data(mod_data_content: str) -> List[Dict[str, Any]]:
     """
     Processes the mod_data content and extracts song data.
@@ -67,7 +43,7 @@ def process_mod_data(mod_data_content: str) -> List[Dict[str, Any]]:
         if len(song_data) < 4:
             continue  # Skip if not enough data
 
-        song_pack = sanitize_song_pack_name(song_data[0].strip())
+        song_pack = fix_song_name(song_data[0].strip())
         song_name = song_data[1].strip()
         song_name = fix_song_name(song_name)  # Fix song name
         song_id = song_data[2].strip()

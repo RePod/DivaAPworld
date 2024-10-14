@@ -71,6 +71,18 @@ Hatsune Miku Project Diva Mega Mix+:
     'false': 50
     'true': 0
 
+  duplicate_song_percentage:
+    # Percentage of duplicate songs to place in remaining filler slots.
+    # Duplicate songs are considered Useful and thus out of logic.
+    #
+    # You can define additional values between the minimum and maximum values.
+    # Minimum value is 0
+    # Maximum value is 100
+    100: 50
+    random: 0
+    random-low: 0
+    random-high: 0
+
   starting_song_count:
     # The number of songs that will be automatically unlocked at the start of a run.
     #
@@ -242,6 +254,10 @@ Hatsune Miku Project Diva Mega Mix+:
   exclude_singers:
     # Songs including singers listed here will not be included. Does not affect any modded songs regardless.
     # Available Singers: Hatsune Miku, Kagamine Rin, Kagamine Len, Megurine Luka, KAITO, MEIKO
+    {}
+
+  mod_data:
+    # If you are using modded songs, paste the string from the DivaJSON Tool here
     {}
 
   # Item & Location Options

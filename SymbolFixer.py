@@ -61,6 +61,17 @@ def replace_non_ascii_with_space(text):
     return ''.join(char if ord(char) < 128 or char == '_' else ' ' for char in text)
 
 
+def special_char_removal(text):
+    # Remove apostrophes, commas, and quotation marks
+    cleaned_text = text.replace("'", "").replace(",", "").replace('"', "")
+
+    # Replace multiple spaces with a single space
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+
+    # Strip any leading or trailing spaces
+    return cleaned_text.strip()
+
+
 # Function to replace symbols in song names
 def replace_symbols(song_name):
     # Replace × with "x"
@@ -131,7 +142,7 @@ def fix_song_name(song_name):
     # Clean up for modded songs
     cleaned_song_name = unicode_to_plain_text(song_name)  # Try to convert unicode to plain text
     cleaned_song_name = transliterate(cleaned_song_name)
-    cleaned_song_name = replace_non_ascii_with_space(
-        cleaned_song_name)  # After conversion, replace any remainders with blanks
+    cleaned_song_name = replace_non_ascii_with_space(cleaned_song_name)  # After conversion, replace any remainders with blanks
+    cleaned_song_name = special_char_removal(cleaned_song_name)
     cleaned_song_name = cleaned_song_name.rstrip()
     return cleaned_song_name
