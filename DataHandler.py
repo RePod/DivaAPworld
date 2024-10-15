@@ -112,28 +112,10 @@ def process_json_data(json_data):
 
 def generate_modded_paths(processed_data, base_path):
 
-    base_path = Path(str(base_path))
-    # Get a list of all direct subfolders
-    subfolders = [f.name for f in base_path.iterdir() if f.is_dir()]
-
-    # Create a separate list with the processed names
-    processed_subfolders = [fix_song_name(name) for name in subfolders]
-
-    # Get cleaned song packs
-    unique_song_packs = set(fix_song_name(item["songPack"]) for item in processed_data)
-
-    # List to store original subfolder names that match processed song packs
-    matching_subfolders = []
-
-    # Iterate through processed subfolders and unique song packs
-    for processed_subfolder in processed_subfolders:
-        if processed_subfolder in unique_song_packs:
-            # Find the original subfolder name
-            original_subfolder = subfolders[processed_subfolders.index(processed_subfolder)]
-            matching_subfolders.append(original_subfolder)
-
-    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in matching_subfolders}
-
+    # Extract unique pack names from processed_data
+    unique_pack_names = {pack['packName'] for pack in processed_data}
+    # Create modded paths based on the unique pack names
+    modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_pack_names}
     return list(modded_paths)
 
 
@@ -260,45 +242,12 @@ def song_unlock(file_path, item_id, lock_status, modded, song_pack):
     """Unlock a song based on its id"""
 
     song_id = int(item_id) // 10
-
-    # Odd number = ID for cover song, so we need to remove 1
-    if (int(item_id) % 10) % 2 == 0:
-        real_diff = int(item_id) % 10
-    else:
-        real_diff = (int(item_id) % 10) - 1
-
-    difficulty = convert_difficulty(real_diff)
-
-    matching_subfolder = None
-
-    if modded:
-
-        base_path = Path(str(file_path))
-
-        # Get a list of all direct subfolders
-        subfolders = [f.name for f in base_path.iterdir() if f.is_dir()]
-
-        # Create a separate list with the processed names
-        processed_subfolders = [fix_song_name(name) for name in subfolders]
-
-        # Get cleaned pack name
-        song_pack = fix_song_name(song_pack)
-
-        # Find the original subfolder if the processed version matches
-
-        for original, processed in zip(subfolders, processed_subfolders):
-            if processed == song_pack:
-                matching_subfolder = original
-                break
+    difficulty = convert_difficulty(int(item_id) % 10)
 
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
     if modded:
-        if matching_subfolder is not None:
-            file_path = f"{file_path}/{matching_subfolder}/rom/mod_pv_db.txt"
-        else:
-            print(f"Error: No match found for '{matching_subfolder}' in the mod folders.")
-
+        file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
     # Perform the action
     action(file_path, int(song_id), difficulty)
     return
@@ -387,28 +336,31 @@ def find_linked_numbers(number_list):
     return list(lower_numbers)
 
 
-def get_player_specific_ids(player_data):
-    # Return an empty list if the input data is empty
+def get_player_specific_ids(raw_data):
 
-    player_data = str(player_data)
-    if player_data == "ModData()":
-        return []
+    raw_data = str(raw_data)
+    song_ids = []  # Initialize an empty list to store song IDs
 
-    items = player_data.split('][')
+    # Use regex to find all song packs and their song details
+    # This regex captures the pack name and song details in the format specified
+    pattern = r'\[([^\]]+)\:\[\[(.*?)\]\]\]'  # Matches the pack name and the songs
 
-    # Clean up the first and last items by removing extra brackets if they exist
-    items[0] = items[0].lstrip('[')
-    items[-1] = items[-1].rstrip(']')
+    # Find all matches of the pattern in the raw data
+    matches = re.findall(pattern, raw_data)
 
-    # Initialize a list to store the ids
-    ids = []
+    # Iterate over each match found
+    for pack_name, songs in matches:
+        # Split the songs based on the '], [' pattern to separate individual songs
+        song_entries = songs.split('], [')
 
-    # Loop through each item
-    for item in items:
-        # Split the item by commas
-        elements = item.split(',')
+        for song in song_entries:
+            # Clean up the song entry string
+            song = song.replace('[', '').replace(']', '').strip()  # Remove brackets and extra spaces
 
-        # Extract the third element (ID) and convert to integer
-        ids.append(int(elements[2]))
+            # Split the song details by comma
+            song_details = song.split(', ')
+            if len(song_details) > 1:  # Check if there's at least an ID present
+                song_id = int(song_details[1])  # Get the songID
+                song_ids.append(song_id)  # Append to the list
 
-    return ids
+    return song_ids  # Return the list of song IDs

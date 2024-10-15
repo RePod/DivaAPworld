@@ -5,6 +5,9 @@ from .JSONCreator import extract_mod_data_to_json
 
 # Python
 import random
+import Utils
+import json
+from Utils import user_path
 from typing import Dict, List, Tuple
 from collections import ChainMap
 
@@ -41,7 +44,7 @@ class MegaMixCollections:
             "[EXEXTREME]": 8
         }
         json_data = load_zipped_json_file("songData.json")
-        mod_data = extract_mod_data_to_json("Players")
+        mod_data = extract_mod_data_to_json(Utils.user_path("Players"))
         base_game_ids = set()
 
         for song in json_data:
@@ -56,29 +59,38 @@ class MegaMixCollections:
             # item_id = song_id x 10, ex: id 420 becomes 4200
             item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
 
-            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, difficulty,
-                                                  difficulty_rating)
+            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, difficulty, difficulty_rating)
 
         if mod_data:
-            for song in mod_data:
-                cover_song = False
-                song_id = int(song['songID'])
-                if song_id in base_game_ids:
-                    cover_song = True
-                song_name = fix_song_name(song['songName'])  # Fix song name if needed
-                song_name = song_name + " " + song['difficulty']
-                singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
-                difficulty = song['difficulty']
-                difficulty_rating = float(song["difficultyRating"])
-                # item_id = song_id x 10, ex: id 420 becomes 4200
-                if not cover_song:
-                    item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
-                else:
-                    item_id = (song_id * 10) + difficulty_mapping.get(difficulty,
-                                                                      "Difficulty not found") + 1  # Give cover songs the same ids but make it odd
+            unique_pack_names = set()  # Set to track unique pack names
+            # Iterate through the outer list
+            for pack_list in mod_data:
+                # Iterate through the inner list
+                for pack in pack_list:
+                    pack_name = pack['packName']  # Assuming 'packName' is the key for the pack name
+                    if pack_name not in unique_pack_names:
+                        unique_pack_names.add(pack_name)  # Add the unique pack name to the set
+                    else:
+                        continue
+                    for song in pack['songs']:
+                        cover_song = False
+                        song_id = int(song['songID'])
+                        if song_id in base_game_ids:
+                            cover_song = True
+                        song_name = fix_song_name(song['songName'])  # Fix song name if needed
+                        song_name = song_name + " " + song['difficulty']
+                        singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
+                        difficulty = song['difficulty']
+                        difficulty_rating = float(song["difficultyRating"])
 
-                self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, difficulty,
-                                                      difficulty_rating)
+                        # Calculate item_id
+                        if not cover_song:
+                            item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
+                        else:
+                            item_id = (song_id * 10) + difficulty_mapping.get(difficulty,
+                                                                              "Difficulty not found") + 1  # Make cover songs odd
+
+                        self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, difficulty, difficulty_rating)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 

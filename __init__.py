@@ -259,7 +259,6 @@ class MegaMixWorld(World):
             locations = {}
             for j in range(2):
                 location_name = f"{name}-{j}"
-                print(location_name)
                 locations[location_name] = self.mm_collection.song_locations[location_name]
 
             region.add_locations(locations, MegaMixLocation)

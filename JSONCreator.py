@@ -1,74 +1,10 @@
+import json
 import re
 import os
-from typing import List, Dict, Any
 from .SymbolFixer import fix_song_name  # Use absolute import
 
 
-def process_mod_data(mod_data_content: str) -> List[Dict[str, Any]]:
-    """
-    Processes the mod_data content and extracts song data.
-
-    Args:
-    mod_data_content (str): The content of the mod_data section as a string.
-
-    Returns:
-    List[Dict[str, Any]]: List of dictionaries containing the extracted mod data.
-    """
-    # Define the difficulties mapping
-    difficulties = ["[EASY]", "[NORMAL]", "[HARD]", "[EXTREME]", "[EXEXTREME]"]
-
-    # List to store the generated JSON entries
-    json_entries = []
-
-    # Split the mod_data content into individual song entries
-    song_entries = mod_data_content.split(']')  # Split by ']' to separate entries
-    song_entries = [entry.strip() for entry in song_entries if entry.strip()]  # Remove empty entries
-
-    # Process each song entry
-    for song_entry in song_entries:
-
-        if not len(song_entry.strip()) > 1:
-            continue
-        # Remove any leading bracket or special characters
-        if song_entry.startswith('"['):
-            song_entry = song_entry[2:]
-        # Remove any leading bracket or special characters
-        elif song_entry.startswith('['):
-            song_entry = song_entry[1:]
-
-        # Split the cleaned song entry by commas
-        song_data = song_entry.split(',')
-
-        # Extract song pack, name, ID, and difficulties
-        if len(song_data) < 4:
-            continue  # Skip if not enough data
-
-        song_pack = fix_song_name(song_data[0].strip())
-        song_name = song_data[1].strip()
-        song_name = fix_song_name(song_name)  # Fix song name
-        song_id = song_data[2].strip()
-        difficulty_ratings = song_data[3:]  # All the difficulty ratings (Easy to ExExtreme)
-
-        # Loop through difficulties and generate JSON if a difficulty exists
-        for i, rating in enumerate(difficulty_ratings):
-            rating = rating.strip()
-            if rating != "0":  # If the difficulty exists (not 0)
-                difficulty_label = difficulties[i]
-
-                # Create a JSON entry
-                json_entry = {
-                    "songPack": song_pack,
-                    "songID": song_id,
-                    "songName": song_name,
-                    "difficulty": difficulty_label,
-                    "difficultyRating": rating
-                }
-                json_entries.append(json_entry)
-
-    return json_entries  # Return the list of dictionaries
-
-
-def extract_mod_data_to_json(folder_path: str) -> List[Dict[str, Any]]:
+def extract_mod_data_to_json(folder_path: str):
     """
     Extracts mod data from a YAML file and converts it to a list of dictionaries.
 
@@ -87,8 +23,8 @@ def extract_mod_data_to_json(folder_path: str) -> List[Dict[str, Any]]:
     # Regex pattern to capture content inside 'mod_data' block
     mod_data_pattern = re.compile(r"mod_data:\s*#.*?\n\s*{([^}]*)}", re.DOTALL)
 
-    # List to store the generated JSON entries
-    json_entries = []
+    # Initialize an empty list to collect all JSON outputs
+    all_mod_data = []
 
     for item in os.listdir(folder_path):
         item_path = os.path.join(folder_path, item)
@@ -106,7 +42,53 @@ def extract_mod_data_to_json(folder_path: str) -> List[Dict[str, Any]]:
                         # Extract content inside mod_data block
                         mod_data_content = match.group(1).strip()
 
-                        # Process the mod_data content
-                        json_entries.extend(process_mod_data(mod_data_content))
+                        if mod_data_content == "":
+                            continue
 
-    return json_entries  # Return the list of dictionaries
+                        # Process the mod_data content
+                        output = convert_to_json(mod_data_content)
+
+                        # Append the resulting dictionary to the list
+                        all_mod_data.append(output)
+
+    return all_mod_data  # Return the list of json data
+
+
+def convert_to_json(data_string):
+    output = []
+
+    # Remove leading and trailing whitespace and any surrounding brackets
+    pack_data = data_string.strip()[1:-1].split('][')
+
+    for pack in pack_data:
+        # Remove leading and trailing whitespace from each pack
+        pack = pack.strip()
+
+        # Split by the first colon to separate the pack name and songs data
+        pack_info = pack.split(':', 1)  # Split only once to avoid issues with colons in song names
+        if len(pack_info) != 2:
+            continue  # Skip malformed packs
+
+        # Clean up the pack name to remove any unwanted characters
+        pack_name = pack_info[0].strip().strip('["')  # Remove any leading '[' or '"'
+
+        # Clean up songs data
+        songs_data = pack_info[1].strip()[1:-1].strip()  # Strip outer brackets
+
+        # Prepare the songs list
+        songs_list = [
+            {
+                "songID": song_info[1],
+                "songName": fix_song_name(song_info[0]),
+                "difficulty": diffs,
+                "difficultyRating": str(int(rating)) if rating.is_integer() else str(rating)
+            }
+            for song in (songs_data.split('], [') if '], [' in songs_data else [songs_data])
+            for song_info in [song.strip().strip('[]').split(', ')]
+            for i, (rating, diffs) in enumerate(zip(map(float, song_info[2:]), ["[EASY]", "[NORMAL]", "[HARD]", "[EXTREME]", "[EXEXTREME]"]))
+            if i < len(diffs) and rating != 0
+        ]
+
+        output.append({"packName": pack_name, "songs": songs_list})
+
+    return output

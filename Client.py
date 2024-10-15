@@ -19,7 +19,7 @@ from .DataHandler import (
     find_linked_numbers
 )
 
-from .JSONCreator import process_mod_data
+from .JSONCreator import convert_to_json
 
 from CommonClient import (
     CommonContext,
@@ -125,7 +125,7 @@ class MegaMixContext(CommonContext):
             self.autoRemove = self.options["autoRemove"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
-            self.modData = process_mod_data(str(self.options["modData"][8:]))
+            self.modData = convert_to_json(str(self.options["modData"])[8:])
             if self.modData:
                 self.modded = True
             self.mod_pv_list = generate_modded_paths(self.modData, self.path)
@@ -179,10 +179,11 @@ class MegaMixContext(CommonContext):
     def is_item_in_modded_data(self, item_id):
         target_song_id = int(item_id) // 10
 
-        for entry in self.modData:
-            if int(entry.get("songID")) == target_song_id:
-                song_pack = entry.get("songPack")
-                return True, song_pack
+        for pack in self.modData:  # Iterate through each pack
+            for song in pack['songs']:  # Iterate through each song in the pack
+                if int(song.get("songID")) == target_song_id:
+                    song_pack = pack.get("packName")  # Get the pack name
+                    return True, song_pack  # Return True and the song pack name
         return False, None
 
     async def receive_item(self):
