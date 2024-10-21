@@ -16,10 +16,9 @@ from .DataHandler import (
     another_song_replacement,
     restore_originals,
     restore_song_list,
-    find_linked_numbers
+    find_linked_numbers,
+    get_dict
 )
-
-from .JSONCreator import convert_to_json
 
 from CommonClient import (
     CommonContext,
@@ -125,12 +124,12 @@ class MegaMixContext(CommonContext):
             self.autoRemove = self.options["autoRemove"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
-            self.modData = convert_to_json(str(self.options["modData"])[8:])
+            self.modData = get_dict(self.options["modData"], True)
             if self.modData:
                 self.modded = True
-            self.mod_pv_list = generate_modded_paths(self.modData, self.path)
-            create_copies(self.mod_pv_list)
-            another_song_replacement(self.mod_pv_list)
+                self.mod_pv_list = generate_modded_paths(self.modData, self.path)
+                create_copies(self.mod_pv_list)
+                another_song_replacement(self.mod_pv_list)
             self.mod_pv_list.append(self.mod_pv)
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
@@ -179,11 +178,10 @@ class MegaMixContext(CommonContext):
     def is_item_in_modded_data(self, item_id):
         target_song_id = int(item_id) // 10
 
-        for pack in self.modData:  # Iterate through each pack
-            for song in pack['songs']:  # Iterate through each song in the pack
-                if int(song.get("songID")) == target_song_id:
-                    song_pack = pack.get("packName")  # Get the pack name
-                    return True, song_pack  # Return True and the song pack name
+        for pack, songs in self.modData.items():  # Iterate through each pack
+            for song in songs:  # Iterate through each song in the pack
+                if song[1] == target_song_id:
+                    return True, pack.replace('/', "'")  # Return True and the song pack name
         return False, None
 
     async def receive_item(self):

@@ -3,9 +3,10 @@ import pkgutil
 import re
 import os
 import shutil
-from pathlib import Path
 from .SymbolFixer import fix_song_name
 from collections import defaultdict
+import ast
+from typing import Any
 
 
 # File Handling
@@ -113,7 +114,8 @@ def process_json_data(json_data):
 def generate_modded_paths(processed_data, base_path):
 
     # Extract unique pack names from processed_data
-    unique_pack_names = {pack['packName'] for pack in processed_data}
+    unique_pack_names = {pack_name.replace('/', "'") for pack_name, songs in processed_data.items()}
+
     # Create modded paths based on the unique pack names
     modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_pack_names}
     return list(modded_paths)
@@ -336,31 +338,80 @@ def find_linked_numbers(number_list):
     return list(lower_numbers)
 
 
-def get_player_specific_ids(raw_data):
+def extract_mod_data_to_json(folder_path: str) -> list[Any]:
+    """
+    Extracts mod data from YAML files and converts it to a list of dictionaries.
+    """
+    if not os.path.isdir(folder_path):
+        raise ValueError(f"The path {folder_path} is not a valid directory.")
 
-    raw_data = str(raw_data)
+    # Search text for the specific game
+    search_text = "Hatsune Miku Project Diva Mega Mix+"
+
+    # Regex pattern to capture the outermost curly braces content
+    mod_data_pattern = r'megamix_mod_data:\s*(?:#.*\n)?\s*(\{.*\})'
+
+
+    # Initialize an empty list to collect all inputs
+    all_mod_data = []
+
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+
+        if os.path.isfile(item_path):
+            with open(item_path, 'r') as file:  # Open the file in read mode
+                file_content = file.read()
+
+                # Check if the search text (game title) is found in the file
+                if search_text in file_content:
+                    # Search for all occurrences of 'megamix_mod_data:' and the block within {}
+                    matches = re.findall(mod_data_pattern, file_content)
+
+                    # Process each mod_data block
+                    for mod_data_content in matches:
+
+                        data_dict = get_dict(mod_data_content, False)
+
+                        if data_dict == "":
+                            continue
+
+                        all_mod_data.append(data_dict)
+
+    return all_mod_data
+
+
+def get_dict(mod_data, client):
+
+    if client:
+        trimmed_data = str(mod_data[8:-1])  # Slicing to remove first and last character
+        if trimmed_data == "":
+            return None
+
+    else:
+        # Remove the first 2 and last 2 characters
+        trimmed_data = str(mod_data[2:-2])  # Slicing to remove first and last character
+
+        if trimmed_data == "":
+            return ""
+
+    data_dict = ast.literal_eval(trimmed_data)
+
+    return data_dict
+
+
+def get_player_specific_ids(mod_data):
+
     song_ids = []  # Initialize an empty list to store song IDs
 
-    # Use regex to find all song packs and their song details
-    # This regex captures the pack name and song details in the format specified
-    pattern = r'\[([^\]]+)\:\[\[(.*?)\]\]\]'  # Matches the pack name and the songs
+    if mod_data == "()":
+        return song_ids
 
-    # Find all matches of the pattern in the raw data
-    matches = re.findall(pattern, raw_data)
+    trimmed_data = str(mod_data[1:-1])  # Slicing to remove first and last character
+    data_dict = ast.literal_eval(trimmed_data)
 
-    # Iterate over each match found
-    for pack_name, songs in matches:
-        # Split the songs based on the '], [' pattern to separate individual songs
-        song_entries = songs.split('], [')
-
-        for song in song_entries:
-            # Clean up the song entry string
-            song = song.replace('[', '').replace(']', '').strip()  # Remove brackets and extra spaces
-
-            # Split the song details by comma
-            song_details = song.split(', ')
-            if len(song_details) > 1:  # Check if there's at least an ID present
-                song_id = int(song_details[1])  # Get the songID
-                song_ids.append(song_id)  # Append to the list
+    for pack_name, songs in data_dict.items():
+        for song in songs:
+            song_id = song[1]
+            song_ids.append(song_id)
 
     return song_ids  # Return the list of song IDs

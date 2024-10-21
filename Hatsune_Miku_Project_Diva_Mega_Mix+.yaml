@@ -256,7 +256,7 @@ Hatsune Miku Project Diva Mega Mix+:
     # Available Singers: Hatsune Miku, Kagamine Rin, Kagamine Len, Megurine Luka, KAITO, MEIKO
     {}
 
-  mod_data:
+  megamix_mod_data:
     # If you are using modded songs, paste the string from the DivaJSON Tool here
     {}
 

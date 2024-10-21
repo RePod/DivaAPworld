@@ -221,7 +221,7 @@ class ExcludeSinger(OptionSet):
 
 class ModData(OptionSet):
     """If you are using modded songs, paste the string from the DivaJSON Tool here"""
-    display_name = "ModData"
+    display_name = "MegaMixModData"
     default = {}
 
 
@@ -244,4 +244,4 @@ class MegaMixOptions(PerGameCommonOptions):
     include_songs: IncludeSongs
     exclude_songs: ExcludeSongs
     exclude_singers: ExcludeSinger
-    mod_data: ModData
+    megamix_mod_data: ModData

@@ -1,18 +1,16 @@
 # Local
 from .Items import SongData
 from .SymbolFixer import fix_song_name
-from .JSONCreator import extract_mod_data_to_json
 
 # Python
 import random
 import Utils
-import json
-from Utils import user_path
 from typing import Dict, List, Tuple
 from collections import ChainMap
 
 from .DataHandler import (
     load_zipped_json_file,
+    extract_mod_data_to_json,
 )
 
 
@@ -43,6 +41,16 @@ class MegaMixCollections:
             "[EXTREME]": 6,
             "[EXEXTREME]": 8
         }
+
+        difficulty_mapping_modded = {
+            'E': '[EASY]',
+            'N': '[NORMAL]',
+            'H': '[HARD]',
+            'EX': '[EXTREME]',
+            'EXEX': '[EXEXTREME]'
+        }
+        difficulty_order = ['E', 'N', 'H', 'EX', 'EXEX']
+
         json_data = load_zipped_json_file("songData.json")
         mod_data = extract_mod_data_to_json(Utils.user_path("Players"))
         base_game_ids = set()
@@ -62,35 +70,29 @@ class MegaMixCollections:
             self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, difficulty, difficulty_rating)
 
         if mod_data:
-            unique_pack_names = set()  # Set to track unique pack names
-            # Iterate through the outer list
-            for pack_list in mod_data:
-                # Iterate through the inner list
-                for pack in pack_list:
-                    pack_name = pack['packName']  # Assuming 'packName' is the key for the pack name
-                    if pack_name not in unique_pack_names:
-                        unique_pack_names.add(pack_name)  # Add the unique pack name to the set
-                    else:
-                        continue
-                    for song in pack['songs']:
-                        cover_song = False
-                        song_id = int(song['songID'])
-                        if song_id in base_game_ids:
-                            cover_song = True
-                        song_name = fix_song_name(song['songName'])  # Fix song name if needed
-                        song_name = song_name + " " + song['difficulty']
-                        singers = []  # Avoid filtering modded songs due to non-vocaloid songs being listed as "Miku"
-                        difficulty = song['difficulty']
-                        difficulty_rating = float(song["difficultyRating"])
+            for data_dict in mod_data:
+                for pack_name, songs in data_dict.items():
+                    for song in songs:
+                        song_id = song[1]
+                        difficulties = {}
+                        singers = {}
+                        # Extract difficulties
+                        for diff in song[2:]:
+                            difficulties.update(diff)
 
-                        # Calculate item_id
-                        if not cover_song:
-                            item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
-                        else:
-                            item_id = (song_id * 10) + difficulty_mapping.get(difficulty,
-                                                                              "Difficulty not found") + 1  # Make cover songs odd
+                        # Create a formatted difficulty dictionary with mapped names
+                        formatted_difficulties = {}
+                        for key in difficulty_order:
+                            # Only add difficulties that exist
+                            if key in difficulties:
+                                formatted_difficulties[difficulty_mapping_modded[key]] = difficulties[key]
 
-                        self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, difficulty, difficulty_rating)
+                        for diff, rating in formatted_difficulties.items():
+                            song_name = str.replace(song[0], "/", "'")
+                            song_name = fix_song_name(song_name)
+                            song_name = song_name + " " + diff
+                            item_id = (song_id * 10) + difficulty_mapping.get(diff, "Difficulty not found")
+                            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, diff, rating)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
