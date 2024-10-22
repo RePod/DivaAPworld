@@ -74,6 +74,9 @@ class MegaMixCollections:
                 for pack_name, songs in data_dict.items():
                     for song in songs:
                         song_id = song[1]
+                        cover_song = False
+                        if song_id in base_game_ids:
+                            cover_song = True
                         difficulties = {}
                         singers = {}
                         # Extract difficulties
@@ -92,6 +95,9 @@ class MegaMixCollections:
                             song_name = fix_song_name(song_name)
                             song_name = song_name + " " + diff
                             item_id = (song_id * 10) + difficulty_mapping.get(diff, "Difficulty not found")
+                            if cover_song:
+                                item_id += 1
+
                             self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, diff, rating)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
