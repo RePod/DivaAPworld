@@ -27,7 +27,7 @@ class AdditionalSongs(Range):
     - The final song count may be lower due to other settings.
     """
     range_start = 15
-    range_end = 242  # Note will probably not reach this high if any other settings are done.
+    range_end = 3900
     default = 40
     display_name = "Additional Song Count"
 

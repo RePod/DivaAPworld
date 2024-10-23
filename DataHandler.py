@@ -359,7 +359,7 @@ def extract_mod_data_to_json(folder_path: str) -> list[Any]:
         item_path = os.path.join(folder_path, item)
 
         if os.path.isfile(item_path):
-            with open(item_path, 'r') as file:  # Open the file in read mode
+            with open(item_path, 'r', encoding='utf-8') as file:  # Open the file in read mode
                 file_content = file.read()
 
                 # Check if the search text (game title) is found in the file
