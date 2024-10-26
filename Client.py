@@ -40,9 +40,13 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         """Tells you how many Leeks you have, and how many you need for the goal song"""
         asyncio.create_task(self.ctx.get_leek_info())
 
-    def _cmd_toggle_remove_cleared(self):
+    def _cmd_toggle_auto_remove(self):
         """Toggle to automatically remove already cleared songs from the in-game song list after a song clear"""
         asyncio.create_task(self.ctx.toggle_remove_songs())
+
+    def _cmd_remove_cleared(self):
+        """Toggle to automatically remove already cleared songs from the in-game song list after a song clear"""
+        asyncio.create_task(self.ctx.remove_songs())
 
     def _cmd_bk_freeplay(self):
         """Restores songs that aren't part of this AP run, and cleared songs"""
@@ -161,8 +165,6 @@ class MegaMixContext(CommonContext):
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
 
             erase_song_list(self.mod_pv_list)
-            if self.autoRemove:
-                asyncio.create_task(self.remove_songs())
 
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())

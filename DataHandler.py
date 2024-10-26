@@ -256,6 +256,7 @@ def song_unlock(file_path, item_id, lock_status, modded, song_pack):
 
 
 def modify_mod_pv(file_path, song_id, difficulty):
+
     search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
     replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
     if difficulty == 'exExtreme':
@@ -296,6 +297,11 @@ def remove_song(file_path, song_id, difficulty):
 
 def convert_difficulty(difficulty):
     """Convert difficulty string to lowercase."""
+
+    #Fix cover songs
+    if difficulty % 2 != 0:
+        difficulty -= 1
+
     difficulty_map = {
         0: 'easy',
         2: 'normal',
