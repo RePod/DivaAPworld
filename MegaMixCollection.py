@@ -52,7 +52,7 @@ class MegaMixCollections:
         difficulty_order = ['E', 'N', 'H', 'EX', 'EXEX']
 
         json_data = load_zipped_json_file("songData.json")
-        mod_data = extract_mod_data_to_json(Utils.user_path("Players"))
+        mod_data = extract_mod_data_to_json(Utils.user_path(Utils.get_settings()["generator"]["player_files_path"]))
         base_game_ids = set()
 
         for song in json_data:
