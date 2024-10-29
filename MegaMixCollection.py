@@ -111,7 +111,7 @@ class MegaMixCollections:
             for i in range(2):
                 self.song_locations[f"{song_name}-{i}"] = (song_data.code + i)
 
-    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> Tuple[List[str], List[int]]:
+    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float, pick_hardest: bool) -> Tuple[List[str], List[int]]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
         id_list = []
@@ -163,8 +163,13 @@ class MegaMixCollections:
 
             # If there are valid difficulty selections
             if valid_difficulties:
-                # Randomly choose one of the valid difficulty selections
-                selected_difficulty = random.choice(valid_difficulties)
+
+                if pick_hardest:
+                    # Pick the hardest version available
+                    selected_difficulty = valid_difficulties[-1]
+                else:
+                    # Randomly choose one of the valid difficulty selections
+                    selected_difficulty = random.choice(valid_difficulties)
 
                 # Find the song_item that matches the selected difficulty
                 for song_item in group:

@@ -240,7 +240,7 @@ def replace_line_with_text(file_path, search_text, new_line):
         file.writelines(lines)
 
 
-def song_unlock(file_path, item_id, lock_status, modded, song_pack):
+def song_unlock(file_path, item_id, lock_status, modded, song_pack, enable_all):
     """Unlock a song based on its id"""
 
     song_id = int(item_id) // 10
@@ -250,49 +250,66 @@ def song_unlock(file_path, item_id, lock_status, modded, song_pack):
     action = modify_mod_pv if not lock_status else remove_song
     if modded:
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
-    # Perform the action
-    action(file_path, int(song_id), difficulty)
+
+    action(file_path, int(song_id), difficulty, enable_all)
+
     return
 
 
-def modify_mod_pv(file_path, song_id, difficulty):
+def modify_mod_pv(file_path, song_id, difficulty, all_ver):
 
-    search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
-    replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
-    if difficulty == 'exExtreme':
-        search_text = search_text.replace("exExtreme", "extreme")
-        replace_text = replace_text.replace("exExtreme", "extreme")
-        replace_text += "2"
+    # Replace text to disable song, all ver disables all versions
+    difficulties = []
+    if all_ver:
+        difficulties = ['easy', 'normal', 'hard', 'extreme']
     else:
-        replace_text += "1"
+        difficulties.append(difficulty)
 
-    replace_line_with_text(file_path, search_text, replace_text)
+    for difficulty in difficulties:
+        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
+        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
 
-    if difficulty == 'exExtreme':
-        # Disable regular extreme
-        search_text = "pv_" + '{:03d}'.format(
-            song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(
-            song_id) + "_extreme.dsc"
-        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
-        replace_line_with_text(file_path, search_text, replace_text)
-    elif difficulty == 'extreme':
-        # Restore extreme
-        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
-        replace_text = "pv_" + '{:03d}'.format(
-            song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(
-            song_id) + "_extreme.dsc"
+        if difficulty == 'exExtreme':
+            search_text = search_text.replace("exExtreme", "extreme")
+            replace_text = replace_text.replace("exExtreme", "extreme")
+            replace_text += "2"
+        elif difficulty == 'extreme' and all_ver:
+            replace_text += "2"
+        else:
+            replace_text += "1"
+
         replace_line_with_text(file_path, search_text, replace_text)
 
+        if difficulty == 'exExtreme' and not all_ver:
+            # Disable regular extreme
+            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(song_id) + "_extreme.dsc"
+            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
+            replace_line_with_text(file_path, search_text, replace_text)
+        elif difficulty == 'extreme':
+            # Restore extreme
+            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
+            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(song_id) + "_extreme.dsc"
+            replace_line_with_text(file_path, search_text, replace_text)
 
-def remove_song(file_path, song_id, difficulty):
-    if difficulty == 'exExtreme':
-        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=2"
-        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=0"
+
+def remove_song(file_path, song_id, difficulty, all_ver):
+
+    # Replace text to disable song, all ver disables all versions
+    difficulties = []
+    if all_ver:
+        difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
     else:
-        search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=1"
-        replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
+        difficulties.append(difficulty)
 
-    replace_line_with_text(file_path, search_text, replace_text)
+    for difficulty in difficulties:
+        if difficulty == 'exExtreme':
+            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=2"
+            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=0"
+        else:
+            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=1"
+            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
+
+        replace_line_with_text(file_path, search_text, replace_text)
 
 
 def convert_difficulty(difficulty):

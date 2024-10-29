@@ -109,6 +109,11 @@ class DifficultyModeRating(Choice):
     default = 0
 
 
+class EnableAllDifficulties(Toggle):
+    """If Enabled, when a song is received all difficulties for that song will be unlocked, and clearing any of them counts as beating the song"""
+    display_name = "Enable All Difficulties"
+
+
 class DifficultyModeRatingOverrideMin(Choice):
     """Ensures that at least one of the song's available difficulties have this star rating or higher
     x5 = .5, Used since _5 causes issues
@@ -161,6 +166,11 @@ class DifficultyModeRatingOverrideMax(Choice):
     option_9x5 = 17
     option_ten = 18
     default = 18
+
+
+class AlwaysPickHardest(Toggle):
+    """Whether the hardest available version of the song should be picked instead of randomizing between available difficulties."""
+    display_name = "Always Choose Hardest Difficulty Available"
 
 
 class ScoreGradeNeeded(Choice):
@@ -235,9 +245,11 @@ class MegaMixOptions(PerGameCommonOptions):
     song_difficulty_mode: DifficultyMode
     song_difficulty_min: DifficultyModeOverrideMin
     song_difficulty_max: DifficultyModeOverrideMax
+    enable_all_diff: EnableAllDifficulties
     song_difficulty_rating: DifficultyModeRating
     song_difficulty_rating_min: DifficultyModeRatingOverrideMin
     song_difficulty_rating_max: DifficultyModeRatingOverrideMax
+    always_pick_hardest: AlwaysPickHardest
     grade_needed: ScoreGradeNeeded
     leek_count_percentage: TotalLeeksAvailable
     leek_win_count_percentage: LeeksRequiredPercentage

@@ -142,6 +142,11 @@ Hatsune Miku Project Diva Mega Mix+:
     extreme: 0
     exextreme: 50
 
+  enable_all_diff:
+    # If Enabled, when a song is received all difficulties for that song will be unlocked, and clearing any of them counts as beating the song
+    'false': 50
+    'true': 0
+
   song_difficulty_rating:
     # Ensures that at least one of the song's available difficulties have a star rating that falls within these ranges.
     # - Any: All songs are available
@@ -206,6 +211,11 @@ Hatsune Miku Project Diva Mega Mix+:
     nine: 0
     9x5: 0
     ten: 50
+
+  always_pick_hardest:
+    # Whether the hardest available version of the song should be picked instead of randomizing between available difficulties.
+    'false': 50
+    'true': 0
 
   grade_needed:
     # Completing a song will require a grade of this value or higher in order to unlock items.

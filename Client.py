@@ -52,11 +52,11 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         """Restores songs that aren't part of this AP run, and cleared songs"""
         asyncio.create_task(self.ctx.bk_freeplay())
 
-    def _cmd_restore_mods(self):
+    def _cmd_restore_songs(self):
         """Restores modpacks to their original state for intended use"""
         logger.info("Restoring..")
         asyncio.create_task(self.ctx.restore_songs())
-        logger.info("Mod Packs Restored")
+        logger.info("Base Game + Mod Packs Restored")
 
 
 class MegaMixContext(CommonContext):
@@ -98,6 +98,7 @@ class MegaMixContext(CommonContext):
         self.leeks_needed = None
         self.leeks_obtained = 0
         self.grade_needed = None
+        self.enable_all_diff = False
 
         self.watch_task = None
         if not self.watch_task:
@@ -126,6 +127,7 @@ class MegaMixContext(CommonContext):
             self.goal_song = self.options["victoryLocation"]
             self.goal_id = self.options["victoryID"]
             self.autoRemove = self.options["autoRemove"]
+            self.enable_all_diff = self.options["enableAllDiff"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
             self.modData = get_dict(self.options["modData"], True)
@@ -205,9 +207,9 @@ class MegaMixContext(CommonContext):
                             found = False
                             song_pack = None
                         if found:
-                            song_unlock(self.path, network_item.item, False, True, song_pack)
+                            song_unlock(self.path, network_item.item, False, True, song_pack, self.enable_all_diff)
                         else:
-                            song_unlock(self.mod_pv, network_item.item, False, False, song_pack)
+                            song_unlock(self.mod_pv, network_item.item, False, False, song_pack, self.enable_all_diff)
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
@@ -220,9 +222,9 @@ class MegaMixContext(CommonContext):
                 found = False
                 song_pack = None
             if found:
-                song_unlock(self.path, self.goal_id, False, True, song_pack)
+                song_unlock(self.path, self.goal_id, False, True, song_pack, self.enable_all_diff)
             else:
-                song_unlock(self.mod_pv, self.goal_id, False, False, song_pack)
+                song_unlock(self.mod_pv, self.goal_id, False, False, song_pack, self.enable_all_diff)
 
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
@@ -251,14 +253,20 @@ class MegaMixContext(CommonContext):
                 logger.info("Cleared song with appropriate grade!")
                 # Construct location name
                 difficulty = int(song_data.get('pvDifficulty')) * 2
-                location_id = (int(song_data.get('pvId')) * 10) + difficulty
-                if location_id == self.goal_id:
-                    asyncio.create_task(
-                        self.end_goal())
-                    return
+                location_ids = []
+                if self.enable_all_diff:
+                    location_ids = [int(song_data.get('pvId') * 10), int(song_data.get('pvId') * 10) + 2, int(song_data.get('pvId') * 10) + 4, int(song_data.get('pvId') * 10) + 6, int(song_data.get('pvId') * 10) + 8]
+                else:
+                    location_ids.append(int(song_data.get('pvId') * 10) + difficulty)
 
-                for i in range(2):
-                    self.found_checks.append(location_id + i)
+                for location_id in location_ids:
+                    if location_id == self.goal_id:
+                        asyncio.create_task(
+                            self.end_goal())
+                        return
+
+                    for i in range(2):
+                        self.found_checks.append(location_id + i)
 
                 asyncio.create_task(
                     self.send_checks())
@@ -308,7 +316,7 @@ class MegaMixContext(CommonContext):
             # Only log if the pair hasn't been logged yet
             pair_key = (min(location, paired_location), max(location, paired_location))
             if pair_key not in logged_pairs:
-                logger.info(self.location_ap_id_to_name[location][:-2] + " is uncleared")
+                logger.info(self.location_ap_id_to_name[location][:-2] + " " + str(location // 10) + " is uncleared")
                 logged_pairs.add(pair_key)
 
         # Check if missingLocations is empty
@@ -317,7 +325,7 @@ class MegaMixContext(CommonContext):
 
     async def get_leek_info(self):
         logger.info("You have " + str(self.leeks_obtained) + " Leeks")
-        logger.info("You need " + str(self.leeks_needed) + " Leeks total to unlock the goal song " + self.goal_song)
+        logger.info("You need " + str(self.leeks_needed) + " Leeks total to unlock the goal song " + self.goal_song + " " + str(self.goal_id // 10))
 
     async def toggle_remove_songs(self):
         self.autoRemove = not self.autoRemove
@@ -339,9 +347,9 @@ class MegaMixContext(CommonContext):
                 found = False
                 song_pack = None
             if found:
-                song_unlock(self.path, item, True, True, song_pack)
+                song_unlock(self.path, item, True, True, song_pack, self.enable_all_diff)
             else:
-                song_unlock(self.mod_pv, item, True, False, song_pack)
+                song_unlock(self.mod_pv, item, True, False, song_pack, self.enable_all_diff)
 
         logger.info("Removed songs!")
 
