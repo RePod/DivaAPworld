@@ -84,7 +84,7 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(str(self.options.megamix_mod_data)[7:]), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold, self.options.always_pick_hardest)
+            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold, self.options.always_pick_hardest)
 
             # Choose victory song from current available keys, so we can access the song id
             chosen_song_index = random.randrange(0, len(available_song_keys))
