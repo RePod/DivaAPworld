@@ -76,9 +76,9 @@ def replace_non_ascii_with_space(text):
     return ''.join(char if ord(char) < 128 or char == '_' else ' ' for char in text)
 
 
-def special_char_removal(text):
+def special_char_removal(cleaned_text):
     # Remove apostrophes, commas, and quotation marks
-    cleaned_text = text.replace("'", "").replace(",", "").replace('"', "")
+    #cleaned_text = text.replace("'", "").replace(",", "").replace('"', "")
 
     # Replace multiple spaces with a single space
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text)

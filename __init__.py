@@ -325,6 +325,6 @@ class MegaMixWorld(World):
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),
-            "modData": str(self.options.megamix_mod_data),
+            "modData": self.options.megamix_mod_data.value,
             "enableAllDiff": bool(self.options.enable_all_diff),
         }
