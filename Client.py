@@ -129,7 +129,7 @@ class MegaMixContext(CommonContext):
             self.enable_all_diff = self.options["enableAllDiff"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
-            self.modData = json.loads(self.options["modData"])
+            self.modData = json.loads(self.options["modData"]) if self.options["modData"] else None
             if self.modData:
                 self.modded = True
                 self.mod_pv_list = generate_modded_paths(self.modData, self.path)
