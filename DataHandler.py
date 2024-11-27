@@ -1,4 +1,5 @@
 import json
+import yaml
 import pkgutil
 import re
 import os
@@ -7,7 +8,6 @@ import sys
 import Utils
 from .SymbolFixer import fix_song_name
 from collections import defaultdict
-import ast
 from typing import Any
 
 
@@ -384,7 +384,7 @@ def extract_mod_data_to_json() -> list[Any]:
     search_text = "Hatsune Miku Project Diva Mega Mix+"
 
     # Regex pattern to capture the outermost curly braces content
-    mod_data_pattern = r'megamix_mod_data:\s*(?:#.*\n)?\s*(\{.*\})'
+    mod_data_pattern = r"megamix_mod_data:\s*(?:#.*\n)?\s*('.*')"
 
     # Initialize an empty list to collect all inputs
     all_mod_data = []
@@ -403,52 +403,27 @@ def extract_mod_data_to_json() -> list[Any]:
 
                     # Process each mod_data block
                     for mod_data_content in matches:
+                        mod_data_match = yaml.safe_load(file_content)
+                        mod_data_content = mod_data_match.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data", '""')
 
-                        data_dict = get_dict(mod_data_content, False)
-
-                        if data_dict == "":
+                        if isinstance(mod_data_content, dict) or not mod_data_content:
                             continue
 
-                        all_mod_data.append(data_dict)
+                        all_mod_data.append(json.loads(mod_data_content))
 
     total = sum(len(pack) for packList in all_mod_data for pack in packList.values())
     print(f"Found {total} songs")
 
     return all_mod_data
 
-
-def get_dict(mod_data, client):
-
-    if client:
-        trimmed_data = str(mod_data[8:-1])  # Slicing to remove first and last character
-        if trimmed_data == "":
-            return None
-
-    else:
-        # Remove the first 2 and last 2 characters
-        trimmed_data = str(mod_data[2:-2])  # Slicing to remove first and last character
-
-        if trimmed_data == "":
-            return ""
-
-    try:
-        data_dict = ast.literal_eval(trimmed_data)
-    except (ValueError, SyntaxError) as e:
-        print(f"Error parsing data: {e}")
-        data_dict = {}
-
-    return data_dict
-
-
+  
 def get_player_specific_ids(mod_data):
-
     song_ids = []  # Initialize an empty list to store song IDs
 
-    if mod_data == "()":
+    if mod_data == "":
         return song_ids
 
-    trimmed_data = str(mod_data[1:-1])  # Slicing to remove first and last character
-    data_dict = ast.literal_eval(trimmed_data)
+    data_dict = json.loads(mod_data)
 
     for pack_name, songs in data_dict.items():
         for song in songs:

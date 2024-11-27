@@ -90,7 +90,7 @@ class MegaMixCollections:
                                 formatted_difficulties[difficulty_mapping_modded[key]] = difficulties[key]
 
                         for diff, rating in formatted_difficulties.items():
-                            song_name = str.replace(song[0], "/", "'")
+                            song_name = song[0]
                             song_name = fix_song_name(song_name)
                             song_name = song_name + " " + diff
                             item_id = (song_id * 10) + difficulty_mapping.get(diff, "Difficulty not found")

@@ -1,5 +1,5 @@
 from typing import Dict
-from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions
+from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText
 from dataclasses import dataclass
 
 
@@ -229,10 +229,10 @@ class ExcludeSinger(OptionSet):
     default = {}
 
 
-class ModData(OptionSet):
+class ModData(FreeText):
     """If you are using modded songs, paste the string from the DivaJSON Tool here"""
     display_name = "MegaMixModData"
-    default = {}
+    default = ''
 
 
 @dataclass
