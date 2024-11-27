@@ -392,9 +392,9 @@ def extract_mod_data_to_json(folder_path: str) -> list[Any]:
                     # Process each mod_data block
                     for mod_data_content in matches:
                         mod_data_match = yaml.safe_load(file_content)
-                        mod_data_content = mod_data_match.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data")
+                        mod_data_content = mod_data_match.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data", '""')
 
-                        if not mod_data_content:
+                        if isinstance(mod_data_content, dict) or not mod_data_content:
                             continue
 
                         all_mod_data.append(json.loads(mod_data_content))
