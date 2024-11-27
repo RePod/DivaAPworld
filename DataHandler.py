@@ -3,6 +3,8 @@ import pkgutil
 import re
 import os
 import shutil
+import sys
+import Utils
 from .SymbolFixer import fix_song_name
 from collections import defaultdict
 import ast
@@ -121,8 +123,8 @@ def generate_modded_paths(processed_data, base_path):
     return list(modded_paths)
 
 
-def restore_song_list(file_paths, skip_ids):
-    skip_ids.extend(["144", "700", "701"])  # Append 144, 700, and 701 to the skip_ids list
+def restore_song_list(file_paths, skip_ids, restore):
+    skip_ids.extend([144, 700, 701])  # Append 144, 700, and 701 to the skip_ids list
     for file_path in file_paths:
         with open(file_path, 'r', encoding='utf-8') as file:
             modified_lines = []
@@ -130,15 +132,19 @@ def restore_song_list(file_paths, skip_ids):
                 if line.startswith("pv_"):
                     song_numeric_id = re.search(r'pv_(\d+)', line)
                     if song_numeric_id:
-                        song_numeric_id = song_numeric_id.group(1)
+                        song_numeric_id = int(song_numeric_id.group(1))
                         if song_numeric_id in skip_ids:
                             modified_lines.append(line)
                             continue
-                        line = re.sub(r'(\.difficulty\.(easy|normal|hard)\.length)=\d+', r'\1=1', line)
-                        line = re.sub(r'(\.difficulty\.extreme\.length)=\d+', r'\1=2', line)
-                        # Only modify the line if it ends with an equals sign
-                        if re.match(r'(pv_\d+\.difficulty\.extreme\.0\.script_file_name)=$', line.strip()):
-                            line = f"pv_{song_numeric_id}.difficulty.extreme.0.script_file_name=rom/script/pv_{song_numeric_id}_extreme_0.dsc\n"
+                        else:
+                            if restore:
+                                line = re.sub(r'(\.difficulty\.(easy|normal|hard)\.length)=\d+', r'\1=1', line)
+                                line = re.sub(r'(\.difficulty\.extreme\.length)=\d+', r'\1=2', line)
+                                # Only modify the line if it ends with an equals sign
+                                if re.match(r'(pv_\d+\.difficulty\.extreme\.0\.script_file_name)=$', line.strip()):
+                                    line = f"pv_{song_numeric_id}.difficulty.extreme.0.script_file_name=rom/script/pv_{song_numeric_id}_extreme_0.dsc\n"
+                            else:
+                                line = re.sub(r'(\.difficulty\.(easy|normal|hard|extreme)\.length)=\d+', r'\1=0', line)
                 modified_lines.append(line)
 
         with open(file_path, 'w', encoding='utf-8') as file:
@@ -361,10 +367,16 @@ def find_linked_numbers(number_list):
     return list(lower_numbers)
 
 
-def extract_mod_data_to_json(folder_path: str) -> list[Any]:
+def extract_mod_data_to_json() -> list[Any]:
     """
     Extracts mod data from YAML files and converts it to a list of dictionaries.
     """
+
+    user_path = Utils.user_path(Utils.get_settings()["generator"]["player_files_path"])
+    folder_path = sys.argv[sys.argv.index("--player_files_path") + 1] if "--player_files_path" in sys.argv else user_path
+
+    print(f"Checking YAMLs for megamix_mod_data at {folder_path}")
+
     if not os.path.isdir(folder_path):
         raise ValueError(f"The path {folder_path} is not a valid directory.")
 
@@ -373,7 +385,6 @@ def extract_mod_data_to_json(folder_path: str) -> list[Any]:
 
     # Regex pattern to capture the outermost curly braces content
     mod_data_pattern = r'megamix_mod_data:\s*(?:#.*\n)?\s*(\{.*\})'
-
 
     # Initialize an empty list to collect all inputs
     all_mod_data = []
@@ -400,6 +411,9 @@ def extract_mod_data_to_json(folder_path: str) -> list[Any]:
 
                         all_mod_data.append(data_dict)
 
+    total = sum(len(pack) for packList in all_mod_data for pack in packList.values())
+    print(f"Found {total} songs")
+
     return all_mod_data
 
 
@@ -417,7 +431,11 @@ def get_dict(mod_data, client):
         if trimmed_data == "":
             return ""
 
-    data_dict = ast.literal_eval(trimmed_data)
+    try:
+        data_dict = ast.literal_eval(trimmed_data)
+    except (ValueError, SyntaxError) as e:
+        print(f"Error parsing data: {e}")
+        data_dict = {}
 
     return data_dict
 

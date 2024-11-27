@@ -40,20 +40,20 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         """Tells you how many Leeks you have, and how many you need for the goal song"""
         asyncio.create_task(self.ctx.get_leek_info())
 
-    def _cmd_toggle_auto_remove(self):
-        """Toggle to automatically remove already cleared songs from the in-game song list after a song clear"""
+    def _cmd_auto_remove(self):
+        """Toggle to automatically remove already cleared songs after a song clear"""
         asyncio.create_task(self.ctx.toggle_remove_songs())
 
     def _cmd_remove_cleared(self):
-        """Toggle to automatically remove already cleared songs from the in-game song list after a song clear"""
+        """Removes cleared songs from in-game list"""
         asyncio.create_task(self.ctx.remove_songs())
 
-    def _cmd_bk_freeplay(self):
-        """Restores songs that aren't part of this AP run, and cleared songs"""
-        asyncio.create_task(self.ctx.bk_freeplay())
+    def _cmd_freeplay(self):
+        """Toggle that restores or removes songs that aren't part of this AP run"""
+        asyncio.create_task(self.ctx.freeplay_toggle())
 
     def _cmd_restore_songs(self):
-        """Restores modpacks to their original state for intended use"""
+        """Restores songs to their original state for intended use"""
         logger.info("Restoring..")
         asyncio.create_task(self.ctx.restore_songs())
         logger.info("Base Game + Mod Packs Restored")
@@ -74,6 +74,7 @@ class MegaMixContext(CommonContext):
         self.jsonData = process_json_data(load_zipped_json_file("songData.json"))
         self.modData = None
         self.modded = False
+        self.freeplay = False
         self.mod_pv_list = []
         self.previous_received = []
         self.sent_unlock_message = False
@@ -272,6 +273,9 @@ class MegaMixContext(CommonContext):
                     self.send_checks())
             else:
                 logger.info("Song " + song_data.get('pvName') + " Was not beaten with a high enough grade")
+        else:
+            logger.info("Whopper, Whopper, Whopper, Whopper Junior, Double, Triple Whopper Flame grilled taste with perfect toppers I rule this day Lettuce, Mayo, Pickle, Ketchup It's okay if I don't want that Impossible or Bacon Whopper Any Whopper my way You rule, you're seizing the day At BK, have it your way (You rule!)")
+
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
@@ -353,12 +357,18 @@ class MegaMixContext(CommonContext):
 
         logger.info("Removed songs!")
 
-    async def bk_freeplay(self):
+    async def freeplay_toggle(self):
+        self.freeplay = not self.freeplay
 
         song_ids = list(set(int(location) // 10 for location in self.location_ids))
         song_ids.append(self.goal_id)
-        restore_song_list(self.mod_pv_list, song_ids)
-        logger.info("Restored non-AP songs!")
+
+        if self.freeplay:
+            restore_song_list(self.mod_pv_list, song_ids, True)
+            logger.info("Restored non-AP songs!")
+        else:
+            restore_song_list(self.mod_pv_list, song_ids, False)
+            logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):
         restore_originals(self.mod_pv_list)

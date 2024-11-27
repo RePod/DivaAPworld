@@ -116,7 +116,7 @@ class MegaMixWorld(World):
 
             # If the above fails, we want to adjust the difficulty thresholds.
             # Easier first, then harder
-            if lower_diff_threshold <= 1 and higher_diff_threshold >= 11:
+            if lower_diff_threshold <= 1 and higher_diff_threshold >= 10:
                 raise Exception("Failed to find enough songs, even with maximum difficulty thresholds.")
             elif lower_diff_threshold <= 1:
                 higher_diff_threshold += 1
