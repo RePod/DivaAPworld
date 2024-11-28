@@ -27,7 +27,7 @@ from CommonClient import (
     server_loop,
     gui_enabled,
 )
-from NetUtils import NetworkItem, ClientStatus
+from NetUtils import NetworkItem, ClientStatus, Permission
 
 
 class DivaClientCommandProcessor(ClientCommandProcessor):
@@ -245,7 +245,6 @@ class MegaMixContext(CommonContext):
             print(f"Watch task for {file_name} was canceled.")
 
     def receive_location_check(self, song_data):
-
         # If song is not dummy song
         if song_data.get('pvId') != 144:
             # Check if player got a good enough grade on the song
@@ -278,8 +277,12 @@ class MegaMixContext(CommonContext):
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
-        if self.autoRemove:
+
+        if Permission.from_text(self.permissions.get("release")) is Permission.auto:
+            await self.restore_songs()
+        elif self.autoRemove:
             await self.remove_songs()
+
         await self.send_msgs(message)
 
     async def send_checks(self):
