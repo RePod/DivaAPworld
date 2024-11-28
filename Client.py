@@ -279,7 +279,7 @@ class MegaMixContext(CommonContext):
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
 
-        if Permission.from_text(self.permissions.get("release")) is Permission.auto:
+        if Permission.auto & Permission.from_text(self.permissions.get("release")) == Permission.auto:
             await self.restore_songs()
         elif self.autoRemove:
             await self.remove_songs()
