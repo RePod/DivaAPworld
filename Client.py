@@ -245,6 +245,7 @@ class MegaMixContext(CommonContext):
             print(f"Watch task for {file_name} was canceled.")
 
     def receive_location_check(self, song_data):
+
         # If song is not dummy song
         if song_data.get('pvId') != 144:
             # Check if player got a good enough grade on the song
