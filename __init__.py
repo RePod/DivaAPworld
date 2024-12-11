@@ -14,7 +14,6 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 import re
-import random
 import typing
 from typing import List
 from math import floor
