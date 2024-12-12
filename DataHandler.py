@@ -249,6 +249,7 @@ def replace_line_with_text(file_path, search_text, new_line):
 def song_unlock(file_path, item_id, lock_status, modded, song_pack, enable_all):
     """Unlock a song based on its id"""
 
+    return
     song_id = int(item_id) // 10
     difficulty = convert_difficulty(int(item_id) % 10)
 
