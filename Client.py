@@ -186,10 +186,11 @@ class MegaMixContext(CommonContext):
             for song in songs:  # Iterate through each song in the pack
                 if song[1] == target_song_id:
                     return True, pack.replace('/', "'")  # Return True and the song pack name
-        return False, None
+        return False, "ArchipelagoMod"
 
     async def receive_item(self):
         async with self.critical_section_lock:
+            to_unlock = {}
 
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
@@ -204,12 +205,14 @@ class MegaMixContext(CommonContext):
                         if self.modded:
                             found, song_pack = self.is_item_in_modded_data(network_item.item)
                         else:
-                            found = False
-                            song_pack = None
-                        if found:
-                            song_unlock(self.path, network_item.item, False, True, song_pack, self.enable_all_diff)
-                        else:
-                            song_unlock(self.mod_pv, network_item.item, False, False, song_pack, self.enable_all_diff)
+                            song_pack = "ArchipelagoMod"
+
+                        if song_pack not in to_unlock:
+                            to_unlock[song_pack] = []
+                        to_unlock[song_pack].append(network_item.item)
+
+            for song_pack in to_unlock:
+                song_unlock(self.path, to_unlock.get(song_pack), False, song_pack, self.enable_all_diff)
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
@@ -220,11 +223,10 @@ class MegaMixContext(CommonContext):
                 found, song_pack = self.is_item_in_modded_data(self.goal_id)
             else:
                 found = False
-                song_pack = None
-            if found:
-                song_unlock(self.path, self.goal_id, False, True, song_pack, self.enable_all_diff)
-            else:
-                song_unlock(self.mod_pv, self.goal_id, False, False, song_pack, self.enable_all_diff)
+                song_pack = "ArchipelagoMod"
+
+
+            song_unlock(self.path, [self.goal_id], False, song_pack, self.enable_all_diff)
 
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
@@ -350,9 +352,9 @@ class MegaMixContext(CommonContext):
                 found = False
                 song_pack = None
             if found:
-                song_unlock(self.path, item, True, True, song_pack, self.enable_all_diff)
+                song_unlock(self.path, item, True, song_pack, self.enable_all_diff)
             else:
-                song_unlock(self.mod_pv, item, True, False, song_pack, self.enable_all_diff)
+                song_unlock(self.mod_pv, item, True, song_pack, self.enable_all_diff)
 
         logger.info("Removed songs!")
 
