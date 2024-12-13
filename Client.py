@@ -185,12 +185,12 @@ class MegaMixContext(CommonContext):
         for pack, songs in self.modData.items():  # Iterate through each pack
             for song in songs:  # Iterate through each song in the pack
                 if song[1] == target_song_id:
-                    return True, pack.replace('/', "'")  # Return True and the song pack name
-        return False, "ArchipelagoMod"
+                    return pack
+        return "ArchipelagoMod"
 
     async def receive_item(self):
         async with self.critical_section_lock:
-            to_unlock = {}
+            ids_to_packs = {}
 
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
@@ -202,29 +202,21 @@ class MegaMixContext(CommonContext):
                         # Maybe move static items out of MegaMixCollection instead of hard coding?
                         pass
                     else:
-                        if self.modded:
-                            found, song_pack = self.is_item_in_modded_data(network_item.item)
-                        else:
-                            song_pack = "ArchipelagoMod"
+                        song_pack = self.is_item_in_modded_data(network_item.item) if self.modded else "ArchipelagoMod"
 
-                        if song_pack not in to_unlock:
-                            to_unlock[song_pack] = []
-                        to_unlock[song_pack].append(network_item.item)
+                        if song_pack not in ids_to_packs:
+                            ids_to_packs[song_pack] = []
+                        ids_to_packs[song_pack].append(network_item.item)
 
-            for song_pack in to_unlock:
-                song_unlock(self.path, to_unlock.get(song_pack), False, song_pack, self.enable_all_diff)
+            for song_pack in ids_to_packs:
+                song_unlock(self.path, ids_to_packs.get(song_pack), False, song_pack, self.enable_all_diff)
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
                 self.sent_unlock_message = True
-            if self.modded:
-                found, song_pack = self.is_item_in_modded_data(self.goal_id)
-            else:
-                found = False
-                song_pack = "ArchipelagoMod"
-
+                song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
 
             song_unlock(self.path, [self.goal_id], False, song_pack, self.enable_all_diff)
 
@@ -343,18 +335,18 @@ class MegaMixContext(CommonContext):
 
     async def remove_songs(self):
         finished_songs = find_linked_numbers(self.prev_found)
+        ids_to_packs = {}
 
         # Check for matches where all suffixes have been found
         for item in finished_songs:
-            if self.modded:
-                found, song_pack = self.is_item_in_modded_data(item)
-            else:
-                found = False
-                song_pack = None
-            if found:
-                song_unlock(self.path, item, True, song_pack, self.enable_all_diff)
-            else:
-                song_unlock(self.mod_pv, item, True, song_pack, self.enable_all_diff)
+            song_pack = self.is_item_in_modded_data(item) if self.modded else "ArchipelagoMod"
+
+            if song_pack not in ids_to_packs:
+                ids_to_packs[song_pack] = []
+            ids_to_packs[song_pack].append(item)
+
+        for song_pack in ids_to_packs:
+            song_unlock(self.path, ids_to_packs.get(song_pack), True, song_pack, self.enable_all_diff)
 
         logger.info("Removed songs!")
 

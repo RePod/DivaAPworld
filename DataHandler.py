@@ -256,7 +256,6 @@ def song_unlock(file_path, item_id, lock_status, song_pack, enable_all):
     if song_pack is not None:
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
 
-    print(song_pack, file_path)
     pv_db_handle = open_file_handle(file_path)
     modified_pv_db = action(pv_db_handle.readlines(), songs, enable_all)
     pv_db_handle.seek(0)
@@ -308,23 +307,25 @@ def modify_mod_pv(pv_db: list, songs, all_ver) -> list:
     return pv_db
 
 
-def remove_song(file_path, song_id, difficulty, all_ver):
-    # Replace text to disable song, all ver disables all versions
-    difficulties = []
-    if all_ver:
-        difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
-    else:
-        difficulties.append(difficulty)
-
-    for difficulty in difficulties:
-        if difficulty == 'exExtreme':
-            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=2"
-            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=0"
+def remove_song(pv_db: list, songs, all_ver):
+    for song_id, song_diff in songs:
+        # Replace text to disable song, all ver disables all versions
+        difficulties = []
+        if all_ver:
+            difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
         else:
-            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=1"
-            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
+            difficulties.append(song_diff)
 
-        replace_line_with_text(file_path, search_text, replace_text)
+        for difficulty in difficulties:
+            if difficulty == 'exExtreme':
+                search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=2"
+                replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=0"
+            else:
+                search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=1"
+                replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
+
+            pv_db = replace_line_with_text(pv_db, search_text, replace_text)
+    return pv_db
 
 
 def convert_difficulty(difficulty):
