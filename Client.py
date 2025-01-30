@@ -214,7 +214,7 @@ class MegaMixContext(CommonContext):
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
-                logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
+                logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
                 self.sent_unlock_message = True
             if self.modded:
                 found, song_pack = self.is_item_in_modded_data(self.goal_id)
@@ -246,6 +246,7 @@ class MegaMixContext(CommonContext):
 
     def receive_location_check(self, song_data):
 
+        logger.debug(song_data)
         # If song is not dummy song
         if song_data.get('pvId') != 144:
             # Check if player got a good enough grade on the song
@@ -271,7 +272,7 @@ class MegaMixContext(CommonContext):
                 asyncio.create_task(
                     self.send_checks())
             else:
-                logger.info("Song " + song_data.get('pvName') + " Was not beaten with a high enough grade")
+                logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
         else:
             logger.info("Whopper, Whopper, Whopper, Whopper Junior, Double, Triple Whopper Flame grilled taste with perfect toppers I rule this day Lettuce, Mayo, Pickle, Ketchup It's okay if I don't want that Impossible or Bacon Whopper Any Whopper my way You rule, you're seizing the day At BK, have it your way (You rule!)")
 
@@ -331,8 +332,8 @@ class MegaMixContext(CommonContext):
             logger.info("All available songs cleared")
 
     async def get_leek_info(self):
-        logger.info("You have " + str(self.leeks_obtained) + " Leeks")
-        logger.info("You need " + str(self.leeks_needed) + " Leeks total to unlock the goal song " + self.goal_song + " " + str(self.goal_id // 10))
+        logger.info(f"You have {self.leeks_obtained} Leeks")
+        logger.info(f"You need {self.leeks_needed} Leeks total to unlock the goal song {self.goal_song} {self.goal_id // 10}")
 
     async def toggle_remove_songs(self):
         self.autoRemove = not self.autoRemove

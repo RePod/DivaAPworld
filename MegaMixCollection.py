@@ -58,7 +58,7 @@ class MegaMixCollections:
             song_id = int(song['songID'])
             base_game_ids.add(song_id)  # Get list of all base game ids
             song_name = fix_song_name(song['songName'])  # Fix song name if needed
-            song_name = song_name + " " + song['difficulty']
+            song_name = f"{song_name} {song['difficulty']}"
             singers = song['singers']
             dlc = song['DLC'].lower() == "true"
             difficulty = song['difficulty']
@@ -93,7 +93,7 @@ class MegaMixCollections:
                             diff = difficulty_mapping_modded.get(difficulty_order[i])
                             song_name = song[0]
                             song_name = fix_song_name(song_name)
-                            song_name = song_name + " " + diff
+                            song_name = f"{song_name} {diff}"
                             item_id = (song_id * 10) + difficulty_mapping.get(diff, "Difficulty not found")
                             if cover_song:
                                 item_id += 1
