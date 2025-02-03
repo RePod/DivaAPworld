@@ -39,6 +39,7 @@ class MegaMixSettings(settings.Group):
         Players (Mega Mix Clients) must have this set correctly in THEIR host.yaml.
         Generating and hosting do not rely on this.
         """
+        description = "Hatsune Miku Project DIVA Mega Mix+ mods folder"
 
     mod_path: ModPath = ModPath(
         "C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods")
