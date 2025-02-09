@@ -34,7 +34,12 @@ components.append(Component(
 
 class MegaMixSettings(settings.Group):
     class ModPath(settings.LocalFolderPath):
-        """Path to diva mods folder"""
+        """
+        Mod folder location for Hatsune Miku Project DIVA Mega Mix+. Usually ends with "/mods".
+        Players (Mega Mix Clients) must have this set correctly in THEIR host.yaml.
+        Generating and hosting do not rely on this.
+        """
+        description = "Hatsune Miku Project DIVA Mega Mix+ mods folder"
 
     mod_path: ModPath = ModPath(
         "C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods")
