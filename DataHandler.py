@@ -125,7 +125,7 @@ def generate_modded_paths(processed_data, base_path):
 
 
 def restore_song_list(file_paths, skip_ids, restore):
-    skip_ids.extend([144, 700, 701])  # Append 144, 700, and 701 to the skip_ids list
+    skip_ids.extend([144, 700])  # Append 144,and 700 to the skip_ids list
     for file_path in file_paths:
         with open(file_path, 'r', encoding='utf-8') as file:
             modified_lines = []
@@ -168,8 +168,8 @@ def erase_song_list(file_paths):
 
         # Perform replacements
         for i, line in enumerate(file_data):
-            if line.startswith("pv_144") or line.startswith("pv_700") or line.startswith(
-                    "pv_701"):  # Skip lines starting with "pv_144", and skip tutorial
+            # Skip mod song and tutorial IDs
+            if re.match(r'^pv_(144|700)\.', line):
                 continue
             for search_text, replace_text in difficulty_replacements.items():
                 file_data[i] = file_data[i].replace(search_text, replace_text)
@@ -244,7 +244,7 @@ def replace_line_with_text(pv_db: list, search_text, new_line):
     return pv_db
 
 
-def song_unlock(file_path, item_id, lock_status, song_pack, enable_all):
+def song_unlock(file_path, item_id, lock_status, song_pack):
     """Unlock a song based on its id"""
 
     song_ids = [x // 10 for x in item_id]
@@ -257,7 +257,7 @@ def song_unlock(file_path, item_id, lock_status, song_pack, enable_all):
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
 
     pv_db_handle = open_file_handle(file_path)
-    modified_pv_db = action(pv_db_handle.readlines(), songs, enable_all)
+    modified_pv_db = action(pv_db_handle.readlines(), songs)
     pv_db_handle.seek(0)
     pv_db_handle.writelines(modified_pv_db)
     #pv_db_handle.truncate()
@@ -266,14 +266,10 @@ def song_unlock(file_path, item_id, lock_status, song_pack, enable_all):
     return
 
 
-def modify_mod_pv(pv_db: list, songs, all_ver) -> list:
+def modify_mod_pv(pv_db: list, songs) -> list:
     for song_id, song_diff in songs:
         # Replace text to disable song, all ver disables all versions
-        difficulties = []
-        if all_ver:
-            difficulties = ['easy', 'normal', 'hard', 'extreme']
-        else:
-            difficulties.append(song_diff)
+        difficulties = ['easy', 'normal', 'hard', 'extreme']
 
         for difficulty in difficulties:
             search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
@@ -307,14 +303,10 @@ def modify_mod_pv(pv_db: list, songs, all_ver) -> list:
     return pv_db
 
 
-def remove_song(pv_db: list, songs, all_ver):
+def remove_song(pv_db: list, songs):
     for song_id, song_diff in songs:
         # Replace text to disable song, all ver disables all versions
-        difficulties = []
-        if all_ver:
-            difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
-        else:
-            difficulties.append(song_diff)
+        difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
 
         for difficulty in difficulties:
             if difficulty == 'exExtreme':
@@ -326,55 +318,6 @@ def remove_song(pv_db: list, songs, all_ver):
 
             pv_db = replace_line_with_text(pv_db, search_text, replace_text)
     return pv_db
-
-
-def convert_difficulty(difficulty):
-    """Convert difficulty string to lowercase."""
-
-    #Fix cover songs
-    if difficulty % 2 != 0:
-        difficulty -= 1
-
-    difficulty_map = {
-        0: 'easy',
-        2: 'normal',
-        4: 'hard',
-        6: 'extreme',
-        8: 'exExtreme'
-    }
-    return difficulty_map.get(difficulty, None)
-
-
-def find_linked_numbers(number_list):
-    grouped_numbers = defaultdict(list)
-
-    # Define the links between the last digits
-    link_map = {
-        0: 1, 1: 0,
-        2: 3, 3: 2,
-        4: 5, 5: 4,
-        6: 7, 7: 6,
-        8: 9, 9: 8
-    }
-
-    # Group numbers by their prefix (all but the last digit)
-    for num in number_list:
-        prefix = num // 10  # Get all but the last digit
-        last_digit = num % 10  # Get the last digit
-        grouped_numbers[prefix].append(last_digit)
-
-    # Now check for matches in each group
-    lower_numbers = set()  # Use a set to avoid duplicates
-
-    for prefix, last_digits in grouped_numbers.items():
-        # Check for linked pairs within the last digits
-        for digit in last_digits:
-            linked_digit = link_map.get(digit)
-            if linked_digit in last_digits:
-                # Only add the lower of the two numbers in the pair
-                lower_numbers.add(min(prefix * 10 + digit, prefix * 10 + linked_digit))
-
-    return list(lower_numbers)
 
 
 def extract_mod_data_to_json() -> list[Any]:
@@ -389,7 +332,7 @@ def extract_mod_data_to_json() -> list[Any]:
     print(f"Checking YAMLs for megamix_mod_data at {folder_path}")
 
     if not os.path.isdir(folder_path):
-        raise ValueError(f"The path {folder_path} is not a valid directory.")
+        print(f"The path {folder_path} is not a valid directory. Modded songs are unavailable for this path.")
 
     # Search text for the specific game
     search_text = "Hatsune Miku Project Diva Mega Mix+"
@@ -413,7 +356,7 @@ def extract_mod_data_to_json() -> list[Any]:
                     matches = re.findall(mod_data_pattern, file_content)
 
                     # Process each mod_data block
-                    for mod_data_content in matches:
+                    for _ in matches:
                         mod_data_match = yaml.safe_load(file_content)
                         mod_data_content = mod_data_match.get("Hatsune Miku Project Diva Mega Mix+", {}).get(
                             "megamix_mod_data", '""')

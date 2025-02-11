@@ -16,9 +16,7 @@ from .DataHandler import (
     another_song_replacement,
     restore_originals,
     restore_song_list,
-    find_linked_numbers,
 )
-
 from CommonClient import (
     CommonContext,
     ClientCommandProcessor,
@@ -27,7 +25,7 @@ from CommonClient import (
     server_loop,
     gui_enabled,
 )
-from NetUtils import NetworkItem, ClientStatus
+from NetUtils import NetworkItem, ClientStatus, Permission
 
 
 class DivaClientCommandProcessor(ClientCommandProcessor):
@@ -98,12 +96,10 @@ class MegaMixContext(CommonContext):
         self.leeks_needed = None
         self.leeks_obtained = 0
         self.grade_needed = None
-        self.enable_all_diff = False
 
         self.watch_task = None
         if not self.watch_task:
-            self.watch_task = asyncio.create_task(
-                self.watch_json_file(self.songResultsLocation))
+            self.watch_task = asyncio.create_task(self.watch_json_file(self.songResultsLocation))
 
         self.obtained_items_queue = asyncio.Queue()
         self.critical_section_lock = asyncio.Lock()
@@ -127,16 +123,15 @@ class MegaMixContext(CommonContext):
             self.goal_song = self.options["victoryLocation"]
             self.goal_id = self.options["victoryID"]
             self.autoRemove = self.options["autoRemove"]
-            self.enable_all_diff = self.options["enableAllDiff"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
             self.modData = json.loads(self.options["modData"]) if self.options["modData"] else None
             if self.modData:
                 self.modded = True
                 self.mod_pv_list = generate_modded_paths(self.modData, self.path)
-                create_copies(self.mod_pv_list)
-                another_song_replacement(self.mod_pv_list)
             self.mod_pv_list.append(self.mod_pv)
+            create_copies(self.mod_pv_list)
+            another_song_replacement(self.mod_pv_list)
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
@@ -209,16 +204,18 @@ class MegaMixContext(CommonContext):
                         ids_to_packs[song_pack].append(network_item.item)
 
             for song_pack in ids_to_packs:
-                song_unlock(self.path, ids_to_packs.get(song_pack), False, song_pack, self.enable_all_diff)
+                song_unlock(self.path, ids_to_packs.get(song_pack), False, song_pack)
+
 
     def check_goal(self):
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
-                logger.info("Got enough leeks! Unlocking goal song:" + self.goal_song)
+                logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
                 self.sent_unlock_message = True
                 song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
 
-            song_unlock(self.path, [self.goal_id], False, song_pack, self.enable_all_diff)
+            song_unlock(self.path, [self.goal_id], False, song_pack)
+
 
     async def watch_json_file(self, file_name: str):
         """Watch a JSON file for changes and call the callback function."""
@@ -240,40 +237,35 @@ class MegaMixContext(CommonContext):
 
     def receive_location_check(self, song_data):
 
+        logger.debug(song_data)
         # If song is not dummy song
         if song_data.get('pvId') != 144:
             # Check if player got a good enough grade on the song
             if int(song_data.get('scoreGrade')) >= self.grade_needed:
                 logger.info("Cleared song with appropriate grade!")
-                # Construct location name
-                difficulty = int(song_data.get('pvDifficulty')) * 2
-                location_ids = []
-                if self.enable_all_diff:
-                    location_ids = [int(song_data.get('pvId') * 10), int(song_data.get('pvId') * 10) + 2, int(song_data.get('pvId') * 10) + 4, int(song_data.get('pvId') * 10) + 6, int(song_data.get('pvId') * 10) + 8]
-                else:
-                    location_ids.append(int(song_data.get('pvId') * 10) + difficulty)
 
-                for location_id in location_ids:
-                    if location_id == self.goal_id:
-                        asyncio.create_task(
-                            self.end_goal())
-                        return
+                location_id = int(song_data.get('pvId') * 10)
+                if location_id == self.goal_id:
+                    asyncio.create_task(self.end_goal())
+                    return
 
-                    for i in range(2):
-                        self.found_checks.append(location_id + i)
+                for i in range(2):
+                    self.found_checks.append(location_id + i)
 
-                asyncio.create_task(
-                    self.send_checks())
+                asyncio.create_task(self.send_checks())
             else:
-                logger.info("Song " + song_data.get('pvName') + " Was not beaten with a high enough grade")
+                logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
         else:
             logger.info("Whopper, Whopper, Whopper, Whopper Junior, Double, Triple Whopper Flame grilled taste with perfect toppers I rule this day Lettuce, Mayo, Pickle, Ketchup It's okay if I don't want that Impossible or Bacon Whopper Any Whopper my way You rule, you're seizing the day At BK, have it your way (You rule!)")
 
-
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
-        if self.autoRemove:
+
+        if Permission.auto & Permission.from_text(self.permissions.get("release")) == Permission.auto:
+            await self.restore_songs()
+        elif self.autoRemove:
             await self.remove_songs()
+
         await self.send_msgs(message)
 
     async def send_checks(self):
@@ -313,7 +305,7 @@ class MegaMixContext(CommonContext):
             # Only log if the pair hasn't been logged yet
             pair_key = (min(location, paired_location), max(location, paired_location))
             if pair_key not in logged_pairs:
-                logger.info(self.location_ap_id_to_name[location][:-2] + " " + str(location // 10) + " is uncleared")
+                logger.info(f"{self.location_ap_id_to_name[location][:-2]} [ID: {location // 10}] is uncleared")
                 logged_pairs.add(pair_key)
 
         # Check if missingLocations is empty
@@ -321,8 +313,8 @@ class MegaMixContext(CommonContext):
             logger.info("All available songs cleared")
 
     async def get_leek_info(self):
-        logger.info("You have " + str(self.leeks_obtained) + " Leeks")
-        logger.info("You need " + str(self.leeks_needed) + " Leeks total to unlock the goal song " + self.goal_song + " " + str(self.goal_id // 10))
+        logger.info(f"You have {self.leeks_obtained} Leeks")
+        logger.info(f"You need {self.leeks_needed} Leeks total to unlock the goal song {self.goal_song} [ID: {self.goal_id // 10}]")
 
     async def toggle_remove_songs(self):
         self.autoRemove = not self.autoRemove
@@ -334,7 +326,11 @@ class MegaMixContext(CommonContext):
             logger.info("Auto Remove Set to Off")
 
     async def remove_songs(self):
-        finished_songs = find_linked_numbers(self.prev_found)
+        group_songs = {}
+        for loc in self.prev_found:
+            prefix, last = divmod(loc, 10)
+            group_songs.setdefault(prefix, set()).add(last)
+        finished_songs = [prefix * 10 for prefix, digits in group_songs.items() if {0, 1} <= digits]
         ids_to_packs = {}
 
         # Check for matches where all suffixes have been found

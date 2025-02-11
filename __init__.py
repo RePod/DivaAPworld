@@ -13,8 +13,6 @@ from .MegaMixCollection import MegaMixCollections
 from .DataHandler import get_player_specific_ids
 
 #Python
-import re
-import random
 import typing
 from typing import List
 from math import floor
@@ -35,10 +33,14 @@ components.append(Component(
 
 class MegaMixSettings(settings.Group):
     class ModPath(settings.LocalFolderPath):
-        """Path to diva mods folder"""
+        """
+        Mod folder location for Hatsune Miku Project DIVA Mega Mix+. Usually ends with "/mods".
+        Players (Mega Mix Clients) must have this set correctly in THEIR host.yaml.
+        Generating and hosting do not rely on this.
+        """
+        description = "Hatsune Miku Project DIVA Mega Mix+ mods folder"
 
-    mod_path: ModPath = ModPath(
-        "C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods")
+    mod_path: ModPath = ModPath("C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods")
 
 
 class MegaMixWorld(World):
@@ -77,40 +79,27 @@ class MegaMixWorld(World):
         allowed_difficulties = self.get_available_difficulties()
         disallowed_singers = self.options.exclude_singers.value
 
-        # The minimum amount of songs to make an ok rando would be Starting Songs + 10 interim songs + Goal song.
-        # - Interim songs being equal to max starting song count.
-        # Note: The worst settings still allow 25 songs (Streamer Mode + No DLC).
-        starter_song_count = self.options.starting_song_count.value
-
         while True:
             # In most cases this should only need to run once
-            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold, self.options.always_pick_hardest)
+            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
 
             # Choose victory song from current available keys, so we can access the song id
-            chosen_song_index = random.randrange(0, len(available_song_keys))
-            self.victory_song_name = available_song_keys[chosen_song_index]
+            if available_song_keys:
+                chosen_song_index = self.random.randrange(0, len(available_song_keys))
+                self.victory_song_name = available_song_keys[chosen_song_index]
+            else:
+                raise ValueError(f"Not enough songs available. Need at least {self.options.starting_song_count + self.options.additional_song_count + 1}")
 
-            difficulty_mapping = {
-                "[EASY]": 0,
-                "[NORMAL]": 2,
-                "[HARD]": 4,
-                "[EXTREME]": 6,
-                "[EXEXTREME]": 8
-            }
-
-            # Use regex to find the difficulty
-            match = re.search(r'\[(EASY|NORMAL|HARD|EXTREME|EXEXTREME)\]', self.victory_song_name)
-            if match:
-                difficulty_key = f"[{match.group(1)}]"
-                victory_difficulty_value = difficulty_mapping[difficulty_key]
-                self.victory_song_id = (int(song_ids[chosen_song_index]) * 10) + victory_difficulty_value
-
+            # Handle goal ID
+            self.victory_song_id = (int(song_ids[chosen_song_index]) * 10)
             del available_song_keys[chosen_song_index]
 
             available_song_keys = self.handle_plando(available_song_keys)
 
-            count_needed_for_start = max(0, starter_song_count - len(self.starting_songs))
-            if len(available_song_keys) + len(self.included_songs) >= count_needed_for_start + 11:
+            # The minimum amount of songs to make an ok rando would be Starting Songs + 10 interim songs + Goal song.
+            # - Interim songs being equal to max starting song count.
+            count_needed_for_start = max(0, self.options.starting_song_count.value - len(self.starting_songs)) + 11
+            if len(available_song_keys) + len(self.included_songs) >= count_needed_for_start:
                 final_song_list = available_song_keys
                 break
 
@@ -278,43 +267,22 @@ class MegaMixWorld(World):
         return max(1, floor(leek_count * multiplier))
 
     def get_difficulty_range(self) -> List[float]:
-        difficulty_rating = int(self.options.song_difficulty_rating)
 
         # Generate the number_to_option_value dictionary using the formula
         number_to_option_value = {i: 1 + i * 0.5 if i % 2 != 0 else int(1 + i * 0.5) for i in range(19)}
 
-        difficulty_bounds = [1, 10]  # Default difficulty range
-
-        if difficulty_rating == 1:
-            difficulty_bounds = [1, 4]
-        elif difficulty_rating == 2:
-            difficulty_bounds = [4, 6]
-        elif difficulty_rating == 3:
-            difficulty_bounds = [6, 8]
-        elif difficulty_rating == 4:
-            difficulty_bounds = [7, 9]
-        elif difficulty_rating == 5:
-            difficulty_bounds = [8, 10]
-        elif difficulty_rating == 6:
-            minimum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_min, None)
-            maximum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_max, None)
-            difficulty_bounds = [min(minimum_difficulty, maximum_difficulty),
-                                 max(minimum_difficulty, maximum_difficulty)]
+        minimum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_min, None)
+        maximum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_max, None)
+        difficulty_bounds = [min(minimum_difficulty, maximum_difficulty), max(minimum_difficulty, maximum_difficulty)]
 
         return difficulty_bounds
 
     def get_available_difficulties(self) -> List[int]:
-        difficulty_choice = int(self.options.song_difficulty_mode)
         available_difficulties = []
 
-        if difficulty_choice == 0:
-            available_difficulties.extend(range(5))  # Add difficulties 0 through 4
-        elif difficulty_choice == 6:
-            min_diff = min(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
-            max_diff = max(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
-            available_difficulties.extend(range(min_diff, max_diff + 1))
-        else:
-            available_difficulties.append(difficulty_choice - 1)
+        min_diff = min(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
+        max_diff = max(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
+        available_difficulties.extend(range(min_diff, max_diff + 1))
 
         return available_difficulties
 
@@ -326,5 +294,4 @@ class MegaMixWorld(World):
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),
             "modData": self.options.megamix_mod_data.value,
-            "enableAllDiff": bool(self.options.enable_all_diff),
         }
