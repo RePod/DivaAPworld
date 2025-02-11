@@ -342,7 +342,7 @@ class MegaMixContext(CommonContext):
             ids_to_packs[song_pack].append(item)
 
         for song_pack in ids_to_packs:
-            song_unlock(self.path, ids_to_packs.get(song_pack), True, song_pack, self.enable_all_diff)
+            song_unlock(self.path, ids_to_packs.get(song_pack), True, song_pack)
 
         logger.info("Removed songs!")
 

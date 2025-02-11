@@ -248,8 +248,7 @@ def song_unlock(file_path, item_id, lock_status, song_pack):
     """Unlock a song based on its id"""
 
     song_ids = [x // 10 for x in item_id]
-    difficulty = [convert_difficulty(x % 10) for x in item_id]
-    songs = list(zip(song_ids, difficulty))
+    songs = list(song_ids)
 
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
@@ -267,33 +266,21 @@ def song_unlock(file_path, item_id, lock_status, song_pack):
 
 
 def modify_mod_pv(pv_db: list, songs) -> list:
-    for song_id, song_diff in songs:
-        # Replace text to disable song, all ver disables all versions
-        difficulties = ['easy', 'normal', 'hard', 'extreme']
+    difficulties = ['easy', 'normal', 'hard', 'extreme']
 
+    for song_id in songs:
         for difficulty in difficulties:
             search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
             replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
 
-            if difficulty == 'exExtreme':
-                search_text = search_text.replace("exExtreme", "extreme")
-                replace_text = replace_text.replace("exExtreme", "extreme")
-                replace_text += "2"
-            elif difficulty == 'extreme' and all_ver:
+            if difficulty == 'extreme':
                 replace_text += "2"
             else:
                 replace_text += "1"
 
             pv_db = replace_line_with_text(pv_db, search_text, replace_text)
 
-            if difficulty == 'exExtreme' and not all_ver:
-                # Disable regular extreme
-                search_text = "pv_" + '{:03d}'.format(
-                    song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(
-                    song_id) + "_extreme.dsc"
-                replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
-                pv_db = replace_line_with_text(pv_db, search_text, replace_text)
-            elif difficulty == 'extreme':
+            if difficulty == 'extreme':
                 # Restore extreme
                 search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
                 replace_text = "pv_" + '{:03d}'.format(
@@ -304,10 +291,9 @@ def modify_mod_pv(pv_db: list, songs) -> list:
 
 
 def remove_song(pv_db: list, songs):
-    for song_id, song_diff in songs:
-        # Replace text to disable song, all ver disables all versions
-        difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
+    difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
 
+    for song_id in songs:
         for difficulty in difficulties:
             if difficulty == 'exExtreme':
                 search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=2"
