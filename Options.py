@@ -1,16 +1,6 @@
 from typing import Dict
-from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText
+from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText, Visibility
 from dataclasses import dataclass
-
-
-class AllowMegaMixDLCSongs(Toggle):
-    """Whether Extra Song Pack DLC Songs can be chosen as randomised songs."""
-    display_name = "Allow Extra Song Pack DLC Songs"
-
-
-class AutoRemoveCleared(Toggle):
-    """If true, automatically removes cleared songs from the song list on refresh"""
-    display_name = "Auto Remove Songs"
 
 
 class StartingSongs(Range):
@@ -43,30 +33,18 @@ class DuplicateSongPercentage(Range):
     display_name = "Duplicate Song Percentage"
 
 
-class DifficultyMode(Choice):
-    """Difficulty Select, All songs will be of the selected difficulty (Manual allows a range, Any gives a random difficulty for each song)
-    - Any: Each song will be of a randomly chosen difficulty
-    - Easy: Only Easy Charts
-    - Normal: Only Normal Charts
-    - Hard: Only Hard Charts
-    - Extreme: Only Extreme Charts
-    - ExExtreme: Only ExExtreme Charts
-    - Manual: Uses the provided minimum and maximum range.
-    """
-    display_name = "Song Difficulty"
-    option_Any = 0
-    option_Easy = 1
-    option_Normal = 2
-    option_Hard = 3
-    option_Extreme = 4
-    option_ExExtreme = 5
-    option_Manual = 6
-    default = 0
+class AllowMegaMixDLCSongs(Toggle):
+    """Whether Extra Song Pack DLC Songs can be chosen as randomised songs."""
+    display_name = "Allow Extra Song Pack DLC Songs"
 
 
-class DifficultyModeOverrideMin(Choice):
-    """Ensures that 1 difficulty has at least 1 this value or higher per song.
-    - Difficulty Mode must be set to Manual."""
+class AutoRemoveCleared(Toggle):
+    """If true, automatically removes cleared songs from the song list on refresh"""
+    display_name = "Auto Remove Songs"
+
+
+class DifficultyModeMin(Choice):
+    """Minimum difficulty that a song can be selected from"""
     display_name = "Manual Difficulty Min"
     option_Easy = 0
     option_Normal = 1
@@ -76,9 +54,8 @@ class DifficultyModeOverrideMin(Choice):
     default = 0
 
 
-class DifficultyModeOverrideMax(Choice):
-    """Ensures that 1 difficulty has at least 1 this value or lower per song.
-    - Difficulty Mode must be set to Manual."""
+class DifficultyModeMax(Choice):
+    """Maximum difficulty that a song can be selected from"""
     display_name = "Manual Difficulty Max"
     option_Easy = 0
     option_Normal = 1
@@ -88,36 +65,9 @@ class DifficultyModeOverrideMax(Choice):
     default = 4
 
 
-class DifficultyModeRating(Choice):
-    """Ensures that at least one of the song's available difficulties have a star rating that falls within these ranges.
-    - Any: All songs are available
-    - Easy: 1 - 4
-    - Medium: 4 - 6
-    - Hard: 6 - 8
-    - Expert: 7 - 9
-    - Master: 8 - 10
-    - Manual: Uses the provided minimum and maximum range.
-    """
-    display_name = "Song Star Rating Difficulty"
-    option_Any = 0
-    option_Easy = 1
-    option_Medium = 2
-    option_Hard = 3
-    option_Expert = 4
-    option_Master = 5
-    option_Manual = 6
-    default = 0
-
-
-class EnableAllDifficulties(Toggle):
-    """If Enabled, when a song is received all difficulties for that song will be unlocked, and clearing any of them counts as beating the song"""
-    display_name = "Enable All Difficulties"
-
-
-class DifficultyModeRatingOverrideMin(Choice):
+class DifficultyRatingMin(Choice):
     """Ensures that at least one of the song's available difficulties have this star rating or higher
-    x5 = .5, Used since _5 causes issues
-    - Difficulty Mode must be set to Manual."""
+    x5 = .5, Used since _5 causes issues"""
     display_name = "Manual Difficulty Min"
     option_one = 0
     option_1x5 = 1
@@ -141,10 +91,9 @@ class DifficultyModeRatingOverrideMin(Choice):
     default = 0
 
 
-class DifficultyModeRatingOverrideMax(Choice):
+class DifficultyRatingMax(Choice):
     """Ensures that at least one of the song's available difficulties have this star rating or lower
-    x5 = .5, Used since _5 causes issues
-    - Difficulty Mode must be set to Manual."""
+    x5 = .5, Used since _5 causes issues"""
     display_name = "Manual Difficulty Max"
     option_one = 0
     option_1x5 = 1
@@ -166,11 +115,6 @@ class DifficultyModeRatingOverrideMax(Choice):
     option_9x5 = 17
     option_ten = 18
     default = 18
-
-
-class AlwaysPickHardest(Toggle):
-    """Whether the hardest available version of the song should be picked instead of randomizing between available difficulties."""
-    display_name = "Always Choose Hardest Difficulty Available"
 
 
 class ScoreGradeNeeded(Choice):
@@ -233,6 +177,7 @@ class ModData(FreeText):
     """If you are using modded songs, paste the string from the DivaJSON Tool here"""
     display_name = "MegaMixModData"
     default = ''
+    visibility = Visibility.template
 
 
 @dataclass
@@ -242,14 +187,10 @@ class MegaMixOptions(PerGameCommonOptions):
     duplicate_song_percentage: DuplicateSongPercentage
     starting_song_count: StartingSongs
     additional_song_count: AdditionalSongs
-    song_difficulty_mode: DifficultyMode
-    song_difficulty_min: DifficultyModeOverrideMin
-    song_difficulty_max: DifficultyModeOverrideMax
-    enable_all_diff: EnableAllDifficulties
-    song_difficulty_rating: DifficultyModeRating
-    song_difficulty_rating_min: DifficultyModeRatingOverrideMin
-    song_difficulty_rating_max: DifficultyModeRatingOverrideMax
-    always_pick_hardest: AlwaysPickHardest
+    song_difficulty_min: DifficultyModeMin
+    song_difficulty_max: DifficultyModeMax
+    song_difficulty_rating_min: DifficultyRatingMin
+    song_difficulty_rating_max: DifficultyRatingMax
     grade_needed: ScoreGradeNeeded
     leek_count_percentage: TotalLeeksAvailable
     leek_win_count_percentage: LeeksRequiredPercentage

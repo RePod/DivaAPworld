@@ -3,7 +3,6 @@ from .Items import SongData
 from .SymbolFixer import fix_song_name
 
 # Python
-import random
 from typing import Dict, List, Tuple
 from collections import ChainMap
 
@@ -33,14 +32,6 @@ class MegaMixCollections:
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.filler_item_names, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)
 
-        difficulty_mapping = {
-            "[EASY]": 0,
-            "[NORMAL]": 2,
-            "[HARD]": 4,
-            "[EXTREME]": 6,
-            "[EXEXTREME]": 8
-        }
-
         difficulty_mapping_modded = {
             'E': '[EASY]',
             'N': '[NORMAL]',
@@ -58,47 +49,42 @@ class MegaMixCollections:
             song_id = int(song['songID'])
             base_game_ids.add(song_id)  # Get list of all base game ids
             song_name = fix_song_name(song['songName'])  # Fix song name if needed
-            song_name = f"{song_name} {song['difficulty']}"
             singers = song['singers']
             dlc = song['DLC'].lower() == "true"
-            difficulty = song['difficulty']
-            difficulty_rating = float(song["difficultyRating"])
-            # item_id = song_id x 10, ex: id 420 becomes 4200
-            item_id = (song_id * 10) + difficulty_mapping.get(difficulty, "Difficulty not found")
+            difficulties = song['difficulties']
+            difficulty_ratings = song["difficultyRatings"]
+            item_id = (song_id * 10)
 
-            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, difficulty, difficulty_rating)
+            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, dlc, False, difficulties, difficulty_ratings)
 
         if mod_data:
             for data_dict in mod_data:
                 for pack_name, songs in data_dict.items():
                     for song in songs:
                         song_id = song[1]
-                        cover_song = False
+                        item_id = (song_id * 10)
+                        # If cover song
                         if song_id in base_game_ids:
-                            cover_song = True
+                            item_id += 1
+                        song_name = song[0]
+                        song_name = fix_song_name(song_name)
+                        diff_info = []
                         difficulties = []
-                        singers = {}
+                        difficulty_ratings = []
 
-                        while len(difficulties) < 5:
+                        while len(diff_info) < 5:
                             diff = song[2] & 15
                             half = bool(song[2] >> 4 & 1)
                             # there might be a perf difference over time between this VS reversing after it's full, deque, etc
-                            difficulties.insert(0, diff + (.5 if half else 0))
+                            diff_info.insert(0, diff + (.5 if half else 0))
                             song[2] >>= 5
 
-                        for i, rating in enumerate(difficulties):
-                            if rating == 0:
-                                continue
+                        for i, rating in enumerate(diff_info):
+                            if rating != 0:
+                                difficulties.append(difficulty_mapping_modded.get(difficulty_order[i]))
+                                difficulty_ratings.append(rating)
 
-                            diff = difficulty_mapping_modded.get(difficulty_order[i])
-                            song_name = song[0]
-                            song_name = fix_song_name(song_name)
-                            song_name = f"{song_name} {diff}"
-                            item_id = (song_id * 10) + difficulty_mapping.get(diff, "Difficulty not found")
-                            if cover_song:
-                                item_id += 1
-
-                            self.song_items[song_name] = SongData(item_id, song_id, song_name, singers, False, True, diff, rating)
+                        self.song_items[song_name] = SongData(item_id, song_id, song_name, [], False, True, difficulties, difficulty_ratings)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
@@ -111,11 +97,10 @@ class MegaMixCollections:
             for i in range(2):
                 self.song_locations[f"{song_name}-{i}"] = (song_data.code + i)
 
-    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float, pick_hardest: bool) -> Tuple[List[str], List[int]]:
+    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> Tuple[List[str], List[int]]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
         id_list = []
-        song_groups = {}
 
         for songKey, songData in self.song_items.items():
 
@@ -142,41 +127,14 @@ class MegaMixCollections:
                 if singer_found:
                     continue
 
-            # Check if a group for this songID already exists
-            if song_id in song_groups:
-                # Append the current songData object to the existing group
-                song_groups[song_id].append(songData)
-            else:
-                # Create a new group with the current songData object
-                song_groups[song_id] = [songData]
-
-        for song_id, group in song_groups.items():
-            valid_difficulties = []
-
-            # Check if song matches filter settings
-            for song_item in group:
-                if song_item.difficulty in ["[EASY]", "[NORMAL]", "[HARD]", "[EXTREME]", "[EXEXTREME]"]:
-                    difficulty_index = ["[EASY]", "[NORMAL]", "[HARD]", "[EXTREME]", "[EXEXTREME]"].index(
-                        song_item.difficulty)
-                    if difficulty_index in allowed_diff and diff_lower <= song_item.difficultyRating <= diff_higher:
-                        valid_difficulties.append(song_item.difficulty)
-
-            # If there are valid difficulty selections
-            if valid_difficulties:
-
-                if pick_hardest:
-                    # Pick the hardest version available
-                    selected_difficulty = valid_difficulties[-1]
-                else:
-                    # Randomly choose one of the valid difficulty selections
-                    selected_difficulty = random.choice(valid_difficulties)
-
-                # Find the song_item that matches the selected difficulty
-                for song_item in group:
-                    if song_item.difficulty == selected_difficulty:
+            # Check if song has a valid difficulty and rating for settings
+            difficulty_indices = [["[EASY]", "[NORMAL]", "[HARD]", "[EXTREME]", "[EXEXTREME]"].index(d) for d in songData.difficulties]
+            for i, diff in enumerate(difficulty_indices):
+                if diff in allowed_diff:
+                    if diff_lower <= songData.difficultyRatings[i] <= diff_higher:
                         # Append the song name to the selected_songs list
-                        filtered_list.append(song_item.songName)
-                        id_list.append(song_item.songID)
-                        break  # Stop searching once a match is found
+                        filtered_list.append(songData.songName)
+                        id_list.append(songData.songID)
+                        break
 
         return filtered_list, id_list
