@@ -360,7 +360,7 @@ def extract_mod_data_to_json() -> list[Any]:
 def get_player_specific_ids(mod_data):
     song_ids = []  # Initialize an empty list to store song IDs
 
-    if mod_data == "":
+    if mod_data == "" or mod_data == "delete_this_entire_line_and_replace_with_mod_data":
         return song_ids
 
     data_dict = json.loads(mod_data)
