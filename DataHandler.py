@@ -1,6 +1,4 @@
 import json
-from io import TextIOWrapper
-
 import yaml
 import pkgutil
 import re
@@ -9,7 +7,6 @@ import shutil
 import sys
 import Utils
 from .SymbolFixer import fix_song_name
-from collections import defaultdict
 from typing import Any, TextIO
 
 
