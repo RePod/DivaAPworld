@@ -152,7 +152,9 @@ class MegaMixContext(CommonContext):
                 return
             self.leeks_obtained = 0
             self.previous_received = []
-            self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["location_name_to_id"]
+
+            self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"][
+                "location_name_to_id"]
             self.location_name_to_ap_id = {
                 name: loc_id for name, loc_id in
                 self.location_name_to_ap_id.items() if loc_id in self.location_ids
@@ -162,7 +164,6 @@ class MegaMixContext(CommonContext):
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
 
             erase_song_list(self.mod_pv_list)
-
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())
 
@@ -309,7 +310,7 @@ class MegaMixContext(CommonContext):
             # Only log if the pair hasn't been logged yet
             pair_key = (min(location, paired_location), max(location, paired_location))
             if pair_key not in logged_pairs:
-                logger.info(f"{self.location_ap_id_to_name[location][:-2]} [ID: {location // 10}] is uncleared")
+                logger.info(f"{self.location_ap_id_to_name[location][:-2]} is uncleared")
                 logged_pairs.add(pair_key)
 
         # Check if missingLocations is empty
@@ -318,7 +319,7 @@ class MegaMixContext(CommonContext):
 
     async def get_leek_info(self):
         logger.info(f"You have {self.leeks_obtained} Leeks")
-        logger.info(f"You need {self.leeks_needed} Leeks total to unlock the goal song {self.goal_song} [ID: {self.goal_id // 10}]")
+        logger.info(f"You need {self.leeks_needed} Leeks total to unlock the goal song {self.goal_song}")
 
     async def toggle_remove_songs(self):
         self.autoRemove = not self.autoRemove
