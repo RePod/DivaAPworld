@@ -133,7 +133,7 @@ class MegaMixWorld(World):
 
     def create_song_pool(self, available_song_keys):
         starting_song_count = self.options.starting_song_count.value
-        additional_song_count = self.options.additional_song_count.value
+        additional_song_count = min(len(available_song_keys), self.options.additional_song_count.value)
         self.random.shuffle(available_song_keys)
         self.matched_songs = [self.mm_collection.song_items.get(song_name) for song_name in self.included_songs]
 
