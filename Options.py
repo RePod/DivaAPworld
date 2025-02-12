@@ -178,7 +178,7 @@ class ModData(FreeText):
     display_name = "MegaMixModData"
     option_DELETE_THIS_ENTIRE_LINE_AND_REPLACE_WITH_MOD_DATA = ''
     default = ''
-    visibility = 0b1001
+    visibility = Visibility.template | Visibility.spoiler
 
 
 @dataclass
