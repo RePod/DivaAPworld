@@ -218,8 +218,8 @@ Hatsune Miku Project Diva Mega Mix+:
     {}
 
   megamix_mod_data:
-    # If you are using modded songs, paste the string from the DivaJSON Tool here
-    delete_this_entire_line_and_replace_with_mod_data: 50
+    # If you are using modded songs, delete the option below entirely and paste the string from the DivaJSON Tool here
+    '': 50
 
   # Item & Location Options
   local_items:
