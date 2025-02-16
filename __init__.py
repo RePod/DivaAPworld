@@ -92,7 +92,7 @@ class MegaMixWorld(World):
                 raise ValueError(f"Not enough songs available. Need at least {self.options.starting_song_count + self.options.additional_song_count + 1}")
 
             # Handle goal ID
-            self.victory_song_id = available_song_keys[chosen_song_index].songID
+            self.victory_song_id = available_song_keys[chosen_song_index].songID * 10
             del available_song_keys[chosen_song_index]
 
             available_song_keys = self.handle_plando(available_song_keys)
