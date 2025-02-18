@@ -83,6 +83,7 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
+
             allowed_difficulties = list(range(lower_diff_threshold, higher_diff_threshold + 1))
             available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_rating_threshold, higher_rating_threshold)
 
