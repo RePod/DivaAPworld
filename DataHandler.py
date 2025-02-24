@@ -8,7 +8,7 @@ import sys
 import Utils
 import logging
 from .SymbolFixer import fix_song_name
-from typing import Any, TextIO
+from typing import Any
 
 # Set up logger
 logging.basicConfig(level=logging.DEBUG)
@@ -158,8 +158,6 @@ def song_unlock(file_path, item_id, lock_status, song_pack):
         pv_db = file.read()
         pv_db = action(pv_db, song_ids)
         file.write(pv_db)
-
-    return
 
 
 def modify_mod_pv(pv_db: str, songs: str) -> str:
