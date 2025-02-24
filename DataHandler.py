@@ -150,30 +150,16 @@ def restore_song_list(file_paths, skip_ids, restore):
 
 
 def erase_song_list(file_paths):
-    difficulty_replacements = {
-        "easy.length=1": "easy.length=0",
-        "normal.length=1": "normal.length=0",
-        "hard.length=1": "hard.length=0",
-        "extreme.length=1": "extreme.length=0",
-        "extreme.length=2": "extreme.length=0",
-    }
+    search = re.compile(r"^(pv_(?!(144|700)\.)\d+\.difficulty\.(?:easy|normal|hard|extreme)\.length=\d)$", re.MULTILINE)
 
     for file_path in file_paths:
-        # Read file content
         with open(file_path, 'r', encoding='utf-8') as file:
-            file_data = file.readlines()
+            file_data = file.read()
 
-        # Perform replacements
-        for i, line in enumerate(file_data):
-            # Skip mod song and tutorial IDs
-            if re.match(r'^pv_(144|700)\.', line):
-                continue
-            for search_text, replace_text in difficulty_replacements.items():
-                file_data[i] = file_data[i].replace(search_text, replace_text)
+        file_data = re.sub(search, f"#ARCH#\g<1>", file_data)
 
-        # Rewrite file with replacements
         with open(file_path, 'w', encoding='utf-8') as file:
-            file.writelines(file_data)
+            file.write(file_data)
 
 
 def another_song_replacement(file_paths):
