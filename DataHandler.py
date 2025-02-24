@@ -155,20 +155,6 @@ def open_file_handle(file_path: str) -> TextIO:
         print(f"Error: {e}")
 
 
-# Text Replacement
-def replace_line_with_text(pv_db: list, search_text, new_line):
-    # Find and replace the line containing the search text
-    for i, line in enumerate(pv_db):
-        if search_text in line:
-            pv_db[i] = new_line + '\n'
-            break
-    else:
-        # If the search text was not found, print an error and return
-        print(f"Error: '{search_text}' not found in the file.")
-
-    return pv_db
-
-
 def song_unlock(file_path, item_id, lock_status, song_pack):
     """Unlock a song based on its id"""
 
