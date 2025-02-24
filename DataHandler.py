@@ -128,7 +128,7 @@ def restore_song_list(file_paths):
         with open(file_path, 'r', encoding='utf-8') as file:
             file_data = file.read()
 
-        file_data = re.sub(search, f"\g<1>", file_data)
+        file_data = re.sub(search, "\g<1>", file_data)
 
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(file_data)
@@ -141,7 +141,7 @@ def erase_song_list(file_paths):
         with open(file_path, 'r', encoding='utf-8') as file:
             file_data = file.read()
 
-        file_data = re.sub(search, f"#ARCH#\g<1>", file_data)
+        file_data = re.sub(search, "#ARCH#\g<1>", file_data)
 
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(file_data)
@@ -172,8 +172,7 @@ def replace_line_with_text(pv_db: list, search_text, new_line):
 def song_unlock(file_path, item_id, lock_status, song_pack):
     """Unlock a song based on its id"""
 
-    song_ids = [x // 10 for x in item_id]
-    songs = list(song_ids)
+    song_ids = [str(x // 10).zfill(3) for x in item_id]
 
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
@@ -181,53 +180,26 @@ def song_unlock(file_path, item_id, lock_status, song_pack):
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
 
     pv_db_handle = open_file_handle(file_path)
-    modified_pv_db = action(pv_db_handle.readlines(), songs)
+    modified_pv_db = action(pv_db_handle.read(), song_ids)
     pv_db_handle.seek(0)
-    pv_db_handle.writelines(modified_pv_db)
+    pv_db_handle.write(modified_pv_db)
     #pv_db_handle.truncate()
     pv_db_handle.close()
 
     return
 
 
-def modify_mod_pv(pv_db: list, songs) -> list:
-    difficulties = ['easy', 'normal', 'hard', 'extreme']
-
+def modify_mod_pv(pv_db, songs) -> list:
     for song_id in songs:
-        for difficulty in difficulties:
-            search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
-            replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length="
+        pv_db = re.sub(rf"^#ARCH#(pv_{song_id}\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "\g<1>", pv_db, flags=re.MULTILINE)
 
-            if difficulty == 'extreme':
-                replace_text += "2"
-            else:
-                replace_text += "1"
-
-            pv_db = replace_line_with_text(pv_db, search_text, replace_text)
-
-            if difficulty == 'extreme':
-                # Restore extreme
-                search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + "extreme" + ".0.script_file_name="
-                replace_text = "pv_" + '{:03d}'.format(
-                    song_id) + ".difficulty." + "extreme" + ".0.script_file_name=" + "rom/script/" + "pv_" + '{:03d}'.format(
-                    song_id) + "_extreme.dsc"
-                pv_db = replace_line_with_text(pv_db, search_text, replace_text)
     return pv_db
 
 
-def remove_song(pv_db: list, songs):
-    difficulties = ['easy', 'normal', 'hard', 'extreme', 'exExtreme']
-
+def remove_song(pv_db, songs):
     for song_id in songs:
-        for difficulty in difficulties:
-            if difficulty == 'exExtreme':
-                search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=2"
-                replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty.extreme.length=0"
-            else:
-                search_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=1"
-                replace_text = "pv_" + '{:03d}'.format(song_id) + ".difficulty." + difficulty + ".length=0"
+        pv_db = re.sub(rf"^(pv_{song_id}\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
 
-            pv_db = replace_line_with_text(pv_db, search_text, replace_text)
     return pv_db
 
 
