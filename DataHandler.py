@@ -125,12 +125,9 @@ def restore_song_list(file_paths):
     search = re.compile(r"^#ARCH#(.*)", re.MULTILINE)
 
     for file_path in file_paths:
-        with open(file_path, 'r', encoding='utf-8') as file:
+        with open(file_path, 'r+', encoding='utf-8') as file:
             file_data = file.read()
-
-        file_data = re.sub(search, "\g<1>", file_data)
-
-        with open(file_path, 'w', encoding='utf-8') as file:
+            file_data = re.sub(search, r"\g<1>", file_data)
             file.write(file_data)
 
 
@@ -138,49 +135,35 @@ def erase_song_list(file_paths):
     search = re.compile(r"^(pv_(?!(144|700)\.)\d+\.difficulty\.(?:easy|normal|hard|extreme)\.length=\d)$", re.MULTILINE)
 
     for file_path in file_paths:
-        with open(file_path, 'r', encoding='utf-8') as file:
+        with open(file_path, 'r+', encoding='utf-8') as file:
             file_data = file.read()
-
-        file_data = re.sub(search, "#ARCH#\g<1>", file_data)
-
-        with open(file_path, 'w', encoding='utf-8') as file:
+            file_data = re.sub(search, r"#ARCH#\g<1>", file_data)
             file.write(file_data)
-
-
-def open_file_handle(file_path: str) -> TextIO:
-    try:
-        handle = open(file_path, 'r+', encoding='utf-8')
-        return handle
-    except Exception as e:
-        print(f"Error: {e}")
 
 
 def song_unlock(file_path, item_id, lock_status, song_pack):
     """Unlock a song based on its id"""
 
-    song_ids = "|".join([str(x // 10).zfill(3) for x in item_id])
-
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
+    song_ids = "|".join([str(x // 10).zfill(3) for x in item_id])
     if song_pack is not None:
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
 
-    pv_db_handle = open_file_handle(file_path)
-    modified_pv_db = action(pv_db_handle.read(), song_ids)
-    pv_db_handle.seek(0)
-    pv_db_handle.write(modified_pv_db)
-    #pv_db_handle.truncate()
-    pv_db_handle.close()
+    with open(file_path, 'r+', encoding='utf-8') as file:
+        pv_db = file.read()
+        pv_db = action(pv_db, song_ids)
+        file.write(pv_db)
 
     return
 
 
 def modify_mod_pv(pv_db: str, songs: str) -> str:
-    return re.sub(rf"^#ARCH#(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "\g<1>", pv_db, flags=re.MULTILINE)
+    return re.sub(rf"^#ARCH#(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)$", r"\g<1>", pv_db, flags=re.MULTILINE)
 
 
 def remove_song(pv_db: str, songs: str) -> str:
-    return re.sub(rf"^(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
+    return re.sub(rf"^(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)$", r"#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
 
 
 def extract_mod_data_to_json() -> list[Any]:
