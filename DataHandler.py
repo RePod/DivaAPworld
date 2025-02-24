@@ -162,49 +162,6 @@ def erase_song_list(file_paths):
             file.write(file_data)
 
 
-def another_song_replacement(file_paths):
-    for file_path in file_paths:
-        # Read file content
-        with open(file_path, 'r', encoding='utf-8') as file:
-            file_data = file.readlines()
-
-        # Dictionary to store song names in English for each pv_x
-        song_names_en = {}
-
-        # Regex patterns
-        pv_pattern = re.compile(r'^pv_(\d+)\..*')
-        song_name_en_pattern = re.compile(r'^pv_(\d+)\.song_name_en=(.*)')
-        another_song_name_en_pattern = re.compile(r'^pv_(\d+)\.another_song\.\d+\.name_en=.*')
-
-        # Find all pv_x identifiers and their corresponding song names
-        for line in file_data:
-            pv_match = pv_pattern.match(line)
-            if pv_match:
-                pv_id = pv_match.group(1)
-                song_name_en_match = song_name_en_pattern.match(line)
-                if song_name_en_match:
-                    song_names_en[pv_id] = song_name_en_match.group(2)
-
-        # Replace name_en values for each pv_x
-        updated_file_data = []
-        for line in file_data:
-            another_song_match = another_song_name_en_pattern.match(line)
-            if another_song_match:
-                pv_id = another_song_match.group(1)
-                if pv_id in song_names_en:
-                    # Replace the content after '=' with the stored song_name_en
-                    updated_line = re.sub(r'=(.*)', f'={song_names_en[pv_id]}', line)
-                    updated_file_data.append(updated_line)
-                else:
-                    updated_file_data.append(line)
-            else:
-                updated_file_data.append(line)
-
-        # Write the updated content back to the file
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.writelines(updated_file_data)
-
-
 def open_file_handle(file_path: str) -> TextIO:
     try:
         handle = open(file_path, 'r+', encoding='utf-8')

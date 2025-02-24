@@ -13,7 +13,6 @@ from .DataHandler import (
     song_unlock,
     generate_modded_paths,
     create_copies,
-    another_song_replacement,
     restore_originals,
     restore_song_list,
 )
@@ -131,7 +130,6 @@ class MegaMixContext(CommonContext):
                 self.mod_pv_list = generate_modded_paths(self.modData, self.path)
             self.mod_pv_list.append(self.mod_pv)
             create_copies(self.mod_pv_list)
-            another_song_replacement(self.mod_pv_list)
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
             self.check_goal()
 
