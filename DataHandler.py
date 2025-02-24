@@ -121,32 +121,17 @@ def generate_modded_paths(processed_data, base_path):
     return list(modded_paths)
 
 
-def restore_song_list(file_paths, skip_ids, restore):
-    skip_ids.extend([144, 700])  # Append 144,and 700 to the skip_ids list
+def restore_song_list(file_paths):
+    search = re.compile(r"^#ARCH#(.*)", re.MULTILINE)
+
     for file_path in file_paths:
         with open(file_path, 'r', encoding='utf-8') as file:
-            modified_lines = []
-            for line in file:
-                if line.startswith("pv_"):
-                    song_numeric_id = re.search(r'pv_(\d+)', line)
-                    if song_numeric_id:
-                        song_numeric_id = int(song_numeric_id.group(1))
-                        if song_numeric_id in skip_ids:
-                            modified_lines.append(line)
-                            continue
-                        else:
-                            if restore:
-                                line = re.sub(r'(\.difficulty\.(easy|normal|hard)\.length)=\d+', r'\1=1', line)
-                                line = re.sub(r'(\.difficulty\.extreme\.length)=\d+', r'\1=2', line)
-                                # Only modify the line if it ends with an equals sign
-                                if re.match(r'(pv_\d+\.difficulty\.extreme\.0\.script_file_name)=$', line.strip()):
-                                    line = f"pv_{song_numeric_id}.difficulty.extreme.0.script_file_name=rom/script/pv_{song_numeric_id}_extreme_0.dsc\n"
-                            else:
-                                line = re.sub(r'(\.difficulty\.(easy|normal|hard|extreme)\.length)=\d+', r'\1=0', line)
-                modified_lines.append(line)
+            file_data = file.read()
+
+        file_data = re.sub(search, f"\g<1>", file_data)
 
         with open(file_path, 'w', encoding='utf-8') as file:
-            file.writelines(modified_lines)
+            file.write(file_data)
 
 
 def erase_song_list(file_paths):
