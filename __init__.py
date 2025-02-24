@@ -14,7 +14,7 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 import typing
-from typing import List
+from typing import List, Any
 from math import floor
 
 
@@ -68,8 +68,9 @@ class MegaMixWorld(World):
     # Working Data
     victory_song_name: str = ""
     victory_song_id: int
-    starting_songs: List[str]
-    included_songs: List[str]
+    starting_songs: List[Any]
+    included_songs: List[Any]
+    matched_songs: List[Any]
     needed_token_count: int
     location_count: int
 
@@ -81,17 +82,17 @@ class MegaMixWorld(World):
 
         while True:
             # In most cases this should only need to run once
-            available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
+            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_diff_threshold, higher_diff_threshold)
 
             # Choose victory song from current available keys, so we can access the song id
             if available_song_keys:
                 chosen_song_index = self.random.randrange(0, len(available_song_keys))
-                self.victory_song_name = available_song_keys[chosen_song_index]
+                self.victory_song_name = available_song_keys[chosen_song_index].songName
             else:
                 raise ValueError(f"Not enough songs available. Need at least {self.options.starting_song_count + self.options.additional_song_count + 1}")
 
             # Handle goal ID
-            self.victory_song_id = (int(song_ids[chosen_song_index]) * 10)
+            self.victory_song_id = available_song_keys[chosen_song_index].songID * 10
             del available_song_keys[chosen_song_index]
 
             available_song_keys = self.handle_plando(available_song_keys)
@@ -115,9 +116,9 @@ class MegaMixWorld(World):
         self.create_song_pool(final_song_list)
 
         for song in self.starting_songs:
-            self.multiworld.push_precollected(self.create_item(song))
+            self.multiworld.push_precollected(self.create_item("", song))
 
-    def handle_plando(self, available_song_keys: List[str]) -> List[str]:
+    def handle_plando(self, available_song_keys):
         song_items = self.mm_collection.song_items
 
         start_items = self.options.start_inventory.value.keys()
@@ -127,22 +128,22 @@ class MegaMixWorld(World):
         self.starting_songs = [s for s in start_items if s in song_items]
         self.included_songs = [s for s in include_songs if s in song_items and s not in self.starting_songs]
 
-        return [s for s in available_song_keys if s not in start_items
-                and s not in include_songs and s not in exclude_songs]
+        return [s for s in available_song_keys if s.songName not in start_items
+                and s.songName not in include_songs and s.songName not in exclude_songs]
 
-    def create_song_pool(self, available_song_keys: List[str]):
+    def create_song_pool(self, available_song_keys):
         starting_song_count = self.options.starting_song_count.value
         additional_song_count = self.options.additional_song_count.value
-
         self.random.shuffle(available_song_keys)
+        self.matched_songs = [self.mm_collection.song_items.get(song_name) for song_name in self.included_songs]
 
         # First, we must double-check if the player has included too many guaranteed songs
         included_song_count = len(self.included_songs)
         if included_song_count > additional_song_count:
             # If so, we want to thin the list, thus let's get starter songs while we are at it.
-            self.random.shuffle(self.included_songs)
+            self.random.shuffle(self.matched_songs)
             while len(self.included_songs) > additional_song_count:
-                next_song = self.included_songs.pop()
+                next_song = self.matched_songs.pop()
                 if len(self.starting_songs) < starting_song_count:
                     self.starting_songs.append(next_song)
         # Next, make sure the starting songs are fufilled
@@ -151,18 +152,18 @@ class MegaMixWorld(World):
                 if len(available_song_keys) > 0:
                     self.starting_songs.append(available_song_keys.pop())
                 else:
-                    self.starting_songs.append(self.included_songs.pop())
+                    self.starting_songs.append(self.matched_songs.pop())
 
         # Then attempt to fufill any remaining songs for interim songs
-        if len(self.included_songs) < additional_song_count:
-            for _ in range(len(self.included_songs), self.options.additional_song_count):
+        if len(self.matched_songs) < additional_song_count:
+            for _ in range(len(self.matched_songs), self.options.additional_song_count):
                 if len(available_song_keys) <= 0:
                     break
-                self.included_songs.append(available_song_keys.pop())
+                self.matched_songs.append(available_song_keys.pop())
 
-        self.location_count = 2 * (len(self.starting_songs) + len(self.included_songs))
+        self.location_count = 2 * (len(self.starting_songs) + len(self.matched_songs))
 
-    def create_item(self, name: str) -> Item:
+    def create_item(self, name: str, songData = None) -> Item:
 
         if name == self.mm_collection.LEEK_NAME:
             return MegaMixFixedItem(name, ItemClassification.progression_skip_balancing, self.mm_collection.LEEK_CODE, self.player)
@@ -170,11 +171,10 @@ class MegaMixWorld(World):
         if name in self.mm_collection.filler_item_names:
             return MegaMixFixedItem(name, ItemClassification.filler, self.mm_collection.filler_item_names.get(name), self.player)
 
-        song = self.mm_collection.song_items.get(name)
-        return MegaMixSongItem(name, self.player, song)
+        return MegaMixSongItem(songData.songName, self.player, songData)
 
     def create_items(self) -> None:
-        song_keys_in_pool = self.included_songs.copy()
+        songs_in_pool = self.matched_songs.copy()
 
         # Note: Item count will be off if plando is involved.
         item_count = self.get_leek_count()
@@ -184,9 +184,9 @@ class MegaMixWorld(World):
             self.multiworld.itempool.append(self.create_item(self.mm_collection.LEEK_NAME))
 
         # Then add 1 copy of every song
-        item_count += len(self.included_songs)
-        for song in self.included_songs:
-            self.multiworld.itempool.append(self.create_item(song))
+        item_count += len(self.matched_songs)
+        for song in self.matched_songs:
+            self.multiworld.itempool.append(self.create_item("", song))
 
         # At this point, if a player is using traps, it's possible that they have filled all locations
         items_left = self.location_count - item_count
@@ -198,18 +198,18 @@ class MegaMixWorld(World):
         items_left -= dupe_count
 
         # This is for the extraordinary case of needing to fill a lot of items.
-        while dupe_count > len(song_keys_in_pool):
-            for key in song_keys_in_pool:
-                item = self.create_item(key)
+        while dupe_count > len(songs_in_pool):
+            for key in songs_in_pool:
+                item = self.create_item("", key)
                 item.classification = ItemClassification.useful
                 self.multiworld.itempool.append(item)
 
-            dupe_count -= len(song_keys_in_pool)
+            dupe_count -= len(songs_in_pool)
             continue
 
-        self.random.shuffle(song_keys_in_pool)
+        self.random.shuffle(songs_in_pool)
         for i in range(0, dupe_count):
-            item = self.create_item(song_keys_in_pool[i])
+            item = self.create_item("", songs_in_pool[i])
             item.classification = ItemClassification.useful
             self.multiworld.itempool.append(item)
 
@@ -233,14 +233,14 @@ class MegaMixWorld(World):
         # Final song is excluded as for the purpose of this rando, it doesn't matter.
 
         all_selected_locations = self.starting_songs.copy()
-        included_song_copy = self.included_songs.copy()
+        included_song_copy = self.matched_songs.copy()
 
         self.random.shuffle(included_song_copy)
         all_selected_locations.extend(included_song_copy)
 
         # Make a region per song/album, then adds 1-2 item locations to them
         for i in range(0, len(all_selected_locations)):
-            name = all_selected_locations[i]
+            name = all_selected_locations[i].songName
             region = Region(name, self.player, self.multiworld)
             self.multiworld.regions.append(region)
             song_select_region.connect(region, name, lambda state, place=name: state.has(place, self.player))
@@ -258,7 +258,7 @@ class MegaMixWorld(World):
 
     def get_leek_count(self) -> int:
         multiplier = self.options.leek_count_percentage.value / 100.0
-        song_count = len(self.starting_songs) + len(self.included_songs)
+        song_count = len(self.starting_songs) + len(self.matched_songs)
         return max(1, floor(song_count * multiplier))
 
     def get_leek_win_count(self) -> int:

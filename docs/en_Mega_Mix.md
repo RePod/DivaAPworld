@@ -3,7 +3,7 @@
 ## What Does Randomization do to this Game?
 - You will be given a number of starting songs. The number of which depends on your options.
 - Completing any song will give you 2 rewards.
-- The items you can receive are Leeks and Songs. You may receive duplicate songs, they are used as filler.
+- The items you can receive are Leeks and Songs. You may receive duplicate songs and 'SAFE's they are used as filler.
 
 ## What is the Goal of Mega Mix in Archipelago
 
@@ -23,7 +23,7 @@ DLC can be toggled on in the options.
 - If you are unfamiliar with Diva modding, here's a helpful guide, I recommend the mod manager over manual: https://docs.google.com/document/d/1jvG_RGMe_FtlduvD8WwXdfA85I1O4Tde0DfRDM4aeWk/edit
 - To play AP with modded songs, follow this guide here: https://docs.google.com/document/d/17NwFcPzmt5fnXz0GBvrJTlF40fCNcv052kWpM0OQ66o/edit?usp=sharing
 
-###Eden Core Specifics (Modded)
+### Eden Core Specifics (Modded)
 - If using Eden Core, Eden Core must be at the end of the mod loading order after Archipelago.
 - If using Eden Core, and it is included in your modded Json, it goes before Archipelago in the mod load order like other mods
 
