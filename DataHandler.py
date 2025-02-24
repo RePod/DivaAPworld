@@ -158,7 +158,7 @@ def open_file_handle(file_path: str) -> TextIO:
 def song_unlock(file_path, item_id, lock_status, song_pack):
     """Unlock a song based on its id"""
 
-    song_ids = [str(x // 10).zfill(3) for x in item_id]
+    song_ids = "|".join([str(x // 10).zfill(3) for x in item_id])
 
     # Select the appropriate action based on lock status
     action = modify_mod_pv if not lock_status else remove_song
@@ -175,18 +175,12 @@ def song_unlock(file_path, item_id, lock_status, song_pack):
     return
 
 
-def modify_mod_pv(pv_db, songs) -> list:
-    for song_id in songs:
-        pv_db = re.sub(rf"^#ARCH#(pv_{song_id}\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "\g<1>", pv_db, flags=re.MULTILINE)
-
-    return pv_db
+def modify_mod_pv(pv_db: str, songs: str) -> str:
+    return re.sub(rf"^#ARCH#(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "\g<1>", pv_db, flags=re.MULTILINE)
 
 
-def remove_song(pv_db, songs):
-    for song_id in songs:
-        pv_db = re.sub(rf"^(pv_{song_id}\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
-
-    return pv_db
+def remove_song(pv_db: str, songs: str) -> str:
+    return re.sub(rf"^(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)", "#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
 
 
 def extract_mod_data_to_json() -> list[Any]:
