@@ -6,9 +6,13 @@ import os
 import shutil
 import sys
 import Utils
+import logging
 from .SymbolFixer import fix_song_name
 from typing import Any, TextIO
 
+# Set up logger
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # File Handling
 def load_zipped_json_file(file_name: str) -> dict:
@@ -22,10 +26,10 @@ def load_zipped_json_file(file_name: str) -> dict:
             if decoded_contents.strip():  # Check if the contents are not empty
                 return json.loads(decoded_contents)
             else:
-                # print(f"Error: Zipped JSON file '{file_name}' is empty.")
+                logger.debug(f"Error: Zipped JSON file '{file_name}' is empty.")
                 return {}
     except Exception as e:
-        print(f"Error loading zipped JSON file '{file_name}': {e}")
+        logger.debug(f"Error loading zipped JSON file '{file_name}': {e}")
 
     try:
         # Attempt to load the file directly from the filesystem
@@ -36,7 +40,7 @@ def load_zipped_json_file(file_name: str) -> dict:
             else:
                 return {}
     except Exception as e:
-        print(f"Error loading JSON file '{file_name}': {e}")
+        logger.debug(f"Error loading JSON file '{file_name}': {e}")
         return {}
 
 
@@ -48,7 +52,7 @@ def load_json_file(file_name: str) -> dict:
         with open(file_name, 'r', encoding='utf-8') as file:
             return json.load(file)
     except Exception as e:
-        print(f"Error loading JSON file '{file_name}': {e}")
+        logger.debug(f"Error loading JSON file '{file_name}': {e}")
         return {}
 
 
@@ -68,9 +72,9 @@ def create_copies(file_paths):
         if not os.path.exists(new_file_path):
             # Copy the file to the new path
             shutil.copyfile(file_path, new_file_path)
-            print(f"Copied {file_path} to {new_file_path}")
+            logger.debug(f"Copied {file_path} to {new_file_path}")
         else:
-            print(f"File {new_file_path} already exists. Skipping...")
+            logger.debug(f"File {new_file_path} already exists. Skipping...")
 
 
 def restore_originals(original_file_paths):
@@ -82,7 +86,7 @@ def restore_originals(original_file_paths):
 
         if os.path.exists(copy_file_path):
             shutil.copyfile(copy_file_path, original_file_path)
-            print(f"Restored {original_file_path} from {copy_file_path}")
+            logger.debug(f"Restored {original_file_path} from {copy_file_path}")
         else:
             raise FileNotFoundError(f"The copy file {copy_file_path} does not exist.")
 
@@ -174,10 +178,10 @@ def extract_mod_data_to_json() -> list[Any]:
     user_path = Utils.user_path(Utils.get_settings()["generator"]["player_files_path"])
     folder_path = sys.argv[sys.argv.index("--player_files_path") + 1] if "--player_files_path" in sys.argv else user_path
 
-    print(f"Checking YAMLs for megamix_mod_data at {folder_path}")
+    logger.debug(f"Checking YAMLs for megamix_mod_data at {folder_path}")
 
     if not os.path.isdir(folder_path):
-        print(f"The path {folder_path} is not a valid directory. Modded songs are unavailable for this path.")
+        logger.debug(f"The path {folder_path} is not a valid directory. Modded songs are unavailable for this path.")
 
     # Search text for the specific game
     search_text = "Hatsune Miku Project Diva Mega Mix+"
@@ -211,7 +215,7 @@ def extract_mod_data_to_json() -> list[Any]:
                         all_mod_data.append(json.loads(mod_data_content))
 
     total = sum(len(pack) for packList in all_mod_data for pack in packList.values())
-    print(f"Found {total} songs")
+    logger.debug(f"Found {total} songs")
 
     return all_mod_data
 

@@ -174,10 +174,10 @@ class ExcludeSinger(OptionSet):
 
 
 class ModData(FreeText):
-    """If you are using modded songs, paste the string from the DivaJSON Tool here"""
+    """If you are using modded songs, delete the option below entirely and paste the string from the DivaJSON Tool here"""
     display_name = "MegaMixModData"
     default = ''
-    visibility = Visibility.template
+    visibility = Visibility.template | Visibility.spoiler
 
 
 @dataclass
