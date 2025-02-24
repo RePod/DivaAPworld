@@ -130,9 +130,10 @@ def restore_song_list(file_paths):
 
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
-            file_data = file.read()
-            file_data = re.sub(search, r"\g<1>", file_data)
+            file_data = re.sub(search, r"\g<1>", file.read())
+            file.seek(0)
             file.write(file_data)
+            file.truncate()
 
 
 def erase_song_list(file_paths):
@@ -140,9 +141,10 @@ def erase_song_list(file_paths):
 
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
-            file_data = file.read()
-            file_data = re.sub(search, r"#ARCH#\g<1>", file_data)
+            file_data = re.sub(search, r"#ARCH#\g<1>", file.read())
+            file.seek(0)
             file.write(file_data)
+            file.truncate()
 
 
 def song_unlock(file_path, item_id, lock_status, song_pack):
@@ -155,9 +157,10 @@ def song_unlock(file_path, item_id, lock_status, song_pack):
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
 
     with open(file_path, 'r+', encoding='utf-8') as file:
-        pv_db = file.read()
-        pv_db = action(pv_db, song_ids)
+        pv_db = action(file.read(), song_ids)
+        file.seek(0)
         file.write(pv_db)
+        file.truncate()
 
 
 def modify_mod_pv(pv_db: str, songs: str) -> str:
