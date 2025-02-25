@@ -317,8 +317,7 @@ def extract_mod_data_to_json() -> list[Any]:
 
     logger.debug(f"Checking YAMLs for megamix_mod_data at {folder_path}")
 
-    if not os.path.isdir(folder_path):
-        logger.debug(f"The path {folder_path} is not a valid directory. Modded songs are unavailable for this path.")
+
 
     # Search text for the specific game
     search_text = "Hatsune Miku Project Diva Mega Mix+"
@@ -329,27 +328,30 @@ def extract_mod_data_to_json() -> list[Any]:
     # Initialize an empty list to collect all inputs
     all_mod_data = []
 
-    for item in os.listdir(folder_path):
-        item_path = os.path.join(folder_path, item)
+    if not os.path.isdir(folder_path):
+        logger.debug(f"The path {folder_path} is not a valid directory. Modded songs are unavailable for this path.")
+    else:
+        for item in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item)
 
-        if os.path.isfile(item_path):
-            with open(item_path, 'r', encoding='utf-8') as file:  # Open the file in read mode
-                file_content = file.read()
+            if os.path.isfile(item_path):
+                with open(item_path, 'r', encoding='utf-8') as file:  # Open the file in read mode
+                    file_content = file.read()
 
-                # Check if the search text (game title) is found in the file
-                if search_text in file_content:
-                    # Search for all occurrences of 'megamix_mod_data:' and the block within {}
-                    matches = re.findall(mod_data_pattern, file_content)
+                    # Check if the search text (game title) is found in the file
+                    if search_text in file_content:
+                        # Search for all occurrences of 'megamix_mod_data:' and the block within {}
+                        matches = re.findall(mod_data_pattern, file_content)
 
-                    # Process each mod_data block
-                    for _ in matches:
-                        mod_data_match = yaml.safe_load(file_content)
-                        mod_data_content = mod_data_match.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data", '""')
+                        # Process each mod_data block
+                        for _ in matches:
+                            mod_data_match = yaml.safe_load(file_content)
+                            mod_data_content = mod_data_match.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data", '""')
 
-                        if isinstance(mod_data_content, dict) or not mod_data_content:
-                            continue
+                            if isinstance(mod_data_content, dict) or not mod_data_content:
+                                continue
 
-                        all_mod_data.append(json.loads(mod_data_content))
+                            all_mod_data.append(json.loads(mod_data_content))
 
     total = sum(len(pack) for packList in all_mod_data for pack in packList.values())
     logger.debug(f"Found {total} songs")
