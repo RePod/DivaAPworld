@@ -118,7 +118,7 @@ class MegaMixWorld(World):
         # Choose victory song from current available keys, so we can access the song id
         chosen_song_index = self.random.randrange(0, len(final_song_list))
         self.victory_song_name = final_song_list[chosen_song_index].songName
-        self.victory_song_id = final_song_list[chosen_song_index].songID
+        self.victory_song_id = final_song_list[chosen_song_index].songID * 10
         del final_song_list[chosen_song_index]
 
         self.create_song_pool(final_song_list)
