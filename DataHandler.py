@@ -317,8 +317,6 @@ def extract_mod_data_to_json() -> list[Any]:
 
     logger.debug(f"Checking YAMLs for megamix_mod_data at {folder_path}")
 
-
-
     # Search text for the specific game
     search_text = "Hatsune Miku Project Diva Mega Mix+"
 
