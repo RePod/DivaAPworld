@@ -48,7 +48,7 @@ class MegaMixCollections:
         for song in json_data:
             song_id = int(song['songID'])
             base_game_ids.add(song_id)  # Get list of all base game ids
-            song_name = fix_song_name(song['songName'])  # Fix song name if needed
+            song_name = f"{fix_song_name(song['songName'])} [{song_id}]" # Fix song name if needed
             singers = song['singers']
             dlc = song['DLC'].lower() == "true"
             difficulties = song['difficulties']
@@ -97,7 +97,7 @@ class MegaMixCollections:
             for i in range(2):
                 self.song_locations[f"{song_name}-{i}"] = (song_data.code + i)
 
-    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> List[SongData]:
+    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> Tuple[List[str], List[int]]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
         id_list = []
@@ -133,7 +133,8 @@ class MegaMixCollections:
                 if diff in allowed_diff:
                     if diff_lower <= songData.difficultyRatings[i] <= diff_higher:
                         # Append the song to the selected_songs list
-                        filtered_list.append(songData)
+                        filtered_list.append(songData.songName)
+                        id_list.append(songData.songID)
                         break
 
-        return filtered_list
+        return filtered_list, id_list
