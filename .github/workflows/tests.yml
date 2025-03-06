@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-            name: ArchipelagoMW/Archipelago
+          repository: ArchipelagoMW/Archipelago
       - uses: actions/checkout@v4
         with:
-            path: worlds/megamix
+          path: worlds/megamix
     
       - uses: actions/setup-python@v5
         with:
