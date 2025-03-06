@@ -6,14 +6,17 @@ on:
   schedule:
     - cron: "0 0 * * 0"
 
-env:
-  ARCHIPELAGO: /tmp/Archipelago/
-
 jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+            name: ArchipelagoMW/Archipelago
+      - uses: actions/checkout@v4
+        with:
+            path: worlds/megamix
+    
       - uses: actions/setup-python@v5
         with:
           python-version: 3.12
@@ -21,21 +24,15 @@ jobs:
 
       - name: Archipelago | Setup
         run: |
-          git clone https://github.com/ArchipelagoMW/Archipelago $ARCHIPELAGO
-          cd $ARCHIPELAGO
           python -m pip install --upgrade pip
           pip install pytest pytest-subtests pytest-xdist
           python ModuleUpdate.py --yes --force --append "WebHostLib/requirements.txt"
           python Launcher.py --update_settings  # make sure host.yaml exists for tests
-          ln -s $GITHUB_WORKSPACE $ARCHIPELAGO/worlds/megamix
 
       - name: World | Fuzzer
         run: |
-          cd $ARCHIPELAGO
           curl "https://raw.githubusercontent.com/Eijebong/Archipelago-fuzzer/refs/heads/main/fuzz.py" > fuzz.py
           python fuzz.py -g megamix -j 2 -r 100
 
       - name: World | General tests
-        run: |
-          cd $ARCHIPELAGO
-          pytest test/general worlds/megamix
+        run: pytest test/general worlds/megamix
