@@ -86,12 +86,6 @@ class MegaMixWorld(World):
             allowed_difficulties = list(range(lower_diff_threshold, higher_diff_threshold + 1))
             available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_rating_threshold, higher_rating_threshold)
 
-            # Choose victory song from current available keys, so we can access the song id
-            chosen_song_index = self.random.randrange(0, len(available_song_keys))
-            self.victory_song_name = available_song_keys[chosen_song_index]
-            self.victory_song_id = song_ids[chosen_song_index] * 10
-            del available_song_keys[chosen_song_index]
-
             available_song_keys = self.handle_plando(available_song_keys)
             #print(f"{lower_rating_threshold}~{higher_rating_threshold}* {allowed_difficulties}", len(available_song_keys))
 
@@ -148,11 +142,22 @@ class MegaMixWorld(World):
         if included_song_count > additional_song_count:
             # If so, we want to thin the list, thus let's get starter songs while we are at it.
             self.random.shuffle(self.included_songs)
+            self.victory_song_name = self.included_songs.pop()
             while len(self.included_songs) > additional_song_count:
                 next_song = self.included_songs.pop()
                 if len(self.starting_songs) < starting_song_count:
                     self.starting_songs.append(next_song)
-        # Next, make sure the starting songs are fufilled
+        else:
+            # If not, choose a random victory song from the available songs
+            chosen_song = self.random.randrange(0, len(available_song_keys) + included_song_count)
+            if chosen_song < included_song_count:
+                self.victory_song_name = self.included_songs[chosen_song]
+                del self.included_songs[chosen_song]
+            else:
+                self.victory_song_name = available_song_keys[chosen_song - included_song_count]
+                del available_song_keys[chosen_song - included_song_count]
+
+        # Next, make sure the starting songs are fulfilled
         if len(self.starting_songs) < starting_song_count:
             for _ in range(len(self.starting_songs), starting_song_count):
                 if len(available_song_keys) > 0:
@@ -160,13 +165,14 @@ class MegaMixWorld(World):
                 else:
                     self.starting_songs.append(self.included_songs.pop())
 
-        # Then attempt to fufill any remaining songs for interim songs
+        # Then attempt to fulfill any remaining songs for interim songs
         if len(self.included_songs) < additional_song_count:
             for _ in range(len(self.included_songs), self.options.additional_song_count.value):
                 if len(available_song_keys) <= 0:
                     break
                 self.included_songs.append(available_song_keys.pop())
 
+        self.victory_song_id = self.mm_collection.song_items.get(self.victory_song_name).code
         self.location_count = 2 * (len(self.starting_songs) + len(self.included_songs))
 
     def create_item(self, name: str) -> Item:
