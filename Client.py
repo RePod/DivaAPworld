@@ -176,10 +176,11 @@ class MegaMixContext(CommonContext):
     def is_item_in_modded_data(self, item_id):
         target_song_id = int(item_id) // 10
 
-        for pack, songs in self.modData.items():  # Iterate through each pack
-            for song in songs:  # Iterate through each song in the pack
-                if song[1] == target_song_id:
-                    return pack
+        if self.modded:
+            for pack, songs in self.modData.items():
+                for song in songs:
+                    if song[1] == target_song_id:
+                        return pack
         return "ArchipelagoMod"
 
     async def receive_item(self):
@@ -196,7 +197,7 @@ class MegaMixContext(CommonContext):
                         # Maybe move static items out of MegaMixCollection instead of hard coding?
                         pass
                     else:
-                        song_pack = self.is_item_in_modded_data(network_item.item) if self.modded else "ArchipelagoMod"
+                        song_pack = self.is_item_in_modded_data(network_item.item)
 
                         if song_pack not in ids_to_packs:
                             ids_to_packs[song_pack] = []
@@ -210,7 +211,7 @@ class MegaMixContext(CommonContext):
         if not self.sent_unlock_message and self.leeks_obtained >= self.leeks_needed:
             self.sent_unlock_message = True
             logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
-            song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
+            song_pack = self.is_item_in_modded_data(self.goal_id)
             song_unlock(self.path, [self.goal_id], False, song_pack)
 
 
@@ -332,7 +333,7 @@ class MegaMixContext(CommonContext):
 
         # Check for matches where all suffixes have been found
         for item in finished_songs:
-            song_pack = self.is_item_in_modded_data(item) if self.modded else "ArchipelagoMod"
+            song_pack = self.is_item_in_modded_data(item)
 
             if song_pack not in ids_to_packs:
                 ids_to_packs[song_pack] = []
