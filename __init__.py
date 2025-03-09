@@ -86,8 +86,14 @@ class MegaMixWorld(World):
             allowed_difficulties = list(range(lower_diff_threshold, higher_diff_threshold + 1))
             available_song_keys, song_ids = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_rating_threshold, higher_rating_threshold)
 
+            # Choose victory song from current available keys, so we can access the song id
+            chosen_song_index = self.random.randrange(0, len(available_song_keys))
+            self.victory_song_name = available_song_keys[chosen_song_index]
+            self.victory_song_id = song_ids[chosen_song_index] * 10
+            del available_song_keys[chosen_song_index]
+
             available_song_keys = self.handle_plando(available_song_keys)
-            print(f"{lower_rating_threshold}~{higher_rating_threshold}* {allowed_difficulties}", len(available_song_keys))
+            #print(f"{lower_rating_threshold}~{higher_rating_threshold}* {allowed_difficulties}", len(available_song_keys))
 
             # The minimum amount of songs to make an ok rando would be Starting Songs + 10 interim songs + Goal song.
             # - Interim songs being equal to max starting song count.
@@ -113,12 +119,6 @@ class MegaMixWorld(World):
                     higher_rating_threshold += 0.5
             else:
                 lower_rating_threshold -= 0.5
-
-        # Choose victory song from current available keys, so we can access the song id
-        chosen_song_index = self.random.randrange(0, len(final_song_list))
-        self.victory_song_name = final_song_list[chosen_song_index]
-        self.victory_song_id = song_ids[chosen_song_index] * 10
-        del final_song_list[chosen_song_index]
 
         self.create_song_pool(final_song_list)
 
