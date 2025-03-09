@@ -173,7 +173,7 @@ class MegaMixContext(CommonContext):
                 # request after an item is obtained
                 asyncio.create_task(self.obtained_items_queue.put(args["locations"][0]))
 
-    def is_item_in_modded_data(self, item_id):
+    def song_id_to_pack(self, item_id):
         target_song_id = int(item_id) // 10
 
         if self.modded:
@@ -197,11 +197,7 @@ class MegaMixContext(CommonContext):
                         # Maybe move static items out of MegaMixCollection instead of hard coding?
                         pass
                     else:
-                        song_pack = self.is_item_in_modded_data(network_item.item)
-
-                        if song_pack not in ids_to_packs:
-                            ids_to_packs[song_pack] = []
-                        ids_to_packs[song_pack].append(network_item.item)
+                        ids_to_packs.setdefault(self.song_id_to_pack(network_item.item), []).append(network_item.item)
 
             for song_pack in ids_to_packs:
                 song_unlock(self.path, ids_to_packs.get(song_pack), False, song_pack)
@@ -211,7 +207,7 @@ class MegaMixContext(CommonContext):
         if not self.sent_unlock_message and self.leeks_obtained >= self.leeks_needed:
             self.sent_unlock_message = True
             logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
-            song_pack = self.is_item_in_modded_data(self.goal_id)
+            song_pack = self.song_id_to_pack(self.goal_id)
             song_unlock(self.path, [self.goal_id], False, song_pack)
 
 
@@ -331,13 +327,8 @@ class MegaMixContext(CommonContext):
         finished_songs = [prefix * 10 for prefix, digits in group_songs.items() if {0, 1} <= digits]
         ids_to_packs = {}
 
-        # Check for matches where all suffixes have been found
         for item in finished_songs:
-            song_pack = self.is_item_in_modded_data(item)
-
-            if song_pack not in ids_to_packs:
-                ids_to_packs[song_pack] = []
-            ids_to_packs[song_pack].append(item)
+            ids_to_packs.setdefault(self.song_id_to_pack(item), []).append(item)
 
         for song_pack in ids_to_packs:
             song_unlock(self.path, ids_to_packs.get(song_pack), True, song_pack)
