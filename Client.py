@@ -14,7 +14,7 @@ from .DataHandler import (
     generate_modded_paths,
     create_copies,
     restore_originals,
-    restore_song_list,
+    freeplay_song_list,
 )
 from CommonClient import (
     CommonContext,
@@ -341,11 +341,11 @@ class MegaMixContext(CommonContext):
         song_ids = list(set(int(location) // 10 for location in self.location_ids))
         song_ids.append(self.goal_id)
 
+        freeplay_song_list(self.mod_pv_list, song_ids, self.freeplay)
+
         if self.freeplay:
-            restore_song_list(self.mod_pv_list, song_ids, True)
             logger.info("Restored non-AP songs!")
         else:
-            restore_song_list(self.mod_pv_list, song_ids, False)
             logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):

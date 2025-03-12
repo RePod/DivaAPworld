@@ -125,12 +125,18 @@ def generate_modded_paths(processed_data, base_path):
     return list(modded_paths)
 
 
-def restore_song_list(file_paths):
-    search = re.compile(r"^#ARCH#(.*)", re.MULTILINE)
+def freeplay_song_list(file_paths, skip_ids, freeplay: bool):
+    processed_ids = "|".join([str(x).zfill(3) for x in skip_ids])
 
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
-            file_data = re.sub(search, r"\g<1>", file.read())
+            file_data = file.read()
+            if freeplay:
+                file_data = re.sub(r"^#ARCH#(.*)", r"\g<1>", file_data, flags=re.MULTILINE)
+                file_data = remove_song(file_data, processed_ids)
+            else:
+                file_data = re.sub("PLACEHOLDER", r"#ARCH#\g<1>", file_data)
+                file_data = modify_mod_pv(file_data, processed_ids)
             file.seek(0)
             file.write(file_data)
             file.truncate()
