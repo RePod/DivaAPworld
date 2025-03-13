@@ -334,13 +334,16 @@ class MegaMixContext(CommonContext):
     async def freeplay_toggle(self):
         self.freeplay = not self.freeplay
 
-        song_ids = [missing for missing in self.missing_checks[::self.checks_per_song]]
+        song_ids = [location_id for location_id in list(self.location_ids)[::self.checks_per_song]
+                    if location_id not in [i.item for i in self.previous_received]]
+
         if not self.freeplay:
-            song_ids = [received.item for received in self.previous_received if received.item in song_ids]
+            song_ids = [received.item for received in self.previous_received if received.item in self.missing_checks]
+
             if self.leeks_obtained >= self.leeks_needed:
                 song_ids.append(self.goal_id)
-
-        print(song_ids)
+        elif self.leeks_obtained < self.leeks_needed:
+            song_ids.append(self.goal_id)
 
         freeplay_song_list(self.mod_pv_list, song_ids, self.freeplay)
 
