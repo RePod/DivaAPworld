@@ -320,13 +320,9 @@ class MegaMixContext(CommonContext):
             logger.info("Auto Remove Set to Off")
 
     async def remove_songs(self):
-        group_songs = {}
-        for loc in self.prev_found:
-            prefix, last = divmod(loc, 10)
-            group_songs.setdefault(prefix, set()).add(last)
-        finished_songs = [prefix * 10 for prefix, digits in group_songs.items() if {0, 1} <= digits]
-        ids_to_packs = {}
+        finished_songs = self.prev_found[::self.checks_per_song]
 
+        ids_to_packs = {}
         for item in finished_songs:
             ids_to_packs.setdefault(self.song_id_to_pack(item), []).append(item)
 
