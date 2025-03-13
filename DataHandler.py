@@ -125,18 +125,18 @@ def generate_modded_paths(processed_data, base_path):
     return list(modded_paths)
 
 
-def freeplay_song_list(file_paths, skip_ids, freeplay: bool):
-    processed_ids = "|".join([str(x).zfill(3) for x in skip_ids])
+def freeplay_song_list(file_paths, skip_ids: list[int], freeplay: bool):
+    processed_ids = "|".join([str(x // 10).zfill(3) for x in skip_ids])
 
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
             file_data = file.read()
             if freeplay:
-                file_data = re.sub(r"^#ARCH#(.*)", r"\g<1>", file_data, flags=re.MULTILINE)
+                file_data = modify_mod_pv(file_data, f"(?!({processed_ids})\.)\d+")
                 file_data = remove_song(file_data, processed_ids)
             else:
-                file_data = re.sub("PLACEHOLDER", r"#ARCH#\g<1>", file_data)
                 file_data = modify_mod_pv(file_data, processed_ids)
+                file_data = remove_song(file_data, f"(?!({processed_ids})\.)\d+")
             file.seek(0)
             file.write(file_data)
             file.truncate()
@@ -174,7 +174,7 @@ def modify_mod_pv(pv_db: str, songs: str) -> str:
 
 
 def remove_song(pv_db: str, songs: str) -> str:
-    return re.sub(rf"^(pv_({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)$", r"#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
+    return re.sub(rf"^(pv_(?!(144|700)\.)({songs})\.difficulty\.(?:easy|normal|hard|extreme).length=\d)$", r"#ARCH#\g<1>", pv_db, flags=re.MULTILINE)
 
 
 def extract_mod_data_to_json() -> list[Any]:

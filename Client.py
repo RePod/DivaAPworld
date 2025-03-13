@@ -257,7 +257,7 @@ class MegaMixContext(CommonContext):
 
         if Permission.auto & Permission.from_text(self.permissions.get("release")) == Permission.auto:
             await self.restore_songs()
-        elif self.autoRemove:
+        elif self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
         await self.send_msgs(message)
@@ -267,7 +267,7 @@ class MegaMixContext(CommonContext):
         await self.send_msgs(message)
         self.remove_found_checks()
         self.found_checks.clear()
-        if self.autoRemove:
+        if self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
     def remove_found_checks(self):
@@ -334,8 +334,13 @@ class MegaMixContext(CommonContext):
     async def freeplay_toggle(self):
         self.freeplay = not self.freeplay
 
-        song_ids = list(set(int(location) // 10 for location in self.location_ids))
-        song_ids.append(self.goal_id)
+        song_ids = [missing for missing in self.missing_checks[::self.checks_per_song]]
+        if not self.freeplay:
+            song_ids = [received.item for received in self.previous_received if received.item in song_ids]
+            if self.leeks_obtained >= self.leeks_needed:
+                song_ids.append(self.goal_id)
+
+        print(song_ids)
 
         freeplay_song_list(self.mod_pv_list, song_ids, self.freeplay)
 
