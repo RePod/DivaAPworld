@@ -132,11 +132,11 @@ def freeplay_song_list(file_paths, skip_ids: list[int], freeplay: bool):
         with open(file_path, 'r+', encoding='utf-8') as file:
             file_data = file.read()
             if freeplay:
-                file_data = modify_mod_pv(file_data, f"(?!({processed_ids})\.)\d+")
+                file_data = modify_mod_pv(file_data, rf"(?!({processed_ids})\.)\d+")
                 file_data = remove_song(file_data, processed_ids)
             else:
                 file_data = modify_mod_pv(file_data, processed_ids)
-                file_data = remove_song(file_data, f"(?!({processed_ids})\.)\d+")
+                file_data = remove_song(file_data, rf"(?!({processed_ids})\.)\d+")
             file.seek(0)
             file.write(file_data)
             file.truncate()
