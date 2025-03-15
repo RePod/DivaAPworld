@@ -32,7 +32,7 @@ components.append(Component(
 
 
 def launch_json_generator():
-    from .generator import launch
+    from .generator_kivy import launch
     launch_subprocess(launch, name="MegaMixJSONGenerator")
 
 
