@@ -10,6 +10,8 @@ import settings
 class ModManagerApp:
     def __init__(self, master):
         self.Tk = Tk()
+        self.Tk.withdraw()
+
         self.master = master
         self.master.title("Diva Json Generator")
 
@@ -21,12 +23,8 @@ class ModManagerApp:
 
         # Label for the current mods folder
         self.current_folder_label = tk.Label(self.button_frame,
-                                             text=f"Current Mods Folder: {self.mods_folder or 'Not selected'}")
+                                             text=f"Current Mods Folder (host.yaml): {self.mods_folder or 'Not selected'}")
         self.current_folder_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
-
-        # Button for selecting mods folder
-        self.select_mods_button = self.create_button("Select Mods Folder", self.select_folder, 1, 0)
-        self.select_mods_button.grid(row=1, column=0, sticky='w')  # Align left
 
         self.scrollable_frame = None
         self.canvas = None
@@ -88,29 +86,6 @@ class ModManagerApp:
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    def load_mods_folder(self):
-        try:
-            with open('config.txt', 'r') as file:
-                folder = file.read().strip()  # Load folder from config
-                if os.path.exists(folder) and os.path.isdir(folder):  # Check if it's a valid directory
-                    return folder
-                else:
-                    return ""  # Invalid path
-        except FileNotFoundError:
-            return ""
-
-    def save_mods_folder(self, folder_path):
-        with open('config.txt', 'w') as file:
-            file.write(folder_path)  # Save the folder path to config
-
-    def select_folder(self):
-        self.mods_folder = filedialog.askdirectory()
-        if self.mods_folder:
-            self.save_mods_folder(self.mods_folder)  # Save selected folder
-            self.current_folder_label.config(text=f"Current Mods Folder: {self.mods_folder}")  # Update label
-            self.list_folders()
-            self.process_button.pack(pady=10)  # Show the process button
 
     def list_folders(self):
         # Clear the checkbox frame first
