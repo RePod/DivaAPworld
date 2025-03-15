@@ -30,6 +30,17 @@ components.append(Component(
     component_type=Type.CLIENT
 ))
 
+def launch_json_client():
+    from .DivaJson import launch
+    launch_subprocess(launch, name="MegaMixClientClient")
+
+components.append(Component(
+    "Megamix JSON Generator",
+    "MegamixJSONGenerator",
+    func=launch_json_client,
+    component_type=Type.ADJUSTER
+))
+
 
 class MegaMixSettings(settings.Group):
     class ModPath(settings.LocalFolderPath):
