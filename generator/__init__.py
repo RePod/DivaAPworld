@@ -9,9 +9,6 @@ import settings
 
 class ModManagerApp:
     def __init__(self, master):
-        self.Tk = Tk()
-        self.Tk.withdraw()
-
         self.master = master
         self.master.title("Diva Json Generator")
 
@@ -142,9 +139,8 @@ class ModManagerApp:
 
     def copy_to_clipboard(self):
         text = self.generated_text_box.get(1.0, tk.END).strip()  # Get text from the text box
-        self.Tk.clipboard_clear()
-        self.Tk.clipboard_append(text)
-        self.Tk.withdraw()
+        self.master.clipboard_clear()
+        self.master.clipboard_append(text)
         messagebox.showinfo("Copied", "Text copied to clipboard!")  # Notify user
 
     def fix_song_packs(self):
