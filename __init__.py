@@ -30,9 +30,11 @@ components.append(Component(
     component_type=Type.CLIENT
 ))
 
+
 def launch_json_client():
     from .generator import launch
-    launch_subprocess(launch, name="MegaMixClientClient")
+    launch_subprocess(launch, name="MegaMixJSONClient")
+
 
 components.append(Component(
     "Megamix JSON Generator",
