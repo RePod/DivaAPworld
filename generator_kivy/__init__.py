@@ -121,7 +121,7 @@ class DivaJSONGenerator(App):
         return processed_text
 
     def build(self):
-        self.mods_folder = "R:/mods/" #settings.get_settings()["megamix_options"]["mod_path"]
+        self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
 
         self.options = {}
         self.container = ContainerLayout()
