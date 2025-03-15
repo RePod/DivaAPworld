@@ -1,6 +1,6 @@
 import re
 from tkinter import messagebox
-from .SymbolFixer import fix_song_name
+from ..SymbolFixer import fix_song_name
 import json
 
 

@@ -31,7 +31,7 @@ components.append(Component(
 ))
 
 def launch_json_client():
-    from .DivaJson import launch
+    from .generator import launch
     launch_subprocess(launch, name="MegaMixClientClient")
 
 components.append(Component(
