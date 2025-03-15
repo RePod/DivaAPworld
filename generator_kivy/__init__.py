@@ -1,3 +1,5 @@
+import re
+
 from kvui import (App, ScrollBox, Button, MainLayout, ContainerLayout, dp, Widget, BoxLayout, TooltipLabel, ToolTip,
                   Label)
 from kivy.core.clipboard import Clipboard
@@ -8,6 +10,7 @@ import Utils
 
 import os
 import settings
+from .TextFilter import filter_important_lines
 
 class AssociatedLabel(Label):
     def __init__(self, text, associate):
@@ -25,9 +28,11 @@ class DivaJSONGenerator(App):
     container: ContainerLayout
     main_layout: MainLayout
     scrollbox: ScrollBox
+    scrollbox_container: MainLayout
     main_panel: MainLayout
     mods_folder = ""
     checkboxes = []
+    quick_match_input: TextInput
 
 
     def create_pack_list(self):
@@ -59,8 +64,64 @@ class DivaJSONGenerator(App):
         return box
 
 
+    def create_pack_buttons(self):
+        def toggle_checkbox(active: bool = True, search: str = ""):
+            for i in self.checkboxes:
+                if search:
+                    label = i.parent.children[0].text
+                    if "/" == search[0] == search[-1]:
+                        if not re.search(search[1:-1], label):
+                            continue
+                    elif search not in label:
+                        continue
+                i.active = active
+
+        quick_container = BoxLayout(orientation='vertical', size_hint_x=0.20)
+        quick_all_button = Button(text="All", height=40)
+        quick_all_button.bind(on_release=toggle_checkbox)
+        quick_container.add_widget(quick_all_button)
+
+        quick_none_button = Button(text="None", height=40)
+        quick_none_button.bind(on_release=lambda button: toggle_checkbox(False))
+        quick_container.add_widget(quick_none_button)
+
+        quick_match_button = Button(text="Match", height=40)
+        quick_match_button.bind(on_release=lambda button: toggle_checkbox(True, self.quick_match_input.text))
+        quick_container.add_widget(quick_match_button)
+
+        self.quick_match_input = TextInput(multiline=False, size_hint_y=None)
+        self.quick_match_input.bind(on_text_validate=lambda i: toggle_checkbox(True, i.text))
+        quick_container.add_widget(self.quick_match_input)
+
+        quick_unmatch_button = Button(text="Unmatch", height=40)
+        quick_unmatch_button.bind(on_release=lambda button: toggle_checkbox(False, self.quick_match_input.text))
+        quick_container.add_widget(quick_unmatch_button)
+
+        return quick_container
+
+
+    def process_mods(self, folders):
+        processed_text = ""
+        for folder_path in folders:
+            folder_name = os.path.basename(folder_path)
+            processed_text += f"song_pack={folder_name}\n"
+            for master, dirs, files in os.walk(folder_path):
+                for file in files:
+                    if file == "mod_pv_db.txt":
+                        file_path = os.path.join(master, file)
+                        try:
+                            with open(file_path, "r", encoding='utf-8', errors='ignore') as input_file:
+                                processed_text += input_file.read() + "\n"
+                        except Exception as e:
+                            popup = Popup(title='Error',
+                                          content=Label(text=f"Failed to read {file_path}: {e}"),
+                                          size_hint=(None, None), size=(400, 200))
+                            popup.open()
+
+        return processed_text
+
     def build(self):
-        self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
+        self.mods_folder = "R:/mods/" #settings.get_settings()["megamix_options"]["mod_path"]
 
         self.options = {}
         self.container = ContainerLayout()
@@ -69,35 +130,45 @@ class DivaJSONGenerator(App):
         self.container.add_widget(self.main_layout)
 
         def to_clipboard(button):
+            checked_packs=[]
             for i, v in enumerate(self.checkboxes):
                 if v.active is True:
-                    print(v.active, self.scrollbox.children[0].children[-(i+1)].children[0].text)
+                    checked_packs.append(str(os.path.join(self.mods_folder, self.scrollbox.children[0].children[-(i+1)].children[0].text)))
 
-            generated_string = "THISISWHEREI'DPUTTHEJSONOUTPUT,IFIHADANY"
-            Clipboard.copy(generated_string)
+            combined_mod_pv_db = self.process_mods(checked_packs)
+
+            mod_pv_db_json = filter_important_lines(combined_mod_pv_db, "filtered_file.txt", self.mods_folder)
+
+            Clipboard.copy(mod_pv_db_json)
+
+            box = BoxLayout(orientation="vertical")
+            box.add_widget(Label(text=f"Generated {len(checked_packs)} packs ({len(mod_pv_db_json)} bytes)"))
+            #box.add_widget(TextInput(text=mod_pv_db_json, multiline=False, readonly=True, size_hint_y=None, height=32))
+
             popup = Popup(title='Copied to clipboard',
-                          content=TextInput(text=generated_string, multiline=False, readonly=True, size_hint_y=None, height=32),
+                          content=box,
                           size_hint=(None, None), size=(400,200))
             popup.open()
+
+        self.scrollbox_container = MainLayout(cols=2)
 
         self.scrollbox = ScrollBox(size_hint_y=1)
         self.scrollbox.layout.orientation = "vertical"
         self.create_pack_list()
 
-        bottom_box = BoxLayout(size_hint_y=None, height=40)
+        self.scrollbox_container.add_widget(self.scrollbox)
+        self.scrollbox_container.add_widget(self.create_pack_buttons())
 
+        bottom_box = BoxLayout(size_hint_y=None, height=40)
         process_button = Button(text="Generate Mod String")
         process_button.bind(on_release=to_clipboard)
         bottom_box.add_widget(process_button)
-
         bottom_box.add_widget(Button(text="Restore Song Packs", size_hint_x=0.5))
-
-        #self.main_panel = MainLayout()
         open_mods = Button(text=self.mods_folder, size_hint_y=None, height=40)
         open_mods.bind(on_release=lambda button: Utils.open_file(self.mods_folder))
 
         self.main_layout.add_widget(open_mods)
-        self.main_layout.add_widget(self.scrollbox)
+        self.main_layout.add_widget(self.scrollbox_container)
         self.main_layout.add_widget(bottom_box)
 
         #self.main_layout.add_widget(self.main_panel)
