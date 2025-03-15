@@ -1,15 +1,15 @@
 import os
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import Tk, filedialog, messagebox
 from tkinter import ttk
 from .TextFilter import filter_important_lines
-#import pyperclip  # For copying to clipboard
 
 import settings
 
 
 class ModManagerApp:
     def __init__(self, master):
+        self.Tk = Tk()
         self.master = master
         self.master.title("Diva Json Generator")
 
@@ -167,7 +167,9 @@ class ModManagerApp:
 
     def copy_to_clipboard(self):
         text = self.generated_text_box.get(1.0, tk.END).strip()  # Get text from the text box
-        #pyperclip.copy(text)  # Copy text to clipboard
+        self.Tk.clipboard_clear()
+        self.Tk.clipboard_append(text)
+        self.Tk.withdraw()
         messagebox.showinfo("Copied", "Text copied to clipboard!")  # Notify user
 
     def fix_song_packs(self):
