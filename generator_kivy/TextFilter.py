@@ -66,7 +66,7 @@ def filter_important_lines(combined_mod_pv_db: str, mod_folder: str):
         sorted_lines.extend(lines)
 
     mod_pv_db_split = sorted_lines
-    #mod_pv_db_split = verify_dsc(mod_pv_db_split, mod_folder)
+    mod_pv_db_split = verify_dsc(mod_pv_db_split, mod_folder)
 
     flat_text = process_song_file(mod_pv_db_split)
 
