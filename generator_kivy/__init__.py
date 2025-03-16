@@ -10,6 +10,7 @@ import os
 import Utils
 import settings
 from .TextFilter import filter_important_lines
+from ..DataHandler import restore_originals
 
 class AssociatedLabel(Label):
     def __init__(self, text, associate):
@@ -32,6 +33,7 @@ class DivaJSONGenerator(App):
 
     mods_folder = ""
     checkboxes = []
+    labels = []
 
     def create_pack_list(self):
         for folder_name in os.listdir(self.mods_folder):
@@ -55,6 +57,7 @@ class DivaJSONGenerator(App):
 
         label = AssociatedLabel(name, checkbox)
         label.bind(size=label.setter('text_size'))
+        self.labels.append(name)
 
         box.add_widget(checkbox)
         box.add_widget(label)
@@ -161,6 +164,12 @@ class DivaJSONGenerator(App):
                       size_hint=(None, None), size=(400, 200))
         popup.open()
 
+
+    def process_restore_originals(self, btn: Button):
+            mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
+            restore_originals(mod_pv_dbs)
+
+
     def build(self):
         self.title = "Hatsune Miku Project Diva Mega Mix+ JSON Generator"
         self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
@@ -180,7 +189,11 @@ class DivaJSONGenerator(App):
         process_button = Button(text="Generate Mod String")
         process_button.bind(on_release=self.process_to_clipboard)
         bottom_box.add_widget(process_button)
-        bottom_box.add_widget(Button(text="Restore Song Packs", size_hint_x=0.5))
+
+        restore_button = Button(text="Restore Song Packs", size_hint_x=0.5)
+        restore_button.bind(on_release=self.process_restore_originals)
+        bottom_box.add_widget(restore_button)
+
         open_mods = Button(text=self.mods_folder, size_hint_y=None, height=40)
         open_mods.bind(on_release=lambda button: Utils.open_file(self.mods_folder))
 
