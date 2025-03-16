@@ -34,13 +34,8 @@ components.append(Component(
 def launch_json_generator():
     from .generator_kivy import launch
     launch_subprocess(launch, name="MegaMixJSONGenerator")
-def launch_json_generator_tk():
-    from .generator import launch
-    launch_subprocess(launch, name="MegaMixJSONGenerator")
 
-
-components.append(Component("Megamix JSON Generator (Tk)","MegamixJSONGenerator",func=launch_json_generator_tk,component_type=Type.ADJUSTER))
-components.append(Component("Megamix JSON Generator (Kivy)","MegamixJSONGenerator",func=launch_json_generator,component_type=Type.ADJUSTER))
+components.append(Component("Mega Mix JSON Generator", "MegamixJSONGenerator", func=launch_json_generator, component_type=Type.ADJUSTER))
 
 class MegaMixSettings(settings.Group):
     class ModPath(settings.LocalFolderPath):

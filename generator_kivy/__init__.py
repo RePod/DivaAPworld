@@ -121,6 +121,7 @@ class DivaJSONGenerator(App):
         return processed_text
 
     def build(self):
+        self.title = "Hatsune Miku Project Diva Mega Mix+ JSON Generator"
         self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
 
         self.options = {}
