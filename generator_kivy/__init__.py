@@ -30,9 +30,10 @@ class DivaJSONGenerator(App):
     scrollbox: ScrollBox
     scrollbox_container: MainLayout
     main_panel: MainLayout
+    quick_match_input: TextInput
+
     mods_folder = ""
     checkboxes = []
-    quick_match_input: TextInput
 
 
     def create_pack_list(self):
@@ -89,7 +90,7 @@ class DivaJSONGenerator(App):
         quick_match_button.bind(on_release=lambda button: toggle_checkbox(True, self.quick_match_input.text))
         quick_container.add_widget(quick_match_button)
 
-        self.quick_match_input = TextInput(multiline=False, size_hint_y=None)
+        self.quick_match_input = TextInput(multiline=False, size_hint_y=None, height=40)
         self.quick_match_input.bind(on_text_validate=lambda i: toggle_checkbox(True, i.text))
         quick_container.add_widget(self.quick_match_input)
 
@@ -102,16 +103,18 @@ class DivaJSONGenerator(App):
 
     def process_mods(self, folders):
         processed_text = ""
+        trim_pv_db = re.compile(r'^pv_\d+\.(song_name|difficulty\.)')
+
         for folder_path in folders:
             folder_name = os.path.basename(folder_path)
-            processed_text += f"song_pack={folder_name}\n"
+            processed_text += f"\nsong_pack={folder_name}\n"
             for master, dirs, files in os.walk(folder_path):
                 for file in files:
                     if file == "mod_pv_db.txt":
                         file_path = os.path.join(master, file)
                         try:
                             with open(file_path, "r", encoding='utf-8', errors='ignore') as input_file:
-                                processed_text += input_file.read() + "\n"
+                                processed_text += "\n".join([line for line in input_file.read().splitlines() if re.search(trim_pv_db, line)])
                         except Exception as e:
                             popup = Popup(title='Error',
                                           content=Label(text=f"Failed to read {file_path}: {e}"),
@@ -137,8 +140,7 @@ class DivaJSONGenerator(App):
                     checked_packs.append(str(os.path.join(self.mods_folder, self.scrollbox.children[0].children[-(i+1)].children[0].text)))
 
             combined_mod_pv_db = self.process_mods(checked_packs)
-
-            mod_pv_db_json = filter_important_lines(combined_mod_pv_db, "filtered_file.txt", self.mods_folder)
+            mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
 
             Clipboard.copy(mod_pv_db_json)
 

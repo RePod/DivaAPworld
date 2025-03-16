@@ -2,17 +2,20 @@ import re
 import os
 from .TxTToJSON import process_song_file
 
-base_game_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 79, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 208, 209, 210, 211, 212, 213, 214, 215, 216, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 231, 232, 233, 234, 235, 236, 238, 239, 240, 241, 242, 243, 244, 246, 247, 248, 249, 250, 251, 253, 254, 255, 257, 259, 260, 261, 262, 263, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 401, 402, 403, 404, 405, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 600, 601, 602, 603, 604, 605, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 637, 638, 639, 640, 641, 642, 710, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 736, 737, 738, 739, 740, 832]
+base_game_ids = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 79, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 208, 209, 210, 211, 212, 213, 214, 215, 216, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 231, 232, 233, 234, 235, 236, 238, 239, 240, 241, 242, 243, 244, 246, 247, 248, 249, 250, 251, 253, 254, 255, 257, 259, 260, 261, 262, 263, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 401, 402, 403, 404, 405, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 600, 601, 602, 603, 604, 605, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630, 631, 637, 638, 639, 640, 641, 642, 710, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 736, 737, 738, 739, 740, 832}
 
 
-def filter_important_lines(combined_mod_pv_db: str, output_file, mod_folder):
+def filter_important_lines(combined_mod_pv_db: str, mod_folder: str):
     song_pack_lines = {}
     current_song_pack = None
     pv_info = {}
     prev_name = None
 
+    match_diff_length = re.compile(r'^(pv_\d+)\.difficulty\.(\w+)\.length=(\d+)')
+    match_diff_level = re.compile(r'^(pv_\d+)\.difficulty\.(\w+)\.(\d+)\.level=')
+
     for line in combined_mod_pv_db.splitlines():
-        match = re.match(r'^(pv_\d+)\.difficulty\.(\w+)\.length=(\d+)', line)
+        match = re.match(match_diff_length, line)
         if match:
             pv_id = match.group(1)
             difficulty = match.group(2)
@@ -35,7 +38,7 @@ def filter_important_lines(combined_mod_pv_db: str, output_file, mod_folder):
                 prev_name = cur_name
                 song_pack_lines[current_song_pack].append(line)
         elif match and '.level=' in line:
-            pv_id_match = re.match(r'^(pv_\d+)\.difficulty\.(\w+)\.(\d+)\.level=', line)
+            pv_id_match = re.match(match_diff_level, line)
             if pv_id_match:
                 pv_id = pv_id_match.group(1)
                 difficulty = pv_id_match.group(2)
@@ -112,11 +115,11 @@ def verify_dsc(mod_pv_db: list[str], mod_folder: str):
 
             skip_check = False
             match = re.search(r'\d+', pv_number)  # This finds the first sequence of digits
-            if int(match.group()) in base_game_ids:
+            if int(match.group()) > 832 or int(match.group()) in base_game_ids:
                 skip_check = True
 
             # Check if the .dsc file exists, unless it's a cover song
-            if os.path.exists(full_path) or skip_check is True:
+            if skip_check is True or os.path.exists(full_path):
                 # If the file exists, keep the line
                 valid_lines.append(line)
             # If the file doesn't exist, the line is not added
