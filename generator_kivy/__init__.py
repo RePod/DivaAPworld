@@ -1,14 +1,13 @@
-import re
-
 from kvui import (App, ScrollBox, Button, MainLayout, ContainerLayout, dp, Widget, BoxLayout, TooltipLabel, ToolTip,
                   Label)
 from kivy.core.clipboard import Clipboard
 from kivy.uix.popup import Popup
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.textinput import TextInput
-import Utils
 
+import re
 import os
+import Utils
 import settings
 from .TextFilter import filter_important_lines
 
@@ -29,7 +28,6 @@ class DivaJSONGenerator(App):
     main_layout: MainLayout
     scrollbox: ScrollBox
     scrollbox_container: MainLayout
-    main_panel: MainLayout
     quick_match_input: TextInput
 
     mods_folder = ""
@@ -123,48 +121,46 @@ class DivaJSONGenerator(App):
 
         return processed_text
 
+
+    def process_to_clipboard(self, btn: Button):
+        checked_packs = []
+        for i, cb in enumerate(self.checkboxes):
+            if cb.active is True:
+                checked_packs.append(
+                    str(os.path.join(self.mods_folder, self.scrollbox.children[0].children[-(i + 1)].children[0].text)))
+
+        combined_mod_pv_db = self.process_mods(checked_packs)
+        mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
+
+        Clipboard.copy(mod_pv_db_json)
+
+        box = BoxLayout(orientation="vertical")
+        box.add_widget(Label(text=f"Generated {len(checked_packs)} packs ({len(mod_pv_db_json)} bytes)"))
+        # box.add_widget(TextInput(text=mod_pv_db_json, multiline=False, readonly=True, size_hint_y=None, height=32))
+
+        popup = Popup(title='Copied to clipboard',
+                      content=box,
+                      size_hint=(None, None), size=(400, 200))
+        popup.open()
+
     def build(self):
         self.title = "Hatsune Miku Project Diva Mega Mix+ JSON Generator"
         self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
 
-        self.options = {}
         self.container = ContainerLayout()
-
         self.main_layout = MainLayout(rows=3)
         self.container.add_widget(self.main_layout)
 
-        def to_clipboard(button):
-            checked_packs=[]
-            for i, v in enumerate(self.checkboxes):
-                if v.active is True:
-                    checked_packs.append(str(os.path.join(self.mods_folder, self.scrollbox.children[0].children[-(i+1)].children[0].text)))
-
-            combined_mod_pv_db = self.process_mods(checked_packs)
-            mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
-
-            Clipboard.copy(mod_pv_db_json)
-
-            box = BoxLayout(orientation="vertical")
-            box.add_widget(Label(text=f"Generated {len(checked_packs)} packs ({len(mod_pv_db_json)} bytes)"))
-            #box.add_widget(TextInput(text=mod_pv_db_json, multiline=False, readonly=True, size_hint_y=None, height=32))
-
-            popup = Popup(title='Copied to clipboard',
-                          content=box,
-                          size_hint=(None, None), size=(400,200))
-            popup.open()
-
         self.scrollbox_container = MainLayout(cols=2)
-
         self.scrollbox = ScrollBox(size_hint_y=1)
         self.scrollbox.layout.orientation = "vertical"
         self.create_pack_list()
-
         self.scrollbox_container.add_widget(self.scrollbox)
         self.scrollbox_container.add_widget(self.create_pack_buttons())
 
         bottom_box = BoxLayout(size_hint_y=None, height=40)
         process_button = Button(text="Generate Mod String")
-        process_button.bind(on_release=to_clipboard)
+        process_button.bind(on_release=self.process_to_clipboard)
         bottom_box.add_widget(process_button)
         bottom_box.add_widget(Button(text="Restore Song Packs", size_hint_x=0.5))
         open_mods = Button(text=self.mods_folder, size_hint_y=None, height=40)
@@ -173,8 +169,6 @@ class DivaJSONGenerator(App):
         self.main_layout.add_widget(open_mods)
         self.main_layout.add_widget(self.scrollbox_container)
         self.main_layout.add_widget(bottom_box)
-
-        #self.main_layout.add_widget(self.main_panel)
 
         return self.container
 

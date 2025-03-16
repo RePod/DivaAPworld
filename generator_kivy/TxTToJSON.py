@@ -1,11 +1,9 @@
 import re
-from tkinter import messagebox
-from ..SymbolFixer import fix_song_name
 import json
+from ..SymbolFixer import fix_song_name
 
 
 def extract_song_info(mod_pv_db: list[str]):
-
     song_packs = {}
     current_song = None
     current_name = ""
