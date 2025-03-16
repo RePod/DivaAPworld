@@ -33,7 +33,6 @@ class DivaJSONGenerator(App):
     mods_folder = ""
     checkboxes = []
 
-
     def create_pack_list(self):
         for folder_name in os.listdir(self.mods_folder):
             if folder_name == "ArchipelagoMod":
@@ -64,10 +63,25 @@ class DivaJSONGenerator(App):
 
 
     def create_pack_buttons(self):
-        def toggle_checkbox(active: bool = True, search: str = ""):
+        def toggle_checkbox(active: bool = True, search: str = "", import_dml: bool = False):
+            dml_config = ""
+            if import_dml:
+                dml_path = os.path.split(self.mods_folder)[0] + "/config.toml"
+                try:
+                    with open(dml_path, "r", encoding='utf-8',
+                              errors='ignore') as DMLConfig:
+                        dml_config = DMLConfig.read()
+                except Exception as e:
+                    popup = Popup(title='Could not obtain DML config',
+                                  content=TextInput(text=f"{e}"),
+                                  size_hint=(None, None), size=(400, 200))
+                    popup.open()
+
             for i in self.checkboxes:
-                if search:
-                    label = i.parent.children[0].text
+                label = i.parent.children[0].text
+                if import_dml and label not in dml_config:
+                    continue
+                elif search:
                     if "/" == search[0] == search[-1]:
                         if not re.search(search[1:-1], label):
                             continue
@@ -76,6 +90,10 @@ class DivaJSONGenerator(App):
                 i.active = active
 
         quick_container = BoxLayout(orientation='vertical', size_hint_x=0.20)
+        quick_import_button = Button(text="Import from DML", height=40)
+        quick_import_button.bind(on_release=lambda button: toggle_checkbox(True, import_dml=True))
+        quick_container.add_widget(quick_import_button)
+
         quick_all_button = Button(text="All", height=40)
         quick_all_button.bind(on_release=toggle_checkbox)
         quick_container.add_widget(quick_all_button)
