@@ -1,5 +1,7 @@
 import re
 import json
+from tkinter import messagebox
+
 from ..SymbolFixer import fix_song_name
 
 
@@ -24,7 +26,7 @@ def extract_song_info(mod_pv_db: list[str]):
             song_number = int(match.group(1))
             current_song = {
                 'songID': str(song_number),
-                'songName': current_name,
+                'songName': current_name.replace("'", "''"),
                 'difficulties': []
             }
             if current_pack:
@@ -87,9 +89,10 @@ def process_song_file(mod_pv_db: list[str]):
 
     songs_info, conflicts = extract_song_info(mod_pv_db)
 
-    #if conflicts:
-    #    messagebox.showerror("Conflict Detected", f"Conflicts detected for the following pv_ IDs: {conflicts}")
-    #    return
+    # Eventually move to Kivy
+    if conflicts:
+        messagebox.showerror("Conflict Detected", f"Conflicts detected for the following pv_ IDs: {conflicts}")
+        return
 
     if songs_info:
         compressed_data = compress_song_data(songs_info)
