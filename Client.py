@@ -149,7 +149,6 @@ class MegaMixContext(CommonContext):
                 # Connected package not recieved yet, wait for datapackage request after connected package
                 return
             self.leeks_obtained = 0
-            self.sent_unlock_message = False
             self.previous_received = []
 
             self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"][
