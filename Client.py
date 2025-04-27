@@ -149,6 +149,7 @@ class MegaMixContext(CommonContext):
                 # Connected package not recieved yet, wait for datapackage request after connected package
                 return
             self.leeks_obtained = 0
+            self.sent_unlock_message = False
             self.previous_received = []
 
             self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"][
@@ -207,9 +208,11 @@ class MegaMixContext(CommonContext):
 
 
     def check_goal(self):
-        if not self.sent_unlock_message and self.leeks_obtained >= self.leeks_needed:
-            self.sent_unlock_message = True
-            logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
+        if  self.leeks_obtained >= self.leeks_needed:
+            if not self.sent_unlock_message:
+                self.sent_unlock_message = True
+                logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
+
             song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
             song_unlock(self.path, [self.goal_id], False, song_pack)
 
