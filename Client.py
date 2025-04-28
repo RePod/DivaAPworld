@@ -151,8 +151,7 @@ class MegaMixContext(CommonContext):
             self.leeks_obtained = 0
             self.previous_received = []
 
-            self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"][
-                "location_name_to_id"]
+            self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["location_name_to_id"]
             self.location_name_to_ap_id = {
                 name: loc_id for name, loc_id in
                 self.location_name_to_ap_id.items() if loc_id in self.location_ids
@@ -204,10 +203,12 @@ class MegaMixContext(CommonContext):
 
 
     def check_goal(self):
-        if not self.sent_unlock_message and self.leeks_obtained >= self.leeks_needed:
-            self.sent_unlock_message = True
-            logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
-            song_pack = self.song_id_to_pack(self.goal_id)
+        if  self.leeks_obtained >= self.leeks_needed:
+            if not self.sent_unlock_message:
+                self.sent_unlock_message = True
+                logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
+
+            song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
             song_unlock(self.path, [self.goal_id], False, song_pack)
 
 
