@@ -151,8 +151,7 @@ class MegaMixContext(CommonContext):
             self.leeks_obtained = 0
             self.previous_received = []
 
-            self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"][
-                "location_name_to_id"]
+            self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["location_name_to_id"]
             self.location_name_to_ap_id = {
                 name: loc_id for name, loc_id in
                 self.location_name_to_ap_id.items() if loc_id in self.location_ids
