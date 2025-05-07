@@ -203,7 +203,7 @@ class MegaMixContext(CommonContext):
 
 
     def check_goal(self):
-        if  self.leeks_obtained >= self.leeks_needed:
+        if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 self.sent_unlock_message = True
                 logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
