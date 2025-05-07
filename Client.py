@@ -208,7 +208,7 @@ class MegaMixContext(CommonContext):
                 self.sent_unlock_message = True
                 logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
 
-            song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
+            song_pack = self.song_id_to_pack(self.goal_id) if self.modded else "ArchipelagoMod"
             song_unlock(self.path, [self.goal_id], False, song_pack)
 
 
