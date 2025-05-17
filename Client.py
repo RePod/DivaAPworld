@@ -241,11 +241,11 @@ class MegaMixContext(CommonContext):
             location_id = int(song_data.get('pvId') * 10)
 
             if location_id in self.prev_found:
-                logger.info("Song previously cleared. No checks to send.")
+                logger.info("No checks to send: Song checks previously sent")
                 return
 
             if not location_id in self.location_ids:
-                logger.info("Song not in song pool. No checks to send.")
+                logger.info("No checks to send: Song not in song pool")
                 return
 
             if int(song_data.get('scoreGrade')) >= self.grade_needed:
