@@ -32,7 +32,7 @@ components.append(Component(
 
 
 def launch_json_generator():
-    from .generator_kivy.MegaMixGenerator import launch
+    from .generator_megamix.generator import launch
     launch_subprocess(launch, name="MegaMixJSONGenerator")
 
 components.append(Component("Mega Mix JSON Generator", "MegamixJSONGenerator", func=launch_json_generator, component_type=Type.ADJUSTER))
