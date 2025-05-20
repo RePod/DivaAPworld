@@ -238,11 +238,19 @@ class MegaMixContext(CommonContext):
         logger.debug(song_data)
         # If song is not dummy song
         if song_data.get('pvId') != 144:
-            # Check if player got a good enough grade on the song
+            location_id = int(song_data.get('pvId') * 10)
+
+            if location_id in self.prev_found:
+                logger.info("No checks to send: Song checks previously sent or collected")
+                return
+
+            if not location_id in self.location_ids:
+                logger.info("No checks to send: Song not in song pool")
+                return
+
             if int(song_data.get('scoreGrade')) >= self.grade_needed:
                 logger.info("Cleared song with appropriate grade!")
 
-                location_id = int(song_data.get('pvId') * 10)
                 if location_id == self.goal_id:
                     asyncio.create_task(self.end_goal())
                     return
