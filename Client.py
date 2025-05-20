@@ -14,7 +14,7 @@ from .DataHandler import (
     generate_modded_paths,
     create_copies,
     restore_originals,
-    restore_song_list,
+    freeplay_song_list,
 )
 from CommonClient import (
     CommonContext,
@@ -172,13 +172,14 @@ class MegaMixContext(CommonContext):
                 # request after an item is obtained
                 asyncio.create_task(self.obtained_items_queue.put(args["locations"][0]))
 
-    def is_item_in_modded_data(self, item_id):
+    def song_id_to_pack(self, item_id):
         target_song_id = int(item_id) // 10
 
-        for pack, songs in self.modData.items():  # Iterate through each pack
-            for song in songs:  # Iterate through each song in the pack
-                if song[1] == target_song_id:
-                    return pack
+        if self.modded:
+            for pack, songs in self.modData.items():
+                for song in songs:
+                    if song[1] == target_song_id:
+                        return pack
         return "ArchipelagoMod"
 
     async def receive_item(self):
@@ -195,23 +196,19 @@ class MegaMixContext(CommonContext):
                         # Maybe move static items out of MegaMixCollection instead of hard coding?
                         pass
                     else:
-                        song_pack = self.is_item_in_modded_data(network_item.item) if self.modded else "ArchipelagoMod"
-
-                        if song_pack not in ids_to_packs:
-                            ids_to_packs[song_pack] = []
-                        ids_to_packs[song_pack].append(network_item.item)
+                        ids_to_packs.setdefault(self.song_id_to_pack(network_item.item), []).append(network_item.item)
 
             for song_pack in ids_to_packs:
                 song_unlock(self.path, ids_to_packs.get(song_pack), False, song_pack)
 
 
     def check_goal(self):
-        if  self.leeks_obtained >= self.leeks_needed:
+        if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 self.sent_unlock_message = True
                 logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
 
-            song_pack = self.is_item_in_modded_data(self.goal_id) if self.modded else "ArchipelagoMod"
+            song_pack = self.song_id_to_pack(self.goal_id)
             song_unlock(self.path, [self.goal_id], False, song_pack)
 
 
@@ -269,7 +266,7 @@ class MegaMixContext(CommonContext):
 
         if Permission.auto & Permission.from_text(self.permissions.get("release")) == Permission.auto:
             await self.restore_songs()
-        elif self.autoRemove:
+        elif self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
         await self.send_msgs(message)
@@ -279,7 +276,7 @@ class MegaMixContext(CommonContext):
         await self.send_msgs(message)
         self.remove_found_checks()
         self.found_checks.clear()
-        if self.autoRemove:
+        if self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
     def remove_found_checks(self):
@@ -332,20 +329,11 @@ class MegaMixContext(CommonContext):
             logger.info("Auto Remove Set to Off")
 
     async def remove_songs(self):
-        group_songs = {}
-        for loc in self.prev_found:
-            prefix, last = divmod(loc, 10)
-            group_songs.setdefault(prefix, set()).add(last)
-        finished_songs = [prefix * 10 for prefix, digits in group_songs.items() if {0, 1} <= digits]
+        finished_songs = self.prev_found[::self.checks_per_song]
+
         ids_to_packs = {}
-
-        # Check for matches where all suffixes have been found
         for item in finished_songs:
-            song_pack = self.is_item_in_modded_data(item) if self.modded else "ArchipelagoMod"
-
-            if song_pack not in ids_to_packs:
-                ids_to_packs[song_pack] = []
-            ids_to_packs[song_pack].append(item)
+            ids_to_packs.setdefault(self.song_id_to_pack(item), []).append(item)
 
         for song_pack in ids_to_packs:
             song_unlock(self.path, ids_to_packs.get(song_pack), True, song_pack)
@@ -355,14 +343,22 @@ class MegaMixContext(CommonContext):
     async def freeplay_toggle(self):
         self.freeplay = not self.freeplay
 
-        song_ids = list(set(int(location) // 10 for location in self.location_ids))
-        song_ids.append(self.goal_id)
+        song_ids = [location_id for location_id in list(self.location_ids)[::self.checks_per_song]
+                    if location_id not in [i.item for i in self.previous_received]]
+
+        if not self.freeplay:
+            song_ids = [received.item for received in self.previous_received if received.item in self.missing_checks]
+
+            if self.leeks_obtained >= self.leeks_needed:
+                song_ids.append(self.goal_id)
+        elif self.leeks_obtained < self.leeks_needed:
+            song_ids.append(self.goal_id)
+
+        freeplay_song_list(self.mod_pv_list, song_ids, self.freeplay)
 
         if self.freeplay:
-            restore_song_list(self.mod_pv_list, song_ids, True)
             logger.info("Restored non-AP songs!")
         else:
-            restore_song_list(self.mod_pv_list, song_ids, False)
             logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):
