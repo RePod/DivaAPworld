@@ -54,4 +54,4 @@ jobs:
 
       - name: World | General tests
         if: "${{ inputs.unittests_skip != 'true' }}"
-        run: pytest test/general worlds/megamix
+        run: pytest -vv test/general worlds/megamix
