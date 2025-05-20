@@ -1,5 +1,5 @@
-from kvui import (App, ScrollBox, Button, MainLayout, ContainerLayout, dp, Widget, BoxLayout, TooltipLabel, ToolTip,
-                  Label)
+from kvui import (MDApp, ScrollBox, MDButton, MDButtonText, MainLayout, ContainerLayout, dp, Widget, MDBoxLayout, TooltipLabel, ToolTip,
+                  MDLabel)
 from kivy.core.clipboard import Clipboard
 from kivy.uix.popup import Popup
 from kivy.uix.checkbox import CheckBox
@@ -12,19 +12,19 @@ import settings
 from .TextFilter import filter_important_lines
 from ..DataHandler import restore_originals
 
-class AssociatedLabel(Label):
+class AssociatedMDLabel(MDLabel):
     def __init__(self, text, associate):
-        Label.__init__(self)
+        MDLabel.__init__(self)
         self.text = text
         self.associate = associate
         self.valign = 'center'
 
     def on_touch_down(self, touch):
-        Label.on_touch_down(self, touch)
+        MDLabel.on_touch_down(self, touch)
         if self.collide_point(touch.pos[0], touch.pos[1]):
             self.associate.active = not self.associate.active
 
-class DivaJSONGenerator(App):
+class DivaJSONGenerator(MDApp):
     container: ContainerLayout
     main_layout: MainLayout
     scrollbox: ScrollBox
@@ -50,12 +50,12 @@ class DivaJSONGenerator(App):
 
 
     def create_pack_line(self, name: str):
-        box = BoxLayout(size_hint_y=None, height=40)
+        box = MDBoxLayout(size_hint_y=None, height=40)
 
         checkbox = CheckBox(size_hint=(None, None), width=50, height=40)
         self.checkboxes.append(checkbox)
 
-        label = AssociatedLabel(name, checkbox)
+        label = AssociatedMDLabel(name, checkbox)
         label.bind(size=label.setter('text_size'))
         self.labels.append(name)
 
@@ -92,20 +92,20 @@ class DivaJSONGenerator(App):
                         continue
                 i.active = active
 
-        quick_container = BoxLayout(orientation='vertical', size_hint_x=0.20)
-        quick_import_button = Button(text="Import from DML", height=40)
+        quick_container = MDBoxLayout(orientation='vertical', size_hint_x=0.20)
+        quick_import_button = MDButton(MDButtonText(text="Import from DML"), height=40)
         quick_import_button.bind(on_release=lambda button: toggle_checkbox(True, import_dml=True))
         quick_container.add_widget(quick_import_button)
 
-        quick_all_button = Button(text="All", height=40)
+        quick_all_button = MDButton(MDButtonText(text="All"), height=40)
         quick_all_button.bind(on_release=toggle_checkbox)
         quick_container.add_widget(quick_all_button)
 
-        quick_none_button = Button(text="None", height=40)
+        quick_none_button = MDButton(MDButtonText(text="None"), height=40)
         quick_none_button.bind(on_release=lambda button: toggle_checkbox(False))
         quick_container.add_widget(quick_none_button)
 
-        quick_match_button = Button(text="Match", height=40)
+        quick_match_button = MDButton(MDButtonText(text="Match"), height=40)
         quick_match_button.bind(on_release=lambda button: toggle_checkbox(True, self.quick_match_input.text))
         quick_container.add_widget(quick_match_button)
 
@@ -113,7 +113,7 @@ class DivaJSONGenerator(App):
         self.quick_match_input.bind(on_text_validate=lambda i: toggle_checkbox(True, i.text))
         quick_container.add_widget(self.quick_match_input)
 
-        quick_unmatch_button = Button(text="Unmatch", height=40)
+        quick_unmatch_button = MDButton(MDButtonText(text="Unmatch"), height=40)
         quick_unmatch_button.bind(on_release=lambda button: toggle_checkbox(False, self.quick_match_input.text))
         quick_container.add_widget(quick_unmatch_button)
 
@@ -136,14 +136,14 @@ class DivaJSONGenerator(App):
                                 processed_text += "\n".join([line for line in input_file.read().splitlines() if re.search(trim_pv_db, line)])
                         except Exception as e:
                             popup = Popup(title='Error',
-                                          content=Label(text=f"Failed to read {file_path}: {e}"),
+                                          content=MDLabel(text=f"Failed to read {file_path}: {e}"),
                                           size_hint=(None, None), size=(400, 200))
                             popup.open()
 
         return processed_text
 
 
-    def process_to_clipboard(self, btn: Button):
+    def process_to_clipboard(self, btn: MDButton):
         checked_packs = []
         for i, cb in enumerate(self.checkboxes):
             if cb.active is True:
@@ -155,8 +155,8 @@ class DivaJSONGenerator(App):
 
         Clipboard.copy(mod_pv_db_json)
 
-        box = BoxLayout(orientation="vertical")
-        box.add_widget(Label(text=f"Generated {len(checked_packs)} packs ({len(mod_pv_db_json)} bytes)"))
+        box = MDBoxLayout(orientation="vertical")
+        box.add_widget(MDLabel(text=f"Generated {len(checked_packs)} packs ({len(mod_pv_db_json)} bytes)"))
         # box.add_widget(TextInput(text=mod_pv_db_json, multiline=False, readonly=True, size_hint_y=None, height=32))
 
         popup = Popup(title='Copied to clipboard',
@@ -165,7 +165,7 @@ class DivaJSONGenerator(App):
         popup.open()
 
 
-    def process_restore_originals(self, btn: Button):
+    def process_restore_originals(self, btn: MDButton):
             mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
             restore_originals(mod_pv_dbs)
 
@@ -185,16 +185,16 @@ class DivaJSONGenerator(App):
         self.scrollbox_container.add_widget(self.scrollbox)
         self.scrollbox_container.add_widget(self.create_pack_buttons())
 
-        bottom_box = BoxLayout(size_hint_y=None, height=40)
-        process_button = Button(text="Generate Mod String")
+        bottom_box = MDBoxLayout(size_hint_y=None, height=40)
+        process_button = MDButton(MDButtonText(text="Generate Mod String"))
         process_button.bind(on_release=self.process_to_clipboard)
         bottom_box.add_widget(process_button)
 
-        restore_button = Button(text="Restore Song Packs", size_hint_x=0.5)
+        restore_button = MDButton(MDButtonText(text="Restore Song Packs"), size_hint_x=0.5)
         restore_button.bind(on_release=self.process_restore_originals)
         bottom_box.add_widget(restore_button)
 
-        open_mods = Button(text=self.mods_folder, size_hint_y=None, height=40)
+        open_mods = MDButton(MDButtonText(text=self.mods_folder), size_hint_y=None, height=40)
         open_mods.bind(on_release=lambda button: Utils.open_file(self.mods_folder))
 
         self.main_layout.add_widget(open_mods)
