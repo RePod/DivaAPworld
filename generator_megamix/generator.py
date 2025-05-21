@@ -1,9 +1,8 @@
-from kvui import (ThemedApp, MDButton, MDButtonText, MDGridLayout, ScrollBox, MDTextField, MDBoxLayout, MDLabel)
+from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
 from kivy.properties import ObjectProperty
 from kivy.core.clipboard import Clipboard
-from kivy.uix.popup import Popup
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.textinput import TextInput
+from kivymd.uix.dialog import MDDialog, MDDialogHeadlineText, MDDialogContentContainer, MDDialogIcon, MDDialogSupportingText
 
 from kivy.lang.builder import Builder
 import pkgutil
@@ -72,14 +71,14 @@ class DivaJSONGenerator(ThemedApp):
         if import_dml:
             dml_path = os.path.split(self.mods_folder)[0] + "/config.toml"
             try:
-                with open(dml_path, "r", encoding='utf-8',
-                          errors='ignore') as DMLConfig:
+                with open(dml_path, "r", encoding='utf-8', errors='ignore') as DMLConfig:
                     dml_config = DMLConfig.read()
             except Exception as e:
-                popup = Popup(title='Could not obtain DML config',
-                              content=TextInput(text=f"{e}"),
-                              size_hint=(None, None), size=(400, 200))
-                popup.open()
+                MDDialog(
+                    MDDialogIcon(icon="alert"),
+                    MDDialogHeadlineText(text="Could not locate DML config"),
+                    MDDialogContentContainer(MDDialogSupportingText(text=f"{e}")),
+                ).open()
 
         for i in self.checkboxes:
             label = i.parent.children[0].text
@@ -106,18 +105,19 @@ class DivaJSONGenerator(ThemedApp):
         for folder_path in folders:
             folder_name = os.path.basename(folder_path)
             processed_text += f"\nsong_pack={folder_name}\n"
-            for master, dirs, files in os.walk(folder_path):
+            for root, dirs, files in os.walk(folder_path):
                 for file in files:
                     if file == "mod_pv_db.txt":
-                        file_path = os.path.join(master, file)
+                        file_path = os.path.join(root, file)
                         try:
                             with open(file_path, "r", encoding='utf-8', errors='ignore') as input_file:
                                 processed_text += "\n".join([line for line in input_file.read().splitlines() if re.search(trim_pv_db, line)])
                         except Exception as e:
-                            popup = Popup(title='Error',
-                                          content=MDLabel(text=f"Failed to read {file_path}: {e}"),
-                                          size_hint=(None, None), size=(400, 200))
-                            popup.open()
+                            MDDialog(
+                                MDDialogIcon(icon="alert"),
+                                MDDialogHeadlineText(text=f"Pack: {folder_name}"),
+                                MDDialogContentContainer(MDDialogSupportingText(text=f"Failed to read {file_path}: {e}")),
+                            ).open()
 
         return processed_text
 
@@ -135,13 +135,12 @@ class DivaJSONGenerator(ThemedApp):
 
         Clipboard.copy(mod_pv_db_json)
 
-        box = MDBoxLayout(orientation="vertical")
-        box.add_widget(MDLabel(text=f"Generated {len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"))
-
-        popup = Popup(title='Copied to clipboard',
-                      content=box,
-                      size_hint=(None, None), size=(400, 200))
-        popup.open()
+        MDDialog(
+            MDDialogHeadlineText(text="Copied mod string to clipboard"),
+            MDDialogContentContainer(
+                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"),
+            )
+        ).open()
 
 
     def open_mods_folder(self):
