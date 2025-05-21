@@ -80,21 +80,41 @@ class DivaJSONGenerator(ThemedApp):
                     MDDialogContentContainer(MDDialogSupportingText(text=f"{e}")),
                 ).open()
 
-        for i in self.checkboxes:
-            label = i.parent.children[0].text
+        # Look away
+        for cb in [box.children[1] for box in self.pack_list_scroll.layout.children]:
+            label = cb.parent.children[0].text
             if import_dml and label not in dml_config:
                 continue
             elif search:
                 if "/" == search[0] == search[-1]:
                     if not re.search(search[1:-1], label):
                         continue
-                elif search not in label:
+                elif search.lower() not in label.lower():
                     continue
-            i.active = active
+            cb.active = active
 
 
     def toggle_checkbox_from_input(self, active: bool = False):
         self.toggle_checkbox(active, self.filter_input.text)
+
+
+    def clear_filter_input(self):
+        self.filter_input.text = ""
+
+
+    def filter_pack_list(self, instance, search: str):
+        self.pack_list_scroll.layout.clear_widgets()
+
+        # Almost definitely a better way to do this.
+        for i in self.checkboxes:
+            label = i.parent.children[0].text
+            if search:
+                if "/" == search[0] == search[-1]:
+                    if not re.search(search[1:-1], label):
+                        continue
+                elif search.lower() not in label.lower():
+                    continue
+            self.pack_list_scroll.layout.add_widget(i.parent)
 
 
     @staticmethod
