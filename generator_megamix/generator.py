@@ -136,7 +136,7 @@ class DivaJSONGenerator(ThemedApp):
         Clipboard.copy(mod_pv_db_json)
 
         box = MDBoxLayout(orientation="vertical")
-        box.add_widget(MDLabel(text=f"Generated {len(checked_packs)} packs ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"))
+        box.add_widget(MDLabel(text=f"Generated {len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"))
 
         popup = Popup(title='Copied to clipboard',
                       content=box,

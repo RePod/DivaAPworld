@@ -18,7 +18,7 @@ MDBoxLayout:
                 MDButtonIcon:
                     icon: "folder"
                 MDButtonText:
-                    text: "Open Mod Folder"
+                    text: "Open Mods Folder"
 
             MDButton:
                 on_release: app.toggle_checkbox(True, import_dml=True)
@@ -26,6 +26,26 @@ MDBoxLayout:
                     icon: "import"
                 MDButtonText:
                     text: "Import from DML"
+
+            MDButton:
+                id: restorePacks
+                on_release: app.process_restore_originals()
+
+                MDButtonIcon:
+                    icon: "refresh"
+                MDButtonText:
+                    text: "Restore Mod Packs"
+
+            MDButton:
+                id: generateString
+                on_release: app.process_to_clipboard()
+
+                MDButtonIcon:
+                    icon: "code-json"
+                MDButtonText:
+                    text: "Generate Mod String"
+
+            MDNavigationDrawerDivider:
 
             MDButton:
                 on_release: app.toggle_checkbox(True)
@@ -47,24 +67,6 @@ MDBoxLayout:
                 MDButtonText:
                     text: "Unmatch"
 
-            MDButton:
-                id: restorePacks
-                on_release: app.process_restore_originals()
-
-                MDButtonIcon:
-                    icon: "refresh"
-                MDButtonText:
-                    text: "Restore Mod Packs"
-
-            MDButton:
-                id: generateString
-                on_release: app.process_to_clipboard()
-
-                MDButtonIcon:
-                    icon: "code-json"
-                MDButtonText:
-                    text: "Generate Mod String"
-
         MDGridLayout:
             id: packGrid
             rows: 2
@@ -72,7 +74,7 @@ MDBoxLayout:
             MDTextField:
                 id: filter_input
                 mode: "outlined"
-                #set_text: app.filterInput
+                #set_text: app.filter_pack_list
 
                 MDTextFieldLeadingIcon:
                     icon: "magnify"
