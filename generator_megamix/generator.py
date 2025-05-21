@@ -27,9 +27,10 @@ class AssociatedMDLabel(MDLabel):
         if self.collide_point(touch.pos[0], touch.pos[1]):
             self.associate.active = not self.associate.active
 
+
 class DivaJSONGenerator(ThemedApp):
     container: MDBoxLayout = ObjectProperty(None)
-    packlist_scroll: ScrollBox = ObjectProperty(None)
+    pack_list_scroll: ScrollBox = ObjectProperty(None)
     filter_input: MDTextField = ObjectProperty(None)
 
     mods_folder = ""
@@ -46,7 +47,7 @@ class DivaJSONGenerator(ThemedApp):
             if os.path.isdir(folder_path):
                 for root, dirs, files in os.walk(folder_path):
                     if 'mod_pv_db.txt' in files:
-                        self.packlist_scroll.layout.add_widget(self.create_pack_line(folder_name))
+                        self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
                         break
 
 
@@ -57,7 +58,6 @@ class DivaJSONGenerator(ThemedApp):
         self.checkboxes.append(checkbox)
 
         label = AssociatedMDLabel(name, checkbox)
-        label.bind(size=label.setter('text_size'))
         self.labels.append(name)
 
         box.add_widget(checkbox)
@@ -76,7 +76,7 @@ class DivaJSONGenerator(ThemedApp):
             except Exception as e:
                 MDDialog(
                     MDDialogIcon(icon="alert"),
-                    MDDialogHeadlineText(text="Could not locate DML config"),
+                    MDDialogHeadlineText(text="Could not locate or read DML config"),
                     MDDialogContentContainer(MDDialogSupportingText(text=f"{e}")),
                 ).open()
 
@@ -98,7 +98,7 @@ class DivaJSONGenerator(ThemedApp):
 
 
     @staticmethod
-    def process_mods(folders):
+    def process_mods(folders: list[str]):
         processed_text = ""
         trim_pv_db = re.compile(r'^pv_\d+\.(song_name|difficulty\.)')
 
@@ -127,8 +127,7 @@ class DivaJSONGenerator(ThemedApp):
 
         for i, cb in enumerate(self.checkboxes):
             if cb.active is True:
-                checked_packs.append(
-                    str(os.path.join(self.mods_folder, self.packlist_scroll.layout.children[-(i + 1)].children[0].text)))
+                checked_packs.append(os.path.join(self.mods_folder, self.pack_list_scroll.layout.children[-(i + 1)].children[0].text))
 
         combined_mod_pv_db = self.process_mods(checked_packs)
         mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
@@ -137,9 +136,7 @@ class DivaJSONGenerator(ThemedApp):
 
         MDDialog(
             MDDialogHeadlineText(text="Copied mod string to clipboard"),
-            MDDialogContentContainer(
-                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"),
-            )
+            MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"),
         ).open()
 
 
@@ -148,8 +145,8 @@ class DivaJSONGenerator(ThemedApp):
 
 
     def process_restore_originals(self):
-            mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
-            restore_originals(mod_pv_dbs)
+        mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
+        restore_originals(mod_pv_dbs)
 
 
     def build(self):
@@ -158,7 +155,7 @@ class DivaJSONGenerator(ThemedApp):
 
         data = pkgutil.get_data(MegaMixWorld.__module__, "generator_megamix/generator.kv").decode()
         self.container = Builder.load_string(data)
-        self.packlist_scroll = self.container.ids.packlist_scroll
+        self.pack_list_scroll = self.container.ids.pack_list_scroll
         self.filter_input = self.container.ids.filter_input
         self.create_pack_list()
 

@@ -75,11 +75,14 @@ MDBoxLayout:
                 id: filter_input
                 mode: "outlined"
                 #set_text: app.filter_pack_list
+                on_text_validate: app.toggle_checkbox_from_input(True) # "Match"
+                write_tab: False
+                #focus: True
 
                 MDTextFieldLeadingIcon:
                     icon: "magnify"
                 MDTextFieldHintText:
-                    text: "Filter by folder name (/regex/)"
+                    text: "Filter by name (/regex/)"
 
             ScrollBox:
-                id: packlist_scroll
+                id: pack_list_scroll
