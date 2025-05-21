@@ -1,0 +1,83 @@
+<MDButton>:
+    width: self.parent.width
+
+MDBoxLayout:
+    MDGridLayout:
+        cols: 2
+        spacing: "5dp"
+        padding: "10dp"
+
+        MDGridLayout:
+            cols: 1
+            size_hint_x: 0.35
+
+            MDButton:
+                id: open_mod_folder
+                on_release: app.open_mods_folder()
+
+                MDButtonIcon:
+                    icon: "folder"
+                MDButtonText:
+                    text: "Open Mod Folder"
+
+            MDButton:
+                on_release: app.toggle_checkbox(True, import_dml=True)
+                MDButtonIcon:
+                    icon: "import"
+                MDButtonText:
+                    text: "Import from DML"
+
+            MDButton:
+                on_release: app.toggle_checkbox(True)
+                MDButtonText:
+                    text: "All"
+
+            MDButton:
+                on_release: app.toggle_checkbox(False)
+                MDButtonText:
+                    text: "None"
+
+            MDButton:
+                on_release: app.toggle_checkbox_from_input(True)
+                MDButtonText:
+                    text: "Match"
+
+            MDButton:
+                on_release: app.toggle_checkbox_from_input(False)
+                MDButtonText:
+                    text: "Unmatch"
+
+            MDButton:
+                id: restorePacks
+                on_release: app.process_restore_originals()
+
+                MDButtonIcon:
+                    icon: "refresh"
+                MDButtonText:
+                    text: "Restore Mod Packs"
+
+            MDButton:
+                id: generateString
+                on_release: app.process_to_clipboard()
+
+                MDButtonIcon:
+                    icon: "code-json"
+                MDButtonText:
+                    text: "Generate Mod String"
+
+        MDGridLayout:
+            id: packGrid
+            rows: 2
+
+            MDTextField:
+                id: filter_input
+                mode: "outlined"
+                #set_text: app.filterInput
+
+                MDTextFieldLeadingIcon:
+                    icon: "magnify"
+                MDTextFieldHintText:
+                    text: "Filter by folder name (/regex/)"
+
+            ScrollBox:
+                id: packlist_scroll

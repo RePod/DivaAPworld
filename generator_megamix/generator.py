@@ -1,15 +1,19 @@
-from kvui import (MDApp, ScrollBox, MDButton, MDButtonText, MainLayout, ContainerLayout, dp, Widget, MDBoxLayout, TooltipLabel, ToolTip,
-                  MDLabel)
+from kvui import (ThemedApp, MDButton, MDButtonText, MDGridLayout, ScrollBox, MDTextField, MDBoxLayout, MDLabel)
+from kivy.properties import ObjectProperty
 from kivy.core.clipboard import Clipboard
 from kivy.uix.popup import Popup
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.textinput import TextInput
+
+from kivy.lang.builder import Builder
+import pkgutil
 
 import re
 import os
 import Utils
 import settings
 from .TextFilter import filter_important_lines
+from .. import MegaMixWorld
 from ..DataHandler import restore_originals
 
 class AssociatedMDLabel(MDLabel):
@@ -24,12 +28,10 @@ class AssociatedMDLabel(MDLabel):
         if self.collide_point(touch.pos[0], touch.pos[1]):
             self.associate.active = not self.associate.active
 
-class DivaJSONGenerator(MDApp):
-    container: ContainerLayout
-    main_layout: MainLayout
-    scrollbox: ScrollBox
-    scrollbox_container: MainLayout
-    quick_match_input: TextInput
+class DivaJSONGenerator(ThemedApp):
+    container: MDBoxLayout = ObjectProperty(None)
+    packlist_scroll: ScrollBox = ObjectProperty(None)
+    filter_input: MDTextField = ObjectProperty(None)
 
     mods_folder = ""
     checkboxes = []
@@ -45,7 +47,7 @@ class DivaJSONGenerator(MDApp):
             if os.path.isdir(folder_path):
                 for root, dirs, files in os.walk(folder_path):
                     if 'mod_pv_db.txt' in files:
-                        self.scrollbox.layout.add_widget(self.create_pack_line(folder_name))
+                        self.packlist_scroll.layout.add_widget(self.create_pack_line(folder_name))
                         break
 
 
@@ -65,62 +67,39 @@ class DivaJSONGenerator(MDApp):
         return box
 
 
-    def create_pack_buttons(self):
-        def toggle_checkbox(active: bool = True, search: str = "", import_dml: bool = False):
-            dml_config = ""
-            if import_dml:
-                dml_path = os.path.split(self.mods_folder)[0] + "/config.toml"
-                try:
-                    with open(dml_path, "r", encoding='utf-8',
-                              errors='ignore') as DMLConfig:
-                        dml_config = DMLConfig.read()
-                except Exception as e:
-                    popup = Popup(title='Could not obtain DML config',
-                                  content=TextInput(text=f"{e}"),
-                                  size_hint=(None, None), size=(400, 200))
-                    popup.open()
+    def toggle_checkbox(self, active: bool = True, search: str = "", import_dml: bool = False):
+        dml_config = ""
+        if import_dml:
+            dml_path = os.path.split(self.mods_folder)[0] + "/config.toml"
+            try:
+                with open(dml_path, "r", encoding='utf-8',
+                          errors='ignore') as DMLConfig:
+                    dml_config = DMLConfig.read()
+            except Exception as e:
+                popup = Popup(title='Could not obtain DML config',
+                              content=TextInput(text=f"{e}"),
+                              size_hint=(None, None), size=(400, 200))
+                popup.open()
 
-            for i in self.checkboxes:
-                label = i.parent.children[0].text
-                if import_dml and label not in dml_config:
-                    continue
-                elif search:
-                    if "/" == search[0] == search[-1]:
-                        if not re.search(search[1:-1], label):
-                            continue
-                    elif search not in label:
+        for i in self.checkboxes:
+            label = i.parent.children[0].text
+            if import_dml and label not in dml_config:
+                continue
+            elif search:
+                if "/" == search[0] == search[-1]:
+                    if not re.search(search[1:-1], label):
                         continue
-                i.active = active
-
-        quick_container = MDBoxLayout(orientation='vertical', size_hint_x=0.20)
-        quick_import_button = MDButton(MDButtonText(text="Import from DML"), height=40)
-        quick_import_button.bind(on_release=lambda button: toggle_checkbox(True, import_dml=True))
-        quick_container.add_widget(quick_import_button)
-
-        quick_all_button = MDButton(MDButtonText(text="All"), height=40)
-        quick_all_button.bind(on_release=toggle_checkbox)
-        quick_container.add_widget(quick_all_button)
-
-        quick_none_button = MDButton(MDButtonText(text="None"), height=40)
-        quick_none_button.bind(on_release=lambda button: toggle_checkbox(False))
-        quick_container.add_widget(quick_none_button)
-
-        quick_match_button = MDButton(MDButtonText(text="Match"), height=40)
-        quick_match_button.bind(on_release=lambda button: toggle_checkbox(True, self.quick_match_input.text))
-        quick_container.add_widget(quick_match_button)
-
-        self.quick_match_input = TextInput(multiline=False, size_hint_y=None, height=40)
-        self.quick_match_input.bind(on_text_validate=lambda i: toggle_checkbox(True, i.text))
-        quick_container.add_widget(self.quick_match_input)
-
-        quick_unmatch_button = MDButton(MDButtonText(text="Unmatch"), height=40)
-        quick_unmatch_button.bind(on_release=lambda button: toggle_checkbox(False, self.quick_match_input.text))
-        quick_container.add_widget(quick_unmatch_button)
-
-        return quick_container
+                elif search not in label:
+                    continue
+            i.active = active
 
 
-    def process_mods(self, folders):
+    def toggle_checkbox_from_input(self, active: bool = False):
+        self.toggle_checkbox(active, self.filter_input.text)
+
+
+    @staticmethod
+    def process_mods(folders):
         processed_text = ""
         trim_pv_db = re.compile(r'^pv_\d+\.(song_name|difficulty\.)')
 
@@ -143,12 +122,13 @@ class DivaJSONGenerator(MDApp):
         return processed_text
 
 
-    def process_to_clipboard(self, btn: MDButton):
+    def process_to_clipboard(self):
         checked_packs = []
+
         for i, cb in enumerate(self.checkboxes):
             if cb.active is True:
                 checked_packs.append(
-                    str(os.path.join(self.mods_folder, self.scrollbox.children[0].children[-(i + 1)].children[0].text)))
+                    str(os.path.join(self.mods_folder, self.packlist_scroll.layout.children[-(i + 1)].children[0].text)))
 
         combined_mod_pv_db = self.process_mods(checked_packs)
         mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
@@ -156,8 +136,7 @@ class DivaJSONGenerator(MDApp):
         Clipboard.copy(mod_pv_db_json)
 
         box = MDBoxLayout(orientation="vertical")
-        box.add_widget(MDLabel(text=f"Generated {len(checked_packs)} packs ({len(mod_pv_db_json)} bytes)"))
-        # box.add_widget(TextInput(text=mod_pv_db_json, multiline=False, readonly=True, size_hint_y=None, height=32))
+        box.add_widget(MDLabel(text=f"Generated {len(checked_packs)} packs ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"))
 
         popup = Popup(title='Copied to clipboard',
                       content=box,
@@ -165,7 +144,11 @@ class DivaJSONGenerator(MDApp):
         popup.open()
 
 
-    def process_restore_originals(self, btn: MDButton):
+    def open_mods_folder(self):
+        Utils.open_file(self.mods_folder)
+
+
+    def process_restore_originals(self):
             mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
             restore_originals(mod_pv_dbs)
 
@@ -174,32 +157,14 @@ class DivaJSONGenerator(MDApp):
         self.title = "Hatsune Miku Project Diva Mega Mix+ JSON Generator"
         self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
 
-        self.container = ContainerLayout()
-        self.main_layout = MainLayout(rows=3)
-        self.container.add_widget(self.main_layout)
-
-        self.scrollbox_container = MainLayout(cols=2)
-        self.scrollbox = ScrollBox(size_hint_y=1)
-        self.scrollbox.layout.orientation = "vertical"
+        data = pkgutil.get_data(MegaMixWorld.__module__, "generator_megamix/generator.kv").decode()
+        self.container = Builder.load_string(data)
+        self.packlist_scroll = self.container.ids.packlist_scroll
+        self.filter_input = self.container.ids.filter_input
         self.create_pack_list()
-        self.scrollbox_container.add_widget(self.scrollbox)
-        self.scrollbox_container.add_widget(self.create_pack_buttons())
 
-        bottom_box = MDBoxLayout(size_hint_y=None, height=40)
-        process_button = MDButton(MDButtonText(text="Generate Mod String"))
-        process_button.bind(on_release=self.process_to_clipboard)
-        bottom_box.add_widget(process_button)
-
-        restore_button = MDButton(MDButtonText(text="Restore Song Packs"), size_hint_x=0.5)
-        restore_button.bind(on_release=self.process_restore_originals)
-        bottom_box.add_widget(restore_button)
-
-        open_mods = MDButton(MDButtonText(text=self.mods_folder), size_hint_y=None, height=40)
-        open_mods.bind(on_release=lambda button: Utils.open_file(self.mods_folder))
-
-        self.main_layout.add_widget(open_mods)
-        self.main_layout.add_widget(self.scrollbox_container)
-        self.main_layout.add_widget(bottom_box)
+        self.set_colors()
+        self.container.md_bg_color = self.theme_cls.backgroundColor
 
         return self.container
 
