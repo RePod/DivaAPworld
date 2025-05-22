@@ -12,7 +12,7 @@ def extract_song_info(mod_pv_db: list[str]):
     current_name = ""
     current_pack = None
     line_counts = {}
-    conflicts = []
+    conflicts = set()
 
     for line in mod_pv_db:
         if 'song_pack=' in line:
@@ -39,7 +39,7 @@ def extract_song_info(mod_pv_db: list[str]):
             line_counts[pv_id] += 1
 
             if line_counts[pv_id] > 6:
-                conflicts.append(pv_id)
+                conflicts.add(song_number)
 
         if 'song_name_en=' in line:
             parts = line.split('=', 1)
@@ -90,7 +90,7 @@ def process_song_file(mod_pv_db: list[str]):
     songs_info, conflicts = extract_song_info(mod_pv_db)
 
     if conflicts:
-        raise ConflictException({int(pv.split("_").pop()) for pv in conflicts})
+        raise ConflictException(conflicts)
 
     if songs_info:
         compressed_data = compress_song_data(songs_info)
