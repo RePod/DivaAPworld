@@ -11,8 +11,8 @@ def filter_important_lines(combined_mod_pv_db: str, mod_folder: str):
     pv_info = {}
     prev_name = None
 
-    match_diff_length = re.compile(r'^(pv_\d+)\.difficulty\.(\w+)\.length=(\d+)')
-    match_diff_level = re.compile(r'^(pv_\d+)\.difficulty\.(\w+)\.(\d+)\.level=')
+    match_diff_length = re.compile(r'^(pv_\d+)\.difficulty\.(easy|normal|hard|extreme)\.length=(\d+)')
+    match_diff_level = re.compile(r'^(pv_\d+)\.difficulty\.(easy|normal|hard|extreme)\.(\d+)\.level=')
 
     for line in combined_mod_pv_db.splitlines():
         match = re.match(match_diff_length, line)

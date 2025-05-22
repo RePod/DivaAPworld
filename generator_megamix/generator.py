@@ -161,7 +161,11 @@ class DivaJSONGenerator(ThemedApp):
                 checked_packs.append(str(os.path.join(self.mods_folder, self.labels[i])))
 
         combined_mod_pv_db = self.process_mods(checked_packs)
-        mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
+        try:
+            mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
+        except Exception as e:
+            self.show_snackbar(f"Generation exception\n{e}")
+            return
 
         if mod_pv_db_json:
             Clipboard.copy(mod_pv_db_json)
