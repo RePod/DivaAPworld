@@ -157,7 +157,7 @@ class DivaJSONGenerator(ThemedApp):
 
         for i, cb in enumerate(self.checkboxes):
             if cb.active is True:
-                checked_packs.append(str(os.path.join(self.mods_folder, self.pack_list_scroll.layout.children[-(i + 1)].children[0].text)))
+                checked_packs.append(str(os.path.join(self.mods_folder, self.labels[i])))
 
         combined_mod_pv_db = self.process_mods(checked_packs)
         mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
