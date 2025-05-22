@@ -33,10 +33,7 @@ class AssociatedMDLabel(MDLabel):
 
 class MDBoxLayoutHover(MDBoxLayout, HoverBehavior):
     def on_enter(self):
-        self.md_bg_color = [1,1,1,0.1]
-
-    def on_leave(self):
-        self.md_bg_color = [1,1,1,0]
+    pass
 
 class DivaJSONGenerator(ThemedApp):
     container: MDBoxLayout = ObjectProperty(None)
@@ -60,7 +57,6 @@ class DivaJSONGenerator(ThemedApp):
                         self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
                         break
 
-
     def create_pack_line(self, name: str):
         box = MDBoxLayoutHover(size_hint_y=None, height=40)
 
@@ -74,7 +70,6 @@ class DivaJSONGenerator(ThemedApp):
         box.add_widget(label)
 
         return box
-
 
     def toggle_checkbox(self, active: bool = True, search: str = "", import_dml: bool = False):
         dml_config = ""
@@ -104,17 +99,14 @@ class DivaJSONGenerator(ThemedApp):
                     continue
             cb.active = active
 
-
     def toggle_checkbox_from_input(self, active: bool = False):
         if self.filter_input.text:
             self.toggle_checkbox(active=active, search=self.filter_input.text)
 
-
     def clear_filter_input(self):
         self.filter_input.text = ""
 
-
-    def filter_pack_list(self, instance, search: str):
+    def filter_pack_list(self, instance: MDTextField, search: str):
         self.pack_list_scroll.layout.clear_widgets()
 
         # Almost definitely a better way to do this.
@@ -127,7 +119,6 @@ class DivaJSONGenerator(ThemedApp):
                 elif search.lower() not in label.lower():
                     continue
             self.pack_list_scroll.layout.add_widget(i.parent)
-
 
     @staticmethod
     def process_mods(folders: list[str]):
@@ -148,11 +139,11 @@ class DivaJSONGenerator(ThemedApp):
                             MDDialog(
                                 MDDialogIcon(icon="alert"),
                                 MDDialogHeadlineText(text=f"Pack: {folder_name}"),
-                                MDDialogContentContainer(MDDialogSupportingText(text=f"Failed to read {file_path}: {e}")),
+                                MDDialogContentContainer(
+                                    MDDialogSupportingText(text=f"Failed to read {file_path}: {e}")),
                             ).open()
 
         return processed_text
-
 
     def process_to_clipboard(self):
         checked_packs = []
@@ -173,19 +164,18 @@ class DivaJSONGenerator(ThemedApp):
             return
 
         if mod_pv_db_json:
+            json_length = round(len(mod_pv_db_json) / 1024, 2)
             Clipboard.copy(mod_pv_db_json)
 
             MDDialog(
                 MDDialogHeadlineText(text="Copied mod string to clipboard"),
-                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"),
+                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({json_length} KiB)"),
             ).open()
         else:
             self.show_snackbar("No song packs selected")
 
-
     def open_mods_folder(self):
         Utils.open_file(self.mods_folder)
-
 
     @staticmethod
     def show_snackbar(message: str = "ooeeoo"):

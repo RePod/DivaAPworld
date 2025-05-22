@@ -90,7 +90,7 @@ def process_song_file(mod_pv_db: list[str]):
     songs_info, conflicts = extract_song_info(mod_pv_db)
 
     if conflicts:
-        raise ConflictException(conflicts)
+        raise ConflictException(sorted(conflicts))
 
     if songs_info:
         compressed_data = compress_song_data(songs_info)
