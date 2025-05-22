@@ -3,6 +3,7 @@ from kivy.metrics import dp
 from kivy.properties import ObjectProperty
 from kivy.core.clipboard import Clipboard
 from kivy.uix.checkbox import CheckBox
+from kivymd.uix.behaviors import HoverBehavior
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivymd.uix.dialog import MDDialog, MDDialogHeadlineText, MDDialogContentContainer, MDDialogIcon, MDDialogSupportingText
 
@@ -29,6 +30,12 @@ class AssociatedMDLabel(MDLabel):
         if self.collide_point(touch.pos[0], touch.pos[1]):
             self.associate.active = not self.associate.active
 
+class MDBoxLayoutHover(MDBoxLayout, HoverBehavior):
+    def on_enter(self):
+        self.md_bg_color = [1,1,1,0.1]
+
+    def on_leave(self):
+        self.md_bg_color = [1,1,1,0]
 
 class DivaJSONGenerator(ThemedApp):
     container: MDBoxLayout = ObjectProperty(None)
@@ -54,7 +61,7 @@ class DivaJSONGenerator(ThemedApp):
 
 
     def create_pack_line(self, name: str):
-        box = MDBoxLayout(size_hint_y=None, height=40)
+        box = MDBoxLayoutHover(size_hint_y=None, height=40)
 
         checkbox = CheckBox(size_hint=(None, None), width=50, height=40)
         self.checkboxes.append(checkbox)
