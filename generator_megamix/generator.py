@@ -105,7 +105,8 @@ class DivaJSONGenerator(ThemedApp):
 
 
     def toggle_checkbox_from_input(self, active: bool = False):
-        self.toggle_checkbox(active, self.filter_input.text)
+        if self.filter_input.text:
+            self.toggle_checkbox(active=active, search=self.filter_input.text)
 
 
     def clear_filter_input(self):
