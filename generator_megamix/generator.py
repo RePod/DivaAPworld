@@ -1,7 +1,9 @@
 from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
+from kivy.metrics import dp
 from kivy.properties import ObjectProperty
 from kivy.core.clipboard import Clipboard
 from kivy.uix.checkbox import CheckBox
+from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivymd.uix.dialog import MDDialog, MDDialogHeadlineText, MDDialogContentContainer, MDDialogIcon, MDDialogSupportingText
 
 from kivy.lang.builder import Builder
@@ -73,6 +75,7 @@ class DivaJSONGenerator(ThemedApp):
             try:
                 with open(dml_path, "r", encoding='utf-8', errors='ignore') as DMLConfig:
                     dml_config = DMLConfig.read()
+                self.show_snackbar("Imported from DML")
             except Exception as e:
                 MDDialog(
                     MDDialogIcon(icon="alert"),
@@ -152,22 +155,32 @@ class DivaJSONGenerator(ThemedApp):
         combined_mod_pv_db = self.process_mods(checked_packs)
         mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
 
-        Clipboard.copy(mod_pv_db_json)
+        if mod_pv_db_json:
+            Clipboard.copy(mod_pv_db_json)
 
-        MDDialog(
-            MDDialogHeadlineText(text="Copied mod string to clipboard"),
-            MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"),
-        ).open()
+            MDDialog(
+                MDDialogHeadlineText(text="Copied mod string to clipboard"),
+                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({round(len(mod_pv_db_json) / 1024, 2)} KiB)"),
+            ).open()
+        else:
+            self.show_snackbar("No song packs selected")
 
 
     def open_mods_folder(self):
         Utils.open_file(self.mods_folder)
 
 
+    @staticmethod
+    def show_snackbar(message: str = "ooeeoo"):
+        MDSnackbar(MDSnackbarText(text=message), y=dp(24), pos_hint={"center_x": 0.5}, size_hint_x=0.5).open()
+
     def process_restore_originals(self):
         mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
-        restore_originals(mod_pv_dbs)
-
+        try:
+            restore_originals(mod_pv_dbs)
+            self.show_snackbar("Song packs restored")
+        except Exception as e:
+            self.show_snackbar(str(e))
 
     def build(self):
         self.title = "Hatsune Miku Project Diva Mega Mix+ JSON Generator"
