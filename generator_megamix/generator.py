@@ -15,6 +15,7 @@ import os
 import Utils
 import settings
 from .TextFilter import filter_important_lines
+from .TxTToJSON import ConflictException
 from .. import MegaMixWorld
 from ..DataHandler import restore_originals
 
@@ -163,8 +164,12 @@ class DivaJSONGenerator(ThemedApp):
         combined_mod_pv_db = self.process_mods(checked_packs)
         try:
             mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
-        except Exception as e:
-            self.show_snackbar(f"Generation exception\n{e}")
+        except ConflictException as e:
+            MDDialog(
+                MDDialogIcon(icon="alert"),
+                MDDialogHeadlineText(text=f"Conflicting IDs prevent generating"),
+                MDDialogSupportingText(text=str(e))
+            ).open()
             return
 
         if mod_pv_db_json:

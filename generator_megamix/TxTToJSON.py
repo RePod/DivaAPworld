@@ -1,9 +1,10 @@
 import re
 import json
-from tkinter import messagebox
 
 from ..SymbolFixer import fix_song_name
 
+class ConflictException(Exception):
+    pass
 
 def extract_song_info(mod_pv_db: list[str]):
     song_packs = {}
@@ -86,13 +87,10 @@ def extract_song_info(mod_pv_db: list[str]):
 
 
 def process_song_file(mod_pv_db: list[str]):
-
     songs_info, conflicts = extract_song_info(mod_pv_db)
 
-    # Eventually move to Kivy
     if conflicts:
-        messagebox.showerror("Conflict Detected", f"Conflicts detected for the following pv_ IDs: {conflicts}")
-        return
+        raise ConflictException({int(pv.split("_").pop()) for pv in conflicts})
 
     if songs_info:
         compressed_data = compress_song_data(songs_info)
