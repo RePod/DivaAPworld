@@ -32,7 +32,6 @@ class AssociatedMDLabel(MDLabel):
             self.associate.active = not self.associate.active
 
 class MDBoxLayoutHover(MDBoxLayout, HoverBehavior):
-    def on_enter(self):
     pass
 
 class DivaJSONGenerator(ThemedApp):
