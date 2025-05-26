@@ -40,12 +40,13 @@ class DivaJSONGenerator(ThemedApp):
     filter_input: MDTextField = ObjectProperty(None)
 
     mods_folder = ""
+    self_mod_name = "ArchipelagoMod" # Hardcoded
     checkboxes = []
     labels = []
 
     def create_pack_list(self):
         for folder_name in os.listdir(self.mods_folder):
-            if folder_name == "ArchipelagoMod":
+            if folder_name == self.self_mod_name:
                 continue
 
             folder_path = os.path.join(self.mods_folder, folder_name)
@@ -181,6 +182,7 @@ class DivaJSONGenerator(ThemedApp):
 
     def process_restore_originals(self):
         mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels]
+        mod_pv_dbs.append(f"{self.mods_folder}/{self.self_mod_name}/rom/mod_pv_db.txt")
         try:
             restore_originals(mod_pv_dbs)
             self.show_snackbar("Song packs restored")
