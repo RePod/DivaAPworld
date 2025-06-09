@@ -49,7 +49,7 @@ class DivaJSONGenerator(ThemedApp):
             if folder_name == self.self_mod_name:
                 continue
 
-            if os.path.isfile(os.path.join(self.mods_folder, folder_name, "rom/mod_pv_db.txt")):
+            if os.path.isfile(os.path.join(self.mods_folder, folder_name, "rom", "mod_pv_db.txt")):
                 self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
 
     def create_pack_line(self, name: str):
