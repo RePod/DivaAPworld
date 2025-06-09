@@ -39,8 +39,8 @@ class DivaJSONGenerator(ThemedApp):
     pack_list_scroll: ScrollBox = ObjectProperty(None)
     filter_input: MDTextField = ObjectProperty(None)
 
-    mods_folder = ""
-    self_mod_name = "ArchipelagoMod" # Hardcoded
+    mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
+    self_mod_name = "ArchipelagoMod" # Hardcoded. Fetch from Client or something.
     checkboxes = []
     labels = []
 
@@ -49,13 +49,8 @@ class DivaJSONGenerator(ThemedApp):
             if folder_name == self.self_mod_name:
                 continue
 
-            folder_path = os.path.join(self.mods_folder, folder_name)
-
-            if os.path.isdir(folder_path):
-                for root, dirs, files in os.walk(folder_path):
-                    if 'mod_pv_db.txt' in files:
-                        self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
-                        break
+            if os.path.isfile(os.path.join(self.mods_folder, folder_name, "rom", "mod_pv_db.txt")):
+                self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
 
     def create_pack_line(self, name: str):
         box = MDBoxLayoutHover(size_hint_y=None, height=40)
@@ -191,7 +186,6 @@ class DivaJSONGenerator(ThemedApp):
 
     def build(self):
         self.title = "Hatsune Miku Project Diva Mega Mix+ JSON Generator"
-        self.mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
 
         data = pkgutil.get_data(MegaMixWorld.__module__, "generator_megamix/generator.kv").decode()
         self.container = Builder.load_string(data)
