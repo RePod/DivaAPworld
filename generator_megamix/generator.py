@@ -69,7 +69,7 @@ class DivaJSONGenerator(ThemedApp):
     def toggle_checkbox(self, active: bool = True, search: str = "", import_dml: bool = False):
         dml_config = ""
         if import_dml:
-            dml_path = os.path.join(os.path.split(self.mods_folder)[0], "config.toml")
+            dml_path = os.path.join(os.path.dirname(self.mods_folder), "config.toml")
             try:
                 with open(dml_path, "r", encoding='utf-8', errors='ignore') as DMLConfig:
                     dml_config = DMLConfig.read()
@@ -97,9 +97,6 @@ class DivaJSONGenerator(ThemedApp):
     def toggle_checkbox_from_input(self, active: bool = False):
         if self.filter_input.text:
             self.toggle_checkbox(active=active, search=self.filter_input.text)
-
-    def clear_filter_input(self):
-        self.filter_input.text = ""
 
     def filter_pack_list(self, instance: MDTextField, search: str):
         self.pack_list_scroll.layout.clear_widgets()
