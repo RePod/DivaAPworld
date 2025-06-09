@@ -55,6 +55,7 @@ class DivaJSONGenerator(ThemedApp):
                 for root, dirs, files in os.walk(folder_path):
                     if 'mod_pv_db.txt' in files:
                         self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
+                        break
 
     def create_pack_line(self, name: str):
         box = MDBoxLayoutHover(size_hint_y=None, height=40)
