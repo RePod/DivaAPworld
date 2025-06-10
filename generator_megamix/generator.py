@@ -51,9 +51,9 @@ class DivaJSONGenerator(ThemedApp):
                 self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
 
     def create_pack_line(self, name: str):
-        box = MDBoxLayoutHover(size_hint_y=None, height=30)
+        box = MDBoxLayoutHover()
 
-        checkbox = CheckBox(size_hint=(None, None), width=50, height=30)
+        checkbox = CheckBox()
         label = AssociatedMDLabel(name, checkbox)
         self.labels.append(label)
 

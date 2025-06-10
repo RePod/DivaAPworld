@@ -12,6 +12,12 @@
 <MDBoxLayoutHover>:
     on_enter: self.md_bg_color = [1,1,1,0.1]
     on_leave: self.md_bg_color = [1,1,1,0]
+    size_hint_y: None
+    height: dp(36)
+<Checkbox>:
+    size_hint: (None, None)
+    width: 50
+    height: dp(36)
 
 MDBoxLayout:
     MDGridLayout:
