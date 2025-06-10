@@ -41,7 +41,6 @@ class DivaJSONGenerator(ThemedApp):
 
     mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
     self_mod_name = "ArchipelagoMod" # Hardcoded. Fetch from Client or something.
-    checkboxes = []
     labels = []
 
     def create_pack_list(self):
@@ -53,13 +52,11 @@ class DivaJSONGenerator(ThemedApp):
                 self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
 
     def create_pack_line(self, name: str):
-        box = MDBoxLayoutHover(size_hint_y=None, height=40)
+        box = MDBoxLayoutHover(size_hint_y=None, height=30)
 
-        checkbox = CheckBox(size_hint=(None, None), width=50, height=40)
-        self.checkboxes.append(checkbox)
-
+        checkbox = CheckBox(size_hint=(None, None), width=50, height=30)
         label = AssociatedMDLabel(name, checkbox)
-        self.labels.append(name)
+        self.labels.append(label)
 
         box.add_widget(checkbox)
         box.add_widget(label)
@@ -81,18 +78,16 @@ class DivaJSONGenerator(ThemedApp):
                     MDDialogContentContainer(MDDialogSupportingText(text=f"{e}")),
                 ).open()
 
-        # Look away
-        for cb in [box.children[1] for box in self.pack_list_scroll.layout.children]:
-            label = cb.parent.children[0].text
-            if import_dml and label not in dml_config:
+        for label in self.labels:
+            if import_dml and label.text not in dml_config:
                 continue
             elif search:
                 if "/" == search[0] == search[-1]:
-                    if not re.search(search[1:-1], label):
+                    if not re.search(search[1:-1], label.text):
                         continue
-                elif search.lower() not in label.lower():
+                elif search.lower() not in label.text.lower():
                     continue
-            cb.active = active
+            label.associate.active = active
 
     def toggle_checkbox_from_input(self, active: bool = False):
         if self.filter_input.text:
@@ -100,17 +95,16 @@ class DivaJSONGenerator(ThemedApp):
 
     def filter_pack_list(self, instance: MDTextField, search: str):
         self.pack_list_scroll.layout.clear_widgets()
+        self.pack_list_scroll.scroll_y = 1
 
-        # Almost definitely a better way to do this.
-        for i in self.checkboxes:
-            label = i.parent.children[0].text
+        for label in self.labels:
             if search:
                 if "/" == search[0] == search[-1]:
-                    if not re.search(search[1:-1], label):
+                    if not re.search(search[1:-1], label.text):
                         continue
-                elif search.lower() not in label.lower():
+                elif search.lower() not in label.text.lower():
                     continue
-            self.pack_list_scroll.layout.add_widget(i.parent)
+            self.pack_list_scroll.layout.add_widget(label.parent)
 
     @staticmethod
     def process_mods(folders: list[str]):
@@ -119,30 +113,25 @@ class DivaJSONGenerator(ThemedApp):
 
         for folder_path in folders:
             folder_name = os.path.basename(folder_path)
+            mod_pv_db_path = os.path.join(folder_path, "rom", "mod_pv_db.txt")
             processed_text += f"\nsong_pack={folder_name}\n"
-            for root, dirs, files in os.walk(folder_path):
-                for file in files:
-                    if file == "mod_pv_db.txt":
-                        file_path = os.path.join(root, file)
-                        try:
-                            with open(file_path, "r", encoding='utf-8', errors='ignore') as input_file:
-                                processed_text += "\n".join([line for line in input_file.read().splitlines() if re.search(trim_pv_db, line)])
-                        except Exception as e:
-                            MDDialog(
-                                MDDialogIcon(icon="alert"),
-                                MDDialogHeadlineText(text=f"Pack: {folder_name}"),
-                                MDDialogContentContainer(
-                                    MDDialogSupportingText(text=f"Failed to read {file_path}: {e}")),
-                            ).open()
+
+            if os.path.isfile(mod_pv_db_path):
+                try:
+                    with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
+                        processed_text += "\n".join([line for line in input_file.read().splitlines() if trim_pv_db.search(line)])
+                except Exception as e:
+                    MDDialog(
+                        MDDialogIcon(icon="alert"),
+                        MDDialogHeadlineText(text=f"Pack: {folder_name}"),
+                        MDDialogContentContainer(
+                            MDDialogSupportingText(text=f"Failed to read {mod_pv_db_path}: {e}")),
+                    ).open()
 
         return processed_text
 
     def process_to_clipboard(self):
-        checked_packs = []
-
-        for i, cb in enumerate(self.checkboxes):
-            if cb.active is True:
-                checked_packs.append(str(os.path.join(self.mods_folder, self.labels[i])))
+        checked_packs = [str(os.path.join(self.mods_folder, label.text)) for label in self.labels if label.associate.active]
 
         combined_mod_pv_db = self.process_mods(checked_packs)
         try:

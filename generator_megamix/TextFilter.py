@@ -15,7 +15,7 @@ def filter_important_lines(combined_mod_pv_db: str, mod_folder: str):
     match_diff_level = re.compile(r'^(pv_\d+)\.difficulty\.(easy|normal|hard|extreme)\.(\d+)\.level=')
 
     for line in combined_mod_pv_db.splitlines():
-        match = re.match(match_diff_length, line)
+        match = match_diff_length.match(line)
         if match:
             pv_id = match.group(1)
             difficulty = match.group(2)
@@ -38,7 +38,7 @@ def filter_important_lines(combined_mod_pv_db: str, mod_folder: str):
                 prev_name = cur_name
                 song_pack_lines[current_song_pack].append(line)
         elif match and '.level=' in line:
-            pv_id_match = re.match(match_diff_level, line)
+            pv_id_match = match_diff_level.match(line)
             if pv_id_match:
                 pv_id = pv_id_match.group(1)
                 difficulty = pv_id_match.group(2)
