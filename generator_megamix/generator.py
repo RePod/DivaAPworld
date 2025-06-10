@@ -1,22 +1,23 @@
-from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
+import os
+import pkgutil
+import re
+
+from kivy.core.clipboard import Clipboard
+from kivy.lang.builder import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty
-from kivy.core.clipboard import Clipboard
 from kivy.uix.checkbox import CheckBox
 from kivymd.uix.behaviors import HoverBehavior
-from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivymd.uix.dialog import MDDialog, MDDialogHeadlineText, MDDialogContentContainer, MDDialogIcon, MDDialogSupportingText
+from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
-from kivy.lang.builder import Builder
-import pkgutil
-
-import re
-import os
 import Utils
 import settings
+from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
+from .json_megamix import process_mods, ConflictException
 from .. import MegaMixWorld
 from ..DataHandler import restore_originals
-from .json_megamix import process_mods, ConflictException
+
 
 class AssociatedMDLabel(MDLabel):
     def __init__(self, text, associate):

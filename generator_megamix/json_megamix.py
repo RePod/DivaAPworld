@@ -1,7 +1,7 @@
+import json
 import os.path
 import pathlib
 import re
-import json
 
 from ..SymbolFixer import fix_song_name
 
@@ -56,7 +56,6 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
 
     with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
         mod_pv_db = input_file.read()
-
     mod_pv_db = re.findall(rf'^(pv_(\d+)\.(song_name_en|difficulty)(?:\.(.*).(\d+)\.(level|script_file_name))?=(.*))$', mod_pv_db, re.MULTILINE)
 
     for line in mod_pv_db:
