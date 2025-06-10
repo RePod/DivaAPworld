@@ -37,6 +37,13 @@ MDBoxLayout:
                     text: "Open mods folder"
 
             MDButton:
+                on_release: app.create_pack_list()
+                MDButtonIcon:
+                    icon: "folder-refresh"
+                MDButtonText:
+                    text: "Refresh mod list"
+
+            MDButton:
                 on_release: app.toggle_checkbox(True, import_dml=True)
                 MDButtonIcon:
                     icon: "import"

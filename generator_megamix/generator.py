@@ -43,6 +43,9 @@ class DivaJSONGenerator(ThemedApp):
     labels = []
 
     def create_pack_list(self):
+        self.labels = []
+        self.pack_list_scroll.layout.clear_widgets()
+
         for folder_name in os.listdir(self.mods_folder):
             if folder_name == self.self_mod_name:
                 continue
