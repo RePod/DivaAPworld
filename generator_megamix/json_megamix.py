@@ -67,19 +67,14 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
         match song_prop:
             case "song_name_en":
                 songs[song_id][0] = fix_song_name(value).replace("'", "''")
-            case "difficulty":
-                if diff_rating == "encore":
-                    continue # does not exist
-
+            case "difficulty" if not diff_rating == "encore":
                 diff_rating = "exextreme" if diff_index == "1" and diff_rating == "extreme" else diff_rating
                 diff_index = difficulties.index(diff_rating)
 
                 match diff_prop:
                     case "level":
                         songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, float(".".join(value.split("_")[2:4])))
-                    case "script_file_name":
-                        if song_id in base_game_ids:
-                            continue # 99% covers. Good luck everyone.
+                    case "script_file_name" if song_id not in base_game_ids: # 99% covers. Good luck everyone.
                         if not os.path.isfile(os.path.join(mod_dir, value)): # Verify DSC exists
                             diff_lockout[song_id][diff_index] = True
                             songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, 31.0)
