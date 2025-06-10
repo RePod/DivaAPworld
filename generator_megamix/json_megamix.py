@@ -56,10 +56,10 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
 
     with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
         mod_pv_db = input_file.read()
-    mod_pv_db = re.findall(rf'^(pv_(\d+)\.(song_name_en|difficulty)(?:\.(.*).(length|(\d+)\.(level|script_file_name)))?=(.*))$', mod_pv_db, re.MULTILINE)
+    mod_pv_db = re.findall(rf'^pv_(\d+)\.(song_name_en|difficulty)(?:\.([^.]+)\.(\d|length)\.?(level|script_file_name)?)?=(.*)$', mod_pv_db, re.MULTILINE)
 
     for line in mod_pv_db:
-        full, song_id, song_prop, diff_rating, length_check, diff_index, diff_prop, value = line
+        song_id, song_prop, diff_rating, diff_index, diff_prop, value = line
         songs.setdefault(song_id, ["", int(song_id), 0])
         diff_lockout.setdefault(song_id, [False] * 5)
         song_pack_ids.add(song_id)
@@ -71,7 +71,7 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
                 diff_rating = "exextreme" if diff_index == "1" and diff_rating == "extreme" else diff_rating
                 diff_index = difficulties.index(diff_rating)
 
-                if length_check == "length" and value == "0":
+                if diff_index == "length" and value == "0":
                     diff_lockout[song_id][diff_index] = True
                     songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, 31.0)
 
