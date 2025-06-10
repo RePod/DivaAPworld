@@ -14,10 +14,9 @@ import re
 import os
 import Utils
 import settings
-from .TextFilter import filter_important_lines
-from .TxTToJSON import ConflictException
 from .. import MegaMixWorld
 from ..DataHandler import restore_originals
+from .json_megamix import process_mods, ConflictException
 
 class AssociatedMDLabel(MDLabel):
     def __init__(self, text, associate):
@@ -106,54 +105,35 @@ class DivaJSONGenerator(ThemedApp):
                     continue
             self.pack_list_scroll.layout.add_widget(label.parent)
 
-    @staticmethod
-    def process_mods(folders: list[str]):
-        processed_text = ""
-        trim_pv_db = re.compile(r'^pv_\d+\.(song_name|difficulty\.)')
-
-        for folder_path in folders:
-            folder_name = os.path.basename(folder_path)
-            mod_pv_db_path = os.path.join(folder_path, "rom", "mod_pv_db.txt")
-            processed_text += f"\nsong_pack={folder_name}\n"
-
-            if os.path.isfile(mod_pv_db_path):
-                try:
-                    with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
-                        processed_text += "\n".join([line for line in input_file.read().splitlines() if trim_pv_db.search(line)])
-                except Exception as e:
-                    MDDialog(
-                        MDDialogIcon(icon="alert"),
-                        MDDialogHeadlineText(text=f"Pack: {folder_name}"),
-                        MDDialogContentContainer(
-                            MDDialogSupportingText(text=f"Failed to read {mod_pv_db_path}: {e}")),
-                    ).open()
-
-        return processed_text
-
     def process_to_clipboard(self):
         checked_packs = [str(os.path.join(self.mods_folder, label.text)) for label in self.labels if label.associate.active]
+        mod_pv_db_paths_list = [os.path.join(folder_path, "rom", "mod_pv_db.txt") for folder_path in checked_packs]
 
-        combined_mod_pv_db = self.process_mods(checked_packs)
+        if not mod_pv_db_paths_list:
+            self.show_snackbar("No song packs selected")
+            return
+
         try:
-            mod_pv_db_json = filter_important_lines(combined_mod_pv_db, self.mods_folder)
+            mod_pv_db_json = process_mods(mod_pv_db_paths_list)
         except ConflictException as e:
+            Clipboard.copy(str(e))
             MDDialog(
                 MDDialogIcon(icon="alert"),
                 MDDialogHeadlineText(text=f"Conflicting IDs prevent generating"),
-                MDDialogSupportingText(text=str(e))
+                MDDialogSupportingText(text=
+                                       "This is common for packs that target the base game or add covers.\n"
+                                       "The following has been copied to the clipboard.\n\n"
+                                       f"{str(e)}")
             ).open()
             return
 
-        if mod_pv_db_json:
-            json_length = round(len(mod_pv_db_json) / 1024, 2)
-            Clipboard.copy(mod_pv_db_json)
+        json_length = round(len(mod_pv_db_json) / 1024, 2)
+        Clipboard.copy(mod_pv_db_json)
 
-            MDDialog(
-                MDDialogHeadlineText(text="Copied mod string to clipboard"),
-                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({json_length} KiB)"),
-            ).open()
-        else:
-            self.show_snackbar("No song packs selected")
+        MDDialog(
+            MDDialogHeadlineText(text="Copied mod string to clipboard"),
+            MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({json_length} KiB)"),
+        ).open()
 
     def open_mods_folder(self):
         Utils.open_file(self.mods_folder)
