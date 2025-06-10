@@ -56,10 +56,10 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
 
     with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
         mod_pv_db = input_file.read()
-    mod_pv_db = re.findall(rf'^(pv_(\d+)\.(song_name_en|difficulty)(?:\.(.*).(\d+)\.(level|script_file_name))?=(.*))$', mod_pv_db, re.MULTILINE)
+    mod_pv_db = re.findall(rf'^(pv_(\d+)\.(song_name_en|difficulty)(?:\.(.*).(length|(\d+)\.(level|script_file_name)))?=(.*))$', mod_pv_db, re.MULTILINE)
 
     for line in mod_pv_db:
-        full, song_id, song_prop, diff_rating, diff_index, diff_prop, value = line
+        full, song_id, song_prop, diff_rating, length_check, diff_index, diff_prop, value = line
         songs.setdefault(song_id, ["", int(song_id), 0])
         diff_lockout.setdefault(song_id, [False] * 5)
         song_pack_ids.add(song_id)
@@ -71,8 +71,12 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
                 diff_rating = "exextreme" if diff_index == "1" and diff_rating == "extreme" else diff_rating
                 diff_index = difficulties.index(diff_rating)
 
+                if length_check == "length" and value == "0":
+                    diff_lockout[song_id][diff_index] = True
+                    songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, 31.0)
+
                 match diff_prop:
-                    case "level":
+                    case "level" if not diff_lockout[song_id][diff_index]:
                         songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, float(".".join(value.split("_")[2:4])))
                     case "script_file_name" if song_id not in base_game_ids: # 99% covers. Good luck everyone.
                         if not os.path.isfile(os.path.join(mod_dir, value)): # Verify DSC exists
@@ -85,6 +89,7 @@ def shift_difficulty(current_diffs: int = 0, index: int = 0, level_float: float 
     """
     Accumulates difficulties in a bitfield to save space in the export.
     Easy MSB (index 4) <- ExEx LSB (index 0) due to Ex/ExEx prevalence.
+    Each diff is stored as 5 bits with MSB indicating the .5: 9.5 = 0b11001
     Masks off missing DSCs with NOT 31. Locking handled in caller.
     """
 
