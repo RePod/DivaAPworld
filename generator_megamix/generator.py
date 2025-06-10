@@ -2,6 +2,7 @@ import os
 import pkgutil
 import re
 
+from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
 from kivy.core.clipboard import Clipboard
 from kivy.lang.builder import Builder
 from kivy.metrics import dp
@@ -13,7 +14,6 @@ from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 import Utils
 import settings
-from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
 from .json_megamix import process_mods, ConflictException
 from .. import MegaMixWorld
 from ..DataHandler import restore_originals
