@@ -5,7 +5,6 @@ import re
 from kvui import ThemedApp, ScrollBox, MDTextField, MDBoxLayout, MDLabel
 from kivy.core.clipboard import Clipboard
 from kivy.lang.builder import Builder
-from kivy.metrics import dp
 from kivy.properties import ObjectProperty
 from kivy.uix.checkbox import CheckBox
 from kivymd.uix.behaviors import HoverBehavior
@@ -115,7 +114,7 @@ class DivaJSONGenerator(ThemedApp):
             return
 
         try:
-            mod_pv_db_json = process_mods(mod_pv_db_paths_list)
+            count, mod_pv_db_json = process_mods(mod_pv_db_paths_list)
         except ConflictException as e:
             Clipboard.copy(str(e))
             MDDialog(
@@ -133,7 +132,7 @@ class DivaJSONGenerator(ThemedApp):
 
         MDDialog(
             MDDialogHeadlineText(text="Copied mod string to clipboard"),
-            MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({json_length} KiB)"),
+            MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({json_length} KiB)\n{count} unique song IDs"),
         ).open()
 
     def open_mods_folder(self):
@@ -141,7 +140,7 @@ class DivaJSONGenerator(ThemedApp):
 
     @staticmethod
     def show_snackbar(message: str = "ooeeoo"):
-        MDSnackbar(MDSnackbarText(text=message), y=dp(24), pos_hint={"center_x": 0.5}, size_hint_x=0.5).open()
+        MDSnackbar(MDSnackbarText(text=message)).open()
 
     def process_restore_originals(self):
         mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in self.labels + [self.self_mod_name]]

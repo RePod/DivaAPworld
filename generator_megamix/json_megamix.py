@@ -22,7 +22,7 @@ base_game_ids = { # Excluded: 700, 701
 class ConflictException(Exception):
     pass
 
-def process_mods(mod_pv_dbs_path_list: list[str]) -> str:
+def process_mods(mod_pv_dbs_path_list: list[str]) -> tuple[int, str]:
     """
     Accumulates song metadata across the provided mod_pv_dbs and returns JSON.
 
@@ -46,7 +46,7 @@ def process_mods(mod_pv_dbs_path_list: list[str]) -> str:
         unique_seen_ids |= {song_id: mod_folder for song_id in song_pack_ids}
         mod_song_collection[mod_folder] = song_pack_list
 
-    return finalize_json(mod_song_collection)
+    return len(unique_seen_ids), finalize_json(mod_song_collection)
 
 def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], list[list[str,int,int]]]:
     difficulties = ["exextreme", "extreme", "hard", "normal", "easy"] # see shift_difficulty()
