@@ -95,7 +95,7 @@ class DivaJSONGenerator(ThemedApp):
         if self.filter_input.text:
             self.toggle_checkbox(active=active, search=self.filter_input.text)
 
-    def filter_pack_list(self, instance: MDTextField, search: str):
+    def filter_pack_list(self, _, search: str):
         self.pack_list_scroll.layout.clear_widgets()
         self.pack_list_scroll.scroll_y = 1
 
