@@ -300,8 +300,11 @@ class MegaMixWorld(World):
 
     def fill_slot_data(self):
 
-        data = json.loads(self.options.megamix_mod_data.value)
-        filtered = {pack: [entry[1] for entry in songs] for pack, songs in data.items()}
+        try:
+            data = json.loads(self.options.megamix_mod_data.value)
+            filtered = {pack: [entry[1] for entry in songs] for pack, songs in data.items()}
+        except json.JSONDecodeError:
+            filtered = None
 
         return {
             "victoryLocation": self.victory_song_name,
