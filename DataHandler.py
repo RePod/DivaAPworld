@@ -88,7 +88,7 @@ def restore_originals(original_file_paths):
             shutil.copyfile(copy_file_path, original_file_path)
             logger.debug(f"Restored {original_file_path} from {copy_file_path}")
         else:
-            raise FileNotFoundError(f"The copy file {copy_file_path} does not exist.")
+            logger.debug(f"The copy file {copy_file_path} does not exist.")
 
 
 # Data processing
