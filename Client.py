@@ -233,18 +233,18 @@ class MegaMixContext(CommonContext):
         if song_data.get('pvId') != 144:
             location_id = int(song_data.get('pvId') * 10)
 
-            if int(song_data.get('scoreGrade')) >= self.grade_needed:
-
-                if location_id == self.goal_id:
-                    asyncio.create_task(self.end_goal())
-                    return
-
+            if not location_id == self.goal_id:
                 if location_id in self.prev_found:
                     logger.info("No checks to send: Song checks previously sent or collected")
                     return
 
                 if not location_id in self.location_ids:
                     logger.info("No checks to send: Song not in song pool")
+                    return
+
+            if int(song_data.get('scoreGrade')) >= self.grade_needed:
+                if location_id == self.goal_id:
+                    asyncio.create_task(self.end_goal())
                     return
 
                 logger.info("Cleared song with appropriate grade!")
@@ -256,7 +256,7 @@ class MegaMixContext(CommonContext):
             else:
                 logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
         else:
-            logger.info("There are no checks at BK but seeing this means your Client is OK!")
+            logger.info("No checks to send at BK but seeing this means your Client is OK!")
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
