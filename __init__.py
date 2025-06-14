@@ -14,6 +14,7 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 import typing
+import json
 from typing import List
 from math import floor
 
@@ -298,11 +299,15 @@ class MegaMixWorld(World):
         return [min_diff, max_diff]
 
     def fill_slot_data(self):
+
+        data = json.loads(self.options.megamix_mod_data.value)
+        filtered = {pack: [entry[1] for entry in songs] for pack, songs in data.items()}
+
         return {
             "victoryLocation": self.victory_song_name,
             "victoryID": self.victory_song_id,
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),
-            "modData": self.options.megamix_mod_data.value,
+            "modData": filtered,
         }

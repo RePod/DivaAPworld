@@ -6,9 +6,7 @@ import json
 import time
 import settings
 from .DataHandler import (
-    load_zipped_json_file,
     load_json_file,
-    process_json_data,
     erase_song_list,
     song_unlock,
     generate_modded_paths,
@@ -67,7 +65,6 @@ class MegaMixContext(CommonContext):
         self.path = settings.get_settings()["megamix_options"]["mod_path"]
         self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
         self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
-        self.jsonData = process_json_data(load_zipped_json_file("songData.json"))
         self.modData = None
         self.modded = False
         self.freeplay = False
@@ -258,8 +255,6 @@ class MegaMixContext(CommonContext):
                 asyncio.create_task(self.send_checks())
             else:
                 logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
-        else:
-            logger.info("Whopper, Whopper, Whopper, Whopper Junior, Double, Triple Whopper Flame grilled taste with perfect toppers I rule this day Lettuce, Mayo, Pickle, Ketchup It's okay if I don't want that Impossible or Bacon Whopper Any Whopper my way You rule, you're seizing the day At BK, have it your way (You rule!)")
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
@@ -311,7 +306,10 @@ class MegaMixContext(CommonContext):
                 logger.info(f"{self.location_ap_id_to_name[location][:-2]} is uncleared")
                 logged_pairs.add(pair_key)
 
-        # Check if missingLocations is empty
+        if self.leeks_obtained >= self.leeks_needed:
+            logger.info(f"Goal song: {self.goal_song} is unlocked.")
+
+        # Check goal and if missingLocations is empty
         if not missing_locations:
             logger.info("All available songs cleared")
 
