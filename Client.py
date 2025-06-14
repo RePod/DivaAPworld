@@ -121,7 +121,7 @@ class MegaMixContext(CommonContext):
             self.autoRemove = self.options["autoRemove"]
             self.leeks_needed = self.options["leekWinCount"]
             self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
-            self.modData = json.loads(self.options["modData"]) if self.options["modData"] else None
+            self.modData = self.options["modData"]
             if self.modData:
                 self.modded = True
                 self.mod_pv_list = generate_modded_paths(self.modData, self.path)
@@ -173,9 +173,9 @@ class MegaMixContext(CommonContext):
         target_song_id = int(item_id) // 10
 
         if self.modded:
-            for pack, songs in self.modData.items():
-                for song in songs:
-                    if song[1] == target_song_id:
+            for pack, ids in self.modData.items():
+                for songID in ids:
+                    if songID == target_song_id:
                         return pack
         return "ArchipelagoMod"
 
@@ -234,20 +234,21 @@ class MegaMixContext(CommonContext):
         if song_data.get('pvId') != 144:
             location_id = int(song_data.get('pvId') * 10)
 
-            if location_id in self.prev_found:
-                logger.info("No checks to send: Song checks previously sent or collected")
-                return
-
-            if not location_id in self.location_ids:
-                logger.info("No checks to send: Song not in song pool")
-                return
-
             if int(song_data.get('scoreGrade')) >= self.grade_needed:
-                logger.info("Cleared song with appropriate grade!")
 
                 if location_id == self.goal_id:
                     asyncio.create_task(self.end_goal())
                     return
+
+                if location_id in self.prev_found:
+                    logger.info("No checks to send: Song checks previously sent or collected")
+                    return
+
+                if not location_id in self.location_ids:
+                    logger.info("No checks to send: Song not in song pool")
+                    return
+
+                logger.info("Cleared song with appropriate grade!")
 
                 for i in range(2):
                     self.found_checks.append(location_id + i)
