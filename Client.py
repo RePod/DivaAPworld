@@ -174,9 +174,8 @@ class MegaMixContext(CommonContext):
 
         if self.modded:
             for pack, ids in self.modData.items():
-                for songID in ids:
-                    if songID == target_song_id:
-                        return pack
+                if target_song_id in ids:
+                    return pack
         return "ArchipelagoMod"
 
     async def receive_item(self):
