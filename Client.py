@@ -255,6 +255,8 @@ class MegaMixContext(CommonContext):
                 asyncio.create_task(self.send_checks())
             else:
                 logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
+        else:
+            logger.info("There are no checks at BK but seeing this means your Client is OK!")
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
