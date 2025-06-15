@@ -72,7 +72,7 @@ class MegaMixCollections:
                                 difficulties.append(difficulty_mapping_modded.get(difficulty_order[i]))
                                 difficulty_ratings.append(rating)
 
-                        self.song_items[song_name] = SongData(item_id, song_id, song_name, [], False, True, difficulties, difficulty_ratings)
+                        self.song_items[song_name] = SongData(item_id, song_id, [], False, True, difficulties, difficulty_ratings)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
@@ -119,8 +119,7 @@ class MegaMixCollections:
             for i, diff in enumerate(difficulty_indices):
                 if diff in allowed_diff:
                     if diff_lower <= songData.difficultyRatings[i] <= diff_higher:
-                        # Append the song to the selected_songs list
-                        filtered_list.append(songData.songName)
+                        filtered_list.append(songKey)
                         break
 
         return filtered_list

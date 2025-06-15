@@ -7,7 +7,6 @@ class SongData(NamedTuple):
 
     code: Optional[int]
     songID: Optional[int]
-    songName: str
     singers: List[str]
     DLC: bool
     modded: bool
