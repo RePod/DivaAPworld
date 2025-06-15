@@ -79,6 +79,7 @@ class MegaMixWorld(World):
     location_name_to_id = {name: code for name, code in mm_collection.location_names_to_id.items()}
 
     # Working Data
+    player_specific_mod_data = {}
     victory_song_name: str = ""
     victory_song_id: int
     starting_songs: List[str]
@@ -92,12 +93,13 @@ class MegaMixWorld(World):
         lower_rating_threshold, higher_rating_threshold = self.get_difficulty_range()
         lower_diff_threshold, higher_diff_threshold = self.get_available_difficulties(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
         disallowed_singers = self.options.exclude_singers.value
+        self.player_specific_mod_data, player_specific_ids = get_player_specific_ids(self.options.megamix_mod_data.value)
 
         while True:
             # In most cases this should only need to run once
 
             allowed_difficulties = list(range(lower_diff_threshold, higher_diff_threshold + 1))
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, get_player_specific_ids(self.options.megamix_mod_data.value), allowed_difficulties, disallowed_singers, lower_rating_threshold, higher_rating_threshold)
+            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, player_specific_ids, allowed_difficulties, disallowed_singers, lower_rating_threshold, higher_rating_threshold)
 
             available_song_keys = self.handle_plando(available_song_keys)
             #print(f"{lower_rating_threshold}~{higher_rating_threshold}* {allowed_difficulties}", len(available_song_keys))
@@ -311,18 +313,11 @@ class MegaMixWorld(World):
         return [min_diff, max_diff]
 
     def fill_slot_data(self):
-
-        try:
-            data = json.loads(self.options.megamix_mod_data.value)
-            filtered = {pack: [entry[1] for entry in songs] for pack, songs in data.items()}
-        except json.JSONDecodeError:
-            filtered = None
-
         return {
             "victoryLocation": self.victory_song_name,
             "victoryID": self.victory_song_id,
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),
-            "modData": filtered,
+            "modData": {pack: [song[1] for song in songs] for pack, songs in self.player_specific_mod_data.items()},
         }

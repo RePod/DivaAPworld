@@ -233,7 +233,7 @@ def get_player_specific_ids(mod_data):
     song_ids = []  # Initialize an empty list to store song IDs
 
     if mod_data == "":
-        return song_ids
+        return {}, song_ids
 
     data_dict = json.loads(mod_data)
 
@@ -242,4 +242,4 @@ def get_player_specific_ids(mod_data):
             song_id = song[1]
             song_ids.append(song_id)
 
-    return song_ids  # Return the list of song IDs
+    return data_dict, song_ids  # Return the list of song IDs
