@@ -93,7 +93,7 @@ def shift_difficulty(current_diffs: int = 0, index: int = 0, level_float: float 
     Masks off missing DSCs with NOT 31. Locking handled in caller.
     """
 
-    level_int = (int(level_float) | 1 << 4 if not level_float.is_integer() else int(level_float)) << 5 * index
+    level_int = (int(level_float) | (not level_float.is_integer()) << 4) << 5 * index
     current_diffs = current_diffs & ~level_int if level_float == 31 else current_diffs | level_int
 
     return current_diffs
