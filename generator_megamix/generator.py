@@ -146,7 +146,7 @@ class DivaJSONGenerator(ThemedApp):
         MDSnackbar(MDSnackbarText(text=message)).open()
 
     def process_restore_originals(self):
-        mod_pv_dbs = [f"{self.mods_folder}/{label}/rom/mod_pv_db.txt" for label in [label.text for label in self.labels] + [self.self_mod_name]]
+        mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in [label.text for label in self.labels] + [self.self_mod_name]]
         try:
             restore_originals(mod_pv_dbs)
             self.show_snackbar("Song packs restored")
