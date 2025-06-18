@@ -16,35 +16,6 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # File Handling
-def load_zipped_json_file(file_name: str) -> dict:
-    """Import a JSON file, either from a zipped package or directly from the filesystem."""
-
-    try:
-        # Attempt to load the file as a zipped resource
-        file_contents = pkgutil.get_data(__name__, file_name)
-        if file_contents is not None:
-            decoded_contents = file_contents.decode('utf-8')
-            if decoded_contents.strip():  # Check if the contents are not empty
-                return json.loads(decoded_contents)
-            else:
-                logger.debug(f"Error: Zipped JSON file '{file_name}' is empty.")
-                return {}
-    except Exception as e:
-        logger.debug(f"Error loading zipped JSON file '{file_name}': {e}")
-
-    try:
-        # Attempt to load the file directly from the filesystem
-        with open(file_name, 'r', encoding='utf-8') as file:
-            file_contents = file.read().strip()
-            if file_contents:  # Check if the file is not empty
-                return json.loads(file_contents)
-            else:
-                return {}
-    except Exception as e:
-        logger.debug(f"Error loading JSON file '{file_name}': {e}")
-        return {}
-
-
 def load_json_file(file_name: str) -> dict:
     """Import a JSON file, either from a zipped package or directly from the filesystem."""
 
@@ -93,30 +64,6 @@ def restore_originals(original_file_paths):
 
 
 # Data processing
-def process_json_data(json_data):
-    """Process JSON data into a dictionary."""
-    processed_data = {}
-    # Iterate over each entry in the JSON data
-    for entry in json_data:
-        song_id = int(entry.get('songID'))
-        song_data = {
-            'songName': fix_song_name(entry.get('songName')),  # Fix song name if needed
-            'singers': entry.get('singers'),
-            'difficulty': entry.get('difficulty'),
-            'difficultyRating': entry.get('difficultyRating')
-        }
-
-        # Check if song ID already exists in the dictionary
-        if song_id in processed_data:
-            # If yes, append the new song data to the existing list
-            processed_data[song_id].append(song_data)
-        else:
-            # If no, create a new list with the song data
-            processed_data[song_id] = [song_data]
-
-    return processed_data
-
-
 def generate_modded_paths(processed_data, base_path):
     # Extract unique pack names from processed_data
     logger.debug(processed_data)

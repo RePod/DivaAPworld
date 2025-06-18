@@ -2,14 +2,11 @@
 from .Items import SongData
 from .SymbolFixer import fix_song_name
 from .MegaMixSongData import SONG_DATA
+from .DataHandler import extract_mod_data_to_json
 
 # Python
 from typing import Dict, List
 from collections import ChainMap
-
-from .DataHandler import (
-    extract_mod_data_to_json,
-)
 
 
 class MegaMixCollections:
