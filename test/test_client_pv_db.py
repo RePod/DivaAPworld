@@ -31,8 +31,8 @@ class TestClientPVDB(MegaMixTestBase):
 
         self.assertMultiLineEqual(good, result)
 
-    def test_removal_required(self):
-        """Verify song removal will not touch IDs that are required to stay enabled."""
+    def test_remove_song_required(self):
+        """Verify remove_song will not touch IDs that are required to stay enabled."""
         start = """#ARCH#pv_123.difficulty.extreme.length=1
         pv_124.difficulty.extreme.length=1
         pv_144.difficulty.extreme.length=1
