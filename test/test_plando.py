@@ -10,7 +10,6 @@ class TestPlando(MegaMixTestBase):
         # Shuffle song_items, pick out 60, allocate 30 to include/exclude, verify they're not returned.
 
         world = self.get_world()
-        self.world_setup()
         self.assertTrue(len(self.song_items) >= 60,f"Minimum 60 MMC song_items expected, got {len(self.song_items)}")
 
         items = list(self.song_items)
