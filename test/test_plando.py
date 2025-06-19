@@ -17,7 +17,7 @@ class TestPlando(MegaMixTestBase):
         world.random.shuffle(items)
         items = items[0:60]
         extras = items[-30:]
-        candidates = items[0:-5][0:30]
+        candidates = items[0:30]
 
         self.assertTrue(len(candidates) == 30,f"30 candidates expected, got {len(candidates)}")
         self.assertTrue(len(extras) == 30,f"30 extras expected, got {len(extras)}")
