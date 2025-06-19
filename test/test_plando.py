@@ -29,7 +29,6 @@ class TestPlando(MegaMixTestBase):
 
         song_pool = world.handle_plando(items)
         overlap = [song for song in candidates if song in song_pool]
-        self.world_setup()
 
         self.assertTrue(len(overlap) == 0, f"0 overlap expected, got {len(overlap)}")
         self.assertTrue(len(song_pool) == len(extras), f"{len(extras)} remaining in song pool expected, got {len(song_pool)}")
