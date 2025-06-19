@@ -1,18 +1,17 @@
 from . import MegaMixTestBase
-from ..MegaMixCollection import MegaMixCollections
 from ..Options import IncludeSongs, ExcludeSongs
 
 class TestPlando(MegaMixTestBase):
-    MMC = MegaMixCollections()
-    song_items = MMC.song_items
 
     def _test_plando(self, exclude: bool = False):
         """Shuffle song_items, pick out 60, allocate 30 to include/exclude, verify they're not returned."""
 
         world = self.get_world()
-        self.assertGreaterEqual(len(self.song_items), 60, f"Minimum 60 MMC song_items expected, got {len(self.song_items)}")
+        song_items = world.mm_collection.song_items
 
-        items = list(self.song_items)
+        self.assertGreaterEqual(len(song_items), 60, f"Minimum 60 MMC song_items expected, got {len(song_items)}")
+
+        items = list(song_items)
         world.random.shuffle(items)
         items = items[0:60]
         extras = items[-30:]
