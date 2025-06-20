@@ -232,10 +232,10 @@ class MegaMixContext(CommonContext):
         # If song is not dummy song
         if song_data.get('pvId') != 144:
             location_id = int(song_data.get('pvId') * 10)
-            location_checks = list(range(location_id, location_id + self.checks_per_song))
+            location_checks = set(range(location_id, location_id + self.checks_per_song))
 
             if not location_id == self.goal_id:
-                if set(location_checks).issubset(set(self.prev_found)):
+                if location_checks.issubset(set(self.prev_found)):
                     logger.info("No checks to send: Song checks previously sent or collected")
                     return
 
