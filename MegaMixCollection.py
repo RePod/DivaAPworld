@@ -66,7 +66,7 @@ class MegaMixCollections:
             for i in range(2):
                 self.song_locations[f"{song_name}-{i}"] = (song_data.code + i)
 
-    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: List[str], diff_lower: float, diff_higher: float) -> List[str]:
+    def get_songs_with_settings(self, dlc: bool, mod_ids: List[int], allowed_diff: List[int], disallowed_singer: set[str], diff_lower: float, diff_higher: float) -> List[str]:
         """Gets a list of all songs that match the filter settings. Difficulty thresholds are inclusive."""
         filtered_list = []
 
@@ -87,7 +87,7 @@ class MegaMixCollections:
                 continue
 
             # Skip song if disallowed singer is found
-            if not songData.modded and set(disallowed_singer).intersection(songData.singers):
+            if not songData.modded and disallowed_singer.intersection(songData.singers):
                 continue
 
             for diff in allowed_diff:
