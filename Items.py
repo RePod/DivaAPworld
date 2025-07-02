@@ -10,8 +10,7 @@ class SongData(NamedTuple):
     singers: List[str]
     DLC: bool
     modded: bool
-    difficulties: List[str]
-    difficultyRatings: List[float]
+    difficulties: List[float]
 
 
 class MegaMixSongItem(Item):

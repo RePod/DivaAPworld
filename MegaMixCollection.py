@@ -29,47 +29,31 @@ class MegaMixCollections:
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.filler_item_names, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)
 
-        difficulty_mapping_modded = {
-            'E': '[EASY]',
-            'N': '[NORMAL]',
-            'H': '[HARD]',
-            'EX': '[EXTREME]',
-            'EXEX': '[EXEXTREME]'
-        }
-        difficulty_order = ['E', 'N', 'H', 'EX', 'EXEX']
-
         self.song_items = SONG_DATA
         mod_data = extract_mod_data_to_json()
         base_game_ids = [song_data.songID for song_data in SONG_DATA.values() if song_data.songID is not None]
 
         if mod_data:
             for data_dict in mod_data:
-                for pack_name, songs in data_dict.items():
+                for _, songs in data_dict.items():
                     for song in songs:
                         song_id = song[1]
+                        song_name = f"{fix_song_name(song[0])} [{song_id}]"
                         item_id = (song_id * 10)
                         # If cover song
                         if song_id in base_game_ids:
                             item_id += 1
-                        song_name = song[0]
-                        song_name = f"{fix_song_name(song_name)} [{song_id}]"
-                        diff_info = []
-                        difficulties = []
-                        difficulty_ratings = []
 
+                        # Shift difficulty bitfields from modded data into [#,#,#,#,#]
+                        diff_info = []
                         while len(diff_info) < 5:
                             diff = song[2] & 15
                             half = bool(song[2] >> 4 & 1)
                             # there might be a perf difference over time between this VS reversing after it's full, deque, etc
-                            diff_info.insert(0, diff + (.5 if half else 0))
+                            diff_info.insert(0, diff + (.5 if half else 0.0))
                             song[2] >>= 5
 
-                        for i, rating in enumerate(diff_info):
-                            if rating != 0:
-                                difficulties.append(difficulty_mapping_modded.get(difficulty_order[i]))
-                                difficulty_ratings.append(rating)
-
-                        self.song_items[song_name] = SongData(item_id, song_id, [], False, True, difficulties, difficulty_ratings)
+                        self.song_items[song_name] = SongData(item_id, song_id, [], False, True, diff_info)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 
@@ -88,7 +72,6 @@ class MegaMixCollections:
 
         for songKey, songData in self.song_items.items():
 
-            singer_found = False
             song_id = songData.songID
 
             # If song is DLC and DLC is disabled, skip song
@@ -104,18 +87,12 @@ class MegaMixCollections:
                 continue
 
             # Skip song if disallowed singer is found
-            if not songData.modded:
-                for singer in disallowed_singer:
-                    if singer in songData.singers:
-                        singer_found = True
-                if singer_found:
-                    continue
+            if not songData.modded and set(disallowed_singer).intersection(songData.singers):
+                continue
 
-            # Check if song has a valid difficulty and rating for settings
-            difficulty_indices = [["[EASY]", "[NORMAL]", "[HARD]", "[EXTREME]", "[EXEXTREME]"].index(d) for d in songData.difficulties]
-            for i, diff in enumerate(difficulty_indices):
-                if diff in allowed_diff:
-                    if diff_lower <= songData.difficultyRatings[i] <= diff_higher:
+            for diff in allowed_diff:
+                if songData.difficulties[diff] > 0.0: # Has that difficulty
+                    if diff_lower <= songData.difficulties[diff] <= diff_higher:
                         filtered_list.append(songKey)
                         break
 
