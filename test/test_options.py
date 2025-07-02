@@ -16,7 +16,7 @@ class TestOptionIncludes(MegaMixTestBase):
 
     def test_included(self):
         world = self.get_world()
-        pool = set([song.name for song in world.multiworld.itempool if song.code >= 10])
+        pool = {song.name for song in world.multiworld.itempool if song.code >= 10}
 
         self.assertTrue(set(world.options.include_songs).issubset(pool))
 
@@ -33,7 +33,7 @@ class TestOptionExcludes(MegaMixTestBase):
 
     def test_excluded(self):
         world = self.get_world()
-        pool = set([song.name for song in world.multiworld.itempool if song.code >= 10])
+        pool = {song.name for song in world.multiworld.itempool if song.code >= 10}
 
         self.assertFalse(set(world.options.exclude_songs).issubset(pool))
 
@@ -56,7 +56,8 @@ class TestOptionExcludeSinger(MegaMixTestBase):
         world = self.get_world()
         # WARNING: mm_collection.song_items is subject to available megamix_mod_data
         singer_songs = [song for song, prop in self.world.mm_collection.song_items.items() if set(prop.singers).intersection(world.options.exclude_singers)]
-        pool = set([song.name for song in self.world.multiworld.itempool if song.code >= 10] + world.starting_songs)
+        pool = {song.name for song in self.world.multiworld.itempool if song.code >= 10}
+        pool.update(world.starting_songs)
 
         intersect = pool.intersection(singer_songs)
         self.assertEqual(intersect, set(), f"0 songs expected from excluded {world.options.exclude_singers}, found {len(intersect)}: {intersect}")
