@@ -54,8 +54,10 @@ class TestOptionExcludeSinger(MegaMixTestBase):
         self.world_setup()
 
         world = self.get_world()
+        # WARNING: mm_collection.song_items is subject to available megamix_mod_data
         singer_songs = [song for song, prop in self.world.mm_collection.song_items.items() if set(prop.singers).intersection(world.options.exclude_singers)]
         pool = set([song.name for song in self.world.multiworld.itempool if song.code >= 10] + world.starting_songs)
 
         intersect = pool.intersection(singer_songs)
         self.assertIsNot(intersect, f"0 songs expected from excluded {world.options.exclude_singers}, found {len(intersect)}: {intersect}")
+        self.assertEqual(len(singer_songs) + len(pool) + 1, len(self.world.mm_collection.song_items))
