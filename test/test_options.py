@@ -60,5 +60,5 @@ class TestOptionExcludeSinger(MegaMixTestBase):
         pool.update(world.starting_songs)
 
         intersect = pool.intersection(singer_songs)
-        self.assertEqual(intersect, set(), f"0 songs expected from excluded {world.options.exclude_singers}, found {len(intersect)}: {intersect}")
+        self.assertEqual(intersect, set(), f"0 songs from {world.options.exclude_singers} expected, got {len(intersect)}: {intersect}")
         self.assertEqual(len(singer_songs) + len(pool) + 1, len(self.world.mm_collection.song_items))
