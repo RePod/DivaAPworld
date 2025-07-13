@@ -12,7 +12,7 @@ class IDNames(MegaMixTestBase):
         """Test all song item names include *a* song ID.
         As of writing, song item IDs start at 10. 1-9 are reserved for non-song items."""
         world = self.get_world()
-        quick = [k for k, id in world.item_name_to_id.items() if not re.search(self.item_regex, k) and id >= 10]
+        quick = [k for k, songID in world.item_name_to_id.items() if not re.search(self.item_regex, k) and songID >= 10]
         self.assertEqual(0, len(quick), f"Item names without song IDs: {quick}")
 
     def test_loc_names_have_id(self):
