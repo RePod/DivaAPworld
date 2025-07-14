@@ -191,7 +191,7 @@ class DeathLinkAmnesty(Range):
     """
     Amount of own deaths needed before sending one Death Link. 0 would be every death, 1 every other, etc.
 
-    This can be adjusted later in the Client with "/deathlink #" and has no limit.
+    This can be adjusted later in the Client with "/deathlink #" and no upper limit.
     """
     display_name = "Death Link Amnesty"
     range_start = 0
