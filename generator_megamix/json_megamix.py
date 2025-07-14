@@ -56,7 +56,7 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
 
     with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
         mod_pv_db = input_file.read()
-    mod_pv_db = re.findall(rf'^pv_(\d+)\.(song_name_en|difficulty)(?:\.([^.]+)\.(\d|length)\.?(level|script_file_name)?)?=(.*)$', mod_pv_db, re.MULTILINE)
+    mod_pv_db = set(re.findall(rf'^pv_(\d+)\.(song_name_en|difficulty)(?:\.([^.]+)\.(\d|length)\.?(level|script_file_name|attribute\.extra)?)?=(.*)$', mod_pv_db, re.MULTILINE))
 
     for line in mod_pv_db:
         song_id, song_prop, diff_rating, diff_index_length, diff_prop, value = line
@@ -68,7 +68,14 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
             case "song_name_en":
                 songs[song_id][0] = fix_song_name(value).replace("'", "''")
             case "difficulty" if not diff_rating == "encore":
+                extra_check = song_id, song_prop, diff_rating, '1', 'attribute.extra', '1'
                 diff_rating = "exextreme" if diff_index_length == "1" and diff_rating == "extreme" else diff_rating
+
+                # Sanity check for invalid extreme data (starts at 1 index/out of 0-2 range of length prop): check the extra attribute.
+                if diff_rating is "exextreme" and extra_check not in mod_pv_db:
+                    print(f"{song_id} appears ExEx but lacks attribute, downgrade to Ex")
+                    diff_rating = "extreme"
+
                 diff_index = difficulties.index(diff_rating)
 
                 if diff_index_length == "length" and value == "0":
