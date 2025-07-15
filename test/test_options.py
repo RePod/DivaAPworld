@@ -16,9 +16,6 @@ class TestOptionIncludes(MegaMixTestBase):
 
     def test_included(self):
         world = self.get_world()
-
-        print([k for k,v in world.mm_collection.song_items.items() if not v.DLC])
-
         pool = {song.name for song in world.multiworld.itempool if song.code >= 10}
         pool.update(world.starting_songs)
         pool.add(world.victory_song_name)
