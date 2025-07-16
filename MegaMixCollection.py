@@ -100,23 +100,22 @@ class MegaMixCollections:
         return filtered_list
 
     def get_item_name_groups(self) -> dict[str, set]:
+        base_songs = {name: data for name, data in self.song_items.items() if not data.modded}
         groups = {
-            "BaseSongs": {name for name, data in self.song_items.items() if not data.modded and not data.DLC},
-            "DLCSongs": {name for name, data in self.song_items.items() if not data.modded and data.DLC},
+            "BaseSongs": {name for name, data in base_songs.items() if not data.DLC},
+            "DLCSongs": {name for name, data in base_songs.items() if data.DLC},
+
+            "SingerMiku": {name for name, data in base_songs.items() if "Hatsune Miku" in data.singers},
+            "SingerRin": {name for name, data in base_songs.items() if "Kagamine Rin" in data.singers},
+            "SingerLen": {name for name, data in base_songs.items() if "Kagamine Len" in data.singers},
+            "SingerLuka": {name for name, data in base_songs.items() if "Megurine Luka" in data.singers},
+            "SingerKAITO": {name for name, data in base_songs.items() if "KAITO" in data.singers},
+            "SingerMEIKO": {name for name, data in base_songs.items() if "MEIKO" in data.singers},
         }
 
         # Disabled since song_items is shared across all players. Need to filter to player_specific_ids.
         #modded = {name for name, data in self.song_items.items() if data.modded}
         #if modded: # test_groups::TestNameGroups::test_item_name_groups_not_empty
         #    groups.update({"ModdedSongs": modded})
-
-        for name, data in self.song_items.items():
-            if data.modded:
-                continue
-
-            for singer in data.singers:
-                singer = singer.split(" ").pop() # Hatsune Miku -> Miku
-                groups.setdefault(f"Singer{singer}", set())
-                groups[f"Singer{singer}"].add(name)
 
         return groups
