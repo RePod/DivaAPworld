@@ -5,8 +5,8 @@ from . import MegaMixTestBase
 
 class IDNames(MegaMixTestBase):
     """Test that item/location names contain a song ID then verify that ID matches its item/loc ID."""
-    item_regex = r"(.*?) \[(\d+)\]$" # name, ID
-    location_regex = r"(.*?) \[(\d+)\]-(\d+)$" # name, ID, suffix
+    item_regex = r"(?P<name>.*?) \[(?P<id>\d+)\]$"
+    location_regex = r"(?P<name>.*?) \[(?P<id>\d+)\]-(?P<suffix>\d+)$"
 
     def test_item_names_have_id(self):
         """Test all song item names include *a* song ID.
@@ -35,7 +35,7 @@ class IDNames(MegaMixTestBase):
             match = re.match(self.item_regex, name)
             self.assertIsNotNone(match, f"Failed to match item_regex to item name: {name}")
 
-            given_id = int(match.group(2))
+            given_id = int(match.group('id'))
 
             self.assertEqual(given_id, (itemID // 10), f"Song ID in item name does not match item ID: {name}")
 
@@ -48,6 +48,6 @@ class IDNames(MegaMixTestBase):
             match = re.match(self.location_regex, name)
             self.assertIsNotNone(match, f"Failed to match location_regex to location name: {name}")
 
-            given_id = int(match.group(2))
+            given_id = int(match.group('id'))
 
             self.assertEqual(given_id, (locID // 10), f"Song ID in location name does not match location ID: {name}")
