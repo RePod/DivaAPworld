@@ -26,12 +26,18 @@ class MegaMixCollections:
     }
 
     def __init__(self) -> None:
+        self.song_items = SONG_DATA
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.filler_item_names, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)
+        self.item_name_groups = {
+            "BaseSongs": {name for name, data in self.song_items.items() if not data.modded and not data.DLC},
+            "DLCSongs": {name for name, data in self.song_items.items() if not data.modded and data.DLC},
+            "ModdedSongs": {}
+        }
 
         self.song_items = SONG_DATA
         mod_data = extract_mod_data_to_json()
-        base_game_ids = [song_data.songID for song_data in SONG_DATA.values() if song_data.songID is not None]
+        base_game_ids = {song_data.songID for song_data in SONG_DATA.values() if song_data.songID is not None}
 
         if mod_data:
             for data_dict in mod_data:
@@ -56,6 +62,9 @@ class MegaMixCollections:
                         self.song_items[song_name] = SongData(item_id, song_id, [], False, True, diff_info)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
+        self.item_name_groups.update({
+            "ModdedSongs": {name for name, data in self.song_items.items() if data.modded}
+        })
 
         for song_name, song_data in self.song_items.items():
             if song_data.code % 2 != 0:  # Fix code for covers
