@@ -3,6 +3,8 @@ from typing import ClassVar
 from test.param import classvar_matrix
 from . import MegaMixTestBase
 
+# WARNING: mm_collection.song_items is subject to available megamix_mod_data from Players YAMLs during all tests.
+# When testing locally this may affect length checks.
 
 class TestOptionIncludes(MegaMixTestBase):
     """Set include_songs and test the multiworld item pool for their inclusion."""
@@ -20,7 +22,7 @@ class TestOptionIncludes(MegaMixTestBase):
         pool.update(world.starting_songs)
         pool.add(world.victory_song_name)
 
-        self.assertTrue(set(world.options.include_songs).issubset(pool))
+        self.assertTrue(world.options.include_songs.value.issubset(pool))
 
 class TestOptionIncludesExact(MegaMixTestBase):
     """Set include_songs to the match the minimum required and verify the entire pool consists of them."""
@@ -68,7 +70,8 @@ class TestOptionIncludesOverflow(MegaMixTestBase):
         pool.update(world.starting_songs)
         pool.add(world.victory_song_name)
 
-        self.assertTrue(pool.issubset(set(world.options.include_songs)))
+        self.assertTrue(pool.issubset(world.options.include_songs.value))
+
 
 class TestOptionExcludes(MegaMixTestBase):
     """Set exclude_songs and test the multiworld item pool for their absence."""
@@ -83,8 +86,11 @@ class TestOptionExcludes(MegaMixTestBase):
     def test_excluded(self):
         world = self.get_world()
         pool = {song.name for song in world.multiworld.itempool if song.code >= 10}
+        pool.update(world.starting_songs)
+        pool.add(world.victory_song_name)
 
-        self.assertFalse(set(world.options.exclude_songs).issubset(pool))
+        self.assertEqual(len(pool), len(world.mm_collection.song_items) - len(world.options.exclude_songs.value))
+        self.assertFalse(world.options.exclude_songs.value.issubset(pool))
 
 
 # Can also supply combinations.
@@ -103,11 +109,11 @@ class TestOptionExcludeSinger(MegaMixTestBase):
         self.world_setup()
 
         world = self.get_world()
-        # WARNING: mm_collection.song_items is subject to available megamix_mod_data
         singer_songs = [song for song, prop in self.world.mm_collection.song_items.items() if set(prop.singers).intersection(world.options.exclude_singers)]
         pool = {song.name for song in self.world.multiworld.itempool if song.code >= 10}
         pool.update(world.starting_songs)
+        pool.add(world.victory_song_name)
 
         intersect = pool.intersection(singer_songs)
-        self.assertEqual(intersect, set(), f"0 songs from {world.options.exclude_singers} expected, got {len(intersect)}: {intersect}")
-        self.assertEqual(len(singer_songs) + len(pool) + 1, len(self.world.mm_collection.song_items))
+        self.assertEqual(0, len(intersect), f"0 songs from {world.options.exclude_singers} expected, got {len(intersect)}: {intersect}")
+        self.assertEqual(len(singer_songs) + len(pool), len(self.world.mm_collection.song_items))
