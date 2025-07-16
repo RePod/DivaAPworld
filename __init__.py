@@ -77,7 +77,7 @@ class MegaMixWorld(World):
 
     item_name_to_id = {name: code for name, code in mm_collection.item_names_to_id.items()}
     location_name_to_id = {name: code for name, code in mm_collection.location_names_to_id.items()}
-    item_name_groups = mm_collection.item_name_groups
+    item_name_groups = mm_collection.get_item_name_groups()
 
     # Working Data
     player_specific_mod_data = {}

@@ -29,10 +29,6 @@ class MegaMixCollections:
         self.song_items = SONG_DATA
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.filler_item_names, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)
-        self.item_name_groups = {
-            "BaseSongs": {name for name, data in self.song_items.items() if not data.modded and not data.DLC},
-            "DLCSongs": {name for name, data in self.song_items.items() if not data.modded and data.DLC},
-        }
 
         self.song_items = SONG_DATA
         mod_data = extract_mod_data_to_json()
@@ -61,12 +57,6 @@ class MegaMixCollections:
                         self.song_items[song_name] = SongData(item_id, song_id, [], False, True, diff_info)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
-
-        modded_group = {name for name, data in self.song_items.items() if data.modded}
-        if modded_group: # test_groups::TestNameGroups::test_item_name_groups_not_empty
-            self.item_name_groups.update({
-                "ModdedSongs": modded_group
-            })
 
         for song_name, song_data in self.song_items.items():
             if song_data.code % 2 != 0:  # Fix code for covers
@@ -108,3 +98,25 @@ class MegaMixCollections:
                         break
 
         return filtered_list
+
+    def get_item_name_groups(self) -> dict[str, set]:
+        groups = {
+            "BaseSongs": {name for name, data in self.song_items.items() if not data.modded and not data.DLC},
+            "DLCSongs": {name for name, data in self.song_items.items() if not data.modded and data.DLC},
+        }
+
+        # Disabled since song_items is shared across all players. Need to filter to player_specific_ids.
+        #modded = {name for name, data in self.song_items.items() if data.modded}
+        #if modded: # test_groups::TestNameGroups::test_item_name_groups_not_empty
+        #    groups.update({"ModdedSongs": modded})
+
+        for name, data in self.song_items.items():
+            if data.modded:
+                continue
+
+            for singer in data.singers:
+                singer = singer.split(" ").pop() # Hatsune Miku -> Miku
+                groups.setdefault(f"Singer{singer}", set())
+                groups[f"Singer{singer}"].add(name)
+
+        return groups
