@@ -32,7 +32,6 @@ class MegaMixCollections:
         self.item_name_groups = {
             "BaseSongs": {name for name, data in self.song_items.items() if not data.modded and not data.DLC},
             "DLCSongs": {name for name, data in self.song_items.items() if not data.modded and data.DLC},
-            "ModdedSongs": {}
         }
 
         self.song_items = SONG_DATA
@@ -62,9 +61,12 @@ class MegaMixCollections:
                         self.song_items[song_name] = SongData(item_id, song_id, [], False, True, diff_info)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
-        self.item_name_groups.update({
-            "ModdedSongs": {name for name, data in self.song_items.items() if data.modded}
-        })
+
+        modded_group = {name for name, data in self.song_items.items() if data.modded}
+        if modded_group: # test_groups::TestNameGroups::test_item_name_groups_not_empty
+            self.item_name_groups.update({
+                "ModdedSongs": modded_group
+            })
 
         for song_name, song_data in self.song_items.items():
             if song_data.code % 2 != 0:  # Fix code for covers
