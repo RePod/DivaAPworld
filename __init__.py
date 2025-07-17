@@ -150,7 +150,7 @@ class MegaMixWorld(World):
 
     def create_song_pool(self, available_song_keys: List[str]):
         starting_song_count = self.options.starting_song_count.value
-        additional_song_count = min(len(available_song_keys), self.options.additional_song_count.value)
+        additional_song_count = self.options.additional_song_count.value
         self.random.shuffle(available_song_keys)
 
         # First, we must double-check if the player has included too many guaranteed songs
