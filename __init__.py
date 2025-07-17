@@ -93,14 +93,13 @@ class MegaMixWorld(World):
         # Initial search criteria
         lower_rating_threshold, higher_rating_threshold = self.get_difficulty_range()
         lower_diff_threshold, higher_diff_threshold = self.get_available_difficulties(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
-        disallowed_singers = self.options.exclude_singers.value
         self.player_specific_mod_data, player_specific_ids = get_player_specific_ids(self.options.megamix_mod_data.value)
 
         while True:
             # In most cases this should only need to run once
 
             allowed_difficulties = list(range(lower_diff_threshold, higher_diff_threshold + 1))
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, player_specific_ids, allowed_difficulties, disallowed_singers, lower_rating_threshold, higher_rating_threshold)
+            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, player_specific_ids, allowed_difficulties, lower_rating_threshold, higher_rating_threshold)
 
             available_song_keys = self.handle_plando(available_song_keys)
             #print(f"{lower_rating_threshold}~{higher_rating_threshold}* {allowed_difficulties}", len(available_song_keys))
