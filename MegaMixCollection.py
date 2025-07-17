@@ -105,12 +105,12 @@ class MegaMixCollections:
             "BaseSongs": {name for name, data in base_songs.items() if not data.DLC},
             "DLCSongs": {name for name, data in base_songs.items() if data.DLC},
 
-            "SingerMiku": {name for name, data in base_songs.items() if "Hatsune Miku" in data.singers},
-            "SingerRin": {name for name, data in base_songs.items() if "Kagamine Rin" in data.singers},
-            "SingerLen": {name for name, data in base_songs.items() if "Kagamine Len" in data.singers},
-            "SingerLuka": {name for name, data in base_songs.items() if "Megurine Luka" in data.singers},
-            "SingerKAITO": {name for name, data in base_songs.items() if "KAITO" in data.singers},
-            "SingerMEIKO": {name for name, data in base_songs.items() if "MEIKO" in data.singers},
+            "MikuSongs": {name for name, data in base_songs.items() if "Hatsune Miku" in data.singers},
+            "RinSongs": {name for name, data in base_songs.items() if "Kagamine Rin" in data.singers},
+            "LenSongs": {name for name, data in base_songs.items() if "Kagamine Len" in data.singers},
+            "LukaSongs": {name for name, data in base_songs.items() if "Megurine Luka" in data.singers},
+            "KAITOSongs": {name for name, data in base_songs.items() if "KAITO" in data.singers},
+            "MEIKOSongs": {name for name, data in base_songs.items() if "MEIKO" in data.singers},
         }
 
         # Disabled since song_items is shared across all players. Need to filter to player_specific_ids.
