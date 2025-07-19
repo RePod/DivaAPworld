@@ -56,7 +56,7 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
 
     with open(mod_pv_db_path, "r", encoding='utf-8') as input_file:
         mod_pv_db = input_file.read()
-    mod_pv_db = set(re.findall(rf'^pv_(\d+)\.(song_name_en|difficulty)(?:\.([^.]+)\.(\d|length)\.?(level|script_file_name|attribute\.extra)?)?=(.*)$', mod_pv_db, re.MULTILINE))
+    mod_pv_db = set(re.findall(rf'^(?:#ARCH#)?pv_(\d+)\.(song_name_en|difficulty)(?:\.([^.]+)\.(\d|length)\.?(level|script_file_name|attribute\.extra)?)?=(.*)$', mod_pv_db, re.MULTILINE))
 
     for line in mod_pv_db:
         song_id, song_prop, diff_rating, diff_index_length, diff_prop, value = line
