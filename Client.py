@@ -233,8 +233,8 @@ class MegaMixContext(CommonContext):
         last_modified = os.path.getmtime(file_path) if os.path.isfile(file_path) else 0.0
         try:
             while True:
+                await asyncio.sleep(1)  # Wait for a short duration
                 if os.path.isfile(file_path):
-                    await asyncio.sleep(1)  # Wait for a short duration
                     modified = os.path.getmtime(file_path)
                     if modified > last_modified:
                         last_modified = modified
