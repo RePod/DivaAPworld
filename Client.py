@@ -233,15 +233,16 @@ class MegaMixContext(CommonContext):
         last_modified = os.path.getmtime(file_path) if os.path.isfile(file_path) else 0.0
         try:
             while True:
-                await asyncio.sleep(1)  # Wait for a short duration
-                modified = os.path.getmtime(file_path)
-                if modified > last_modified:
-                    last_modified = modified
-                    try:
-                        json_data = load_json_file(file_name)
-                        await self.receive_location_check(json_data)
-                    except (FileNotFoundError, json.JSONDecodeError) as e:
-                        print(f"Error loading JSON file: {e}")
+                if os.path.isfile(file_path):
+                    await asyncio.sleep(1)  # Wait for a short duration
+                    modified = os.path.getmtime(file_path)
+                    if modified > last_modified:
+                        last_modified = modified
+                        try:
+                            json_data = load_json_file(file_name)
+                            await self.receive_location_check(json_data)
+                        except (FileNotFoundError, json.JSONDecodeError) as e:
+                            print(f"Error loading JSON file: {e}")
         except asyncio.CancelledError:
             print(f"Watch task for {file_name} was canceled.")
 
