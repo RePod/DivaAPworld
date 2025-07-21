@@ -105,7 +105,7 @@ class TestOptionExcludeItemGroups(MegaMixTestBase):
         "additional_song_count": 251,
     }
 
-    def test_exclude_singer_group(self):
+    def test_exclude_group(self):
         # mmc/group_songs could be initialized once outside the test class?
         mmc = MegaMixCollections()
         group_songs = mmc.get_item_name_groups()[self.group]
