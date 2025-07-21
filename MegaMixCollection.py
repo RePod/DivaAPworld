@@ -87,10 +87,6 @@ class MegaMixCollections:
             if not songData.modded and song_id in mod_ids:
                 continue
 
-            # Skip song if disallowed singer is found
-            if not songData.modded and disallowed_singer.intersection(songData.singers):
-                continue
-
             for diff in allowed_diff:
                 if songData.difficulties[diff] > 0.0: # Has that difficulty
                     if diff_lower <= songData.difficulties[diff] <= diff_higher:
