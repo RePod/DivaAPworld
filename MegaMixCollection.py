@@ -26,7 +26,6 @@ class MegaMixCollections:
     }
 
     def __init__(self) -> None:
-        self.song_items = SONG_DATA
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.filler_item_names, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)
 
