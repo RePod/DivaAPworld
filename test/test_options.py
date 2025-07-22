@@ -2,7 +2,6 @@ from typing import ClassVar
 
 from test.param import classvar_matrix
 from . import MegaMixTestBase
-from ..MegaMixCollection import MegaMixCollections
 
 # WARNING: mm_collection.song_items is subject to available megamix_mod_data from Players YAMLs during all tests.
 # When testing locally this may affect length checks.
