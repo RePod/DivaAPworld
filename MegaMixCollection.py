@@ -109,9 +109,9 @@ class MegaMixCollections:
             "MEIKOSongs": {name for name, data in base_songs.items() if "MEIKO" in data.singers},
         }
 
-        # Disabled since song_items is shared across all players. Need to filter to player_specific_ids.
-        #modded = {name for name, data in self.song_items.items() if data.modded}
-        #if modded: # test_groups::TestNameGroups::test_item_name_groups_not_empty
-        #    groups.update({"ModdedSongs": modded})
+        # Experimental since all players share this group. Filtered in handle_plando.
+        modded = {name for name, data in self.song_items.items() if data.modded}
+        if modded: # test_groups::TestNameGroups::test_item_name_groups_not_empty
+            groups.update({"ModdedSongs": modded})
 
         return groups
