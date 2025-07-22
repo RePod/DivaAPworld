@@ -96,9 +96,8 @@ class TestOptionExcludes(MegaMixTestBase):
 
 @classvar_matrix(group=['MikuSongs', 'RinSongs', 'LenSongs', 'LukaSongs', 'KAITOSongs', 'MEIKOSongs', 'BaseSongs', 'DLCSongs'])
 class TestOptionExcludeItemGroups(MegaMixTestBase):
-    """Set exclude_songs to an item group and test the multiworld item pool for their absence.
-    The classvar solution was elegant before resolving item groups manually. Something probably went wrong somewhere."""
-    auto_construct = False # Big time saver since the initial gen is thrown out
+    """Set exclude_songs to an item group and test the multiworld item pool for their absence."""
+    run_default_tests = False # Greatly speeds up testing time
     group: ClassVar[str]
     options = {
         "allow_megamix_dlc_songs": True,
@@ -106,16 +105,13 @@ class TestOptionExcludeItemGroups(MegaMixTestBase):
     }
 
     def test_exclude_group(self):
-        # mmc/group_songs could be initialized once outside the test class?
-        mmc = MegaMixCollections()
-        group_songs = mmc.get_item_name_groups()[self.group]
+        group_songs = self.world.item_name_groups[self.group]
         self.options["exclude_songs"] = group_songs
         self.world_setup()
 
-        world = self.get_world()
         pool = {song.name for song in self.world.multiworld.itempool if song.code >= 10}
-        pool.update(world.starting_songs)
-        pool.add(world.victory_song_name)
+        pool.update(self.world.starting_songs)
+        pool.add(self.world.victory_song_name)
 
         intersect = pool.intersection(group_songs)
         self.assertEqual(0, len(intersect), f"0 songs from {self.group} expected, got {len(intersect)}: {intersect}")
