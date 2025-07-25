@@ -89,8 +89,9 @@ class MegaMixContext(CommonContext):
         self.goal_song = None
         self.goal_id = None
         self.autoRemove = False
-        self.leeks_needed = None
+        self.leeks_needed = 0
         self.leeks_obtained = 0
+        self.leek_label = None
         self.grade_needed = None
 
         self.watch_task = None
@@ -199,6 +200,12 @@ class MegaMixContext(CommonContext):
 
 
     def check_goal(self):
+        if not self.leek_label:
+            from kivymd.uix.label import MDLabel
+            self.leek_label = MDLabel(halign="center", size_hint=(None, 1), width=100)
+            self.ui.textinput.parent.add_widget(self.leek_label)
+        self.leek_label.text = f"{self.leeks_obtained}/{self.leeks_needed} Leeks"
+
         if self.leeks_obtained >= self.leeks_needed:
             if not self.sent_unlock_message:
                 self.sent_unlock_message = True
