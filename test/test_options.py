@@ -93,27 +93,25 @@ class TestOptionExcludes(MegaMixTestBase):
         self.assertFalse(world.options.exclude_songs.value.issubset(pool))
 
 
-# Can also supply combinations.
-@classvar_matrix(singer=[{'Hatsune Miku'}, {'Kagamine Rin'}, {'Kagamine Len'}, {'Megurine Luka'}, {'KAITO'}, {'MEIKO'}])
-class TestOptionExcludeSinger(MegaMixTestBase):
-    """Set exclude_singers and test the multiworld item pool for their absence."""
-    auto_construct = False
-    singer: ClassVar[set[str]]
+@classvar_matrix(group=['MikuSongs', 'RinSongs', 'LenSongs', 'LukaSongs', 'KAITOSongs', 'MEIKOSongs', 'BaseSongs', 'DLCSongs'])
+class TestOptionExcludeItemGroups(MegaMixTestBase):
+    """Set exclude_songs to an item group and test the multiworld item pool for their absence."""
+    run_default_tests = False # Greatly speeds up testing time
+    group: ClassVar[str]
     options = {
         "allow_megamix_dlc_songs": True,
         "additional_song_count": 251,
     }
 
-    def test_exclude_singer(self):
-        self.options["exclude_singers"] = self.singer
+    def test_exclude_group(self):
+        group_songs = self.world.item_name_groups[self.group]
+        self.options["exclude_songs"] = group_songs
         self.world_setup()
 
-        world = self.get_world()
-        singer_songs = [song for song, prop in self.world.mm_collection.song_items.items() if set(prop.singers).intersection(world.options.exclude_singers)]
         pool = {song.name for song in self.world.multiworld.itempool if song.code >= 10}
-        pool.update(world.starting_songs)
-        pool.add(world.victory_song_name)
+        pool.update(self.world.starting_songs)
+        pool.add(self.world.victory_song_name)
 
-        intersect = pool.intersection(singer_songs)
-        self.assertEqual(0, len(intersect), f"0 songs from {world.options.exclude_singers} expected, got {len(intersect)}: {intersect}")
-        self.assertEqual(len(singer_songs) + len(pool), len(self.world.mm_collection.song_items))
+        intersect = pool.intersection(group_songs)
+        self.assertEqual(0, len(intersect), f"0 songs from {self.group} expected, got {len(intersect)}: {intersect}")
+        self.assertEqual(len(group_songs) + len(pool), len(self.world.mm_collection.song_items))

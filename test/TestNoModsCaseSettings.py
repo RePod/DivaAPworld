@@ -12,7 +12,7 @@ class TestWorstCaseTest(MegaMixTestBase):
         "allow_megamix_dlc_songs": True,
         "song_difficulty_min": 'easy',
         "song_difficulty_max": 'exextreme',
-        "include_songs": ["DYE", "Gizmo", "Kokoro"],
-        "exclude_songs": ["2D Dream Fever", "Break It, Break It!", "Change Me"],
+        "include_songs": ["DYE [603]", "Gizmo [442]", "Kokoro [55]"],
+        "exclude_songs": ["2D Dream Fever [723]", "Break It, Break It! [734]", "Change Me [59]"],
         "megamix_mod_data": '',
     }
