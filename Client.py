@@ -273,41 +273,40 @@ class MegaMixContext(CommonContext):
 
 
     async def receive_location_check(self, song_data):
-
         logger.debug(song_data)
 
-        # If song is not dummy song
-        if song_data.get('pvId') != 144:
-            location_id = int(song_data.get('pvId') * 10)
-            location_checks = set(range(location_id, location_id + self.checks_per_song))
-
-            if not location_id == self.goal_id:
-                if location_checks.issubset(set(self.prev_found)):
-                    logger.info("No checks to send: Song checks previously sent or collected")
-                    return
-
-                if not location_id in self.location_ids:
-                    logger.info("No checks to send: Song not in song pool")
-                    return
-
-            if int(song_data.get('scoreGrade')) >= self.grade_needed:
-                if location_id == self.goal_id:
-                    asyncio.create_task(self.end_goal())
-                    return
-
-                logger.info("Cleared song with appropriate grade!")
-
-                for i in range(2):
-                    self.found_checks.append(location_id + i)
-
-                asyncio.create_task(self.send_checks())
-            else:
-                logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
-
-                if self.death_link and not song_data.get('deathLinked', False):
-                    await self.send_death(f"The Disappearance of {self.player_names[self.slot]}")
-        else:
+        if song_data.get('pvId') == 144: # Always available AP mod song
             logger.info("No checks to send at BK but seeing this means your Client is OK!")
+            return
+
+        location_id = int(song_data.get('pvId') * 10)
+        location_checks = set(range(location_id, location_id + self.checks_per_song))
+
+        if not location_id == self.goal_id:
+            if location_checks.issubset(set(self.prev_found)):
+                logger.info("No checks to send: Song checks previously sent or collected")
+                return
+
+            if not location_id in self.location_ids:
+                logger.info("No checks to send: Song not in song pool")
+                return
+
+        if int(song_data.get('scoreGrade')) >= self.grade_needed:
+            if location_id == self.goal_id:
+                asyncio.create_task(self.end_goal())
+                return
+
+            logger.info("Cleared song with appropriate grade!")
+
+            for i in range(2):
+                self.found_checks.append(location_id + i)
+
+            asyncio.create_task(self.send_checks())
+        else:
+            logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
+
+            if self.death_link and not song_data.get('deathLinked', False):
+                await self.send_death(f"The Disappearance of {self.player_names[self.slot]}")
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
