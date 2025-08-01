@@ -122,7 +122,7 @@ class ScoreGradeNeeded(Choice):
     A Perfect requires a full combo, regardless of accuracy.
     """
     display_name = "Grade Needed"
-    option_Cheap = 1
+    #option_Cheap = 1
     option_Standard = 2
     option_Great = 3
     option_Excellent = 4
