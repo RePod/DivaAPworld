@@ -132,7 +132,7 @@ class MegaMixContext(CommonContext):
             self.goal_id = self.options["victoryID"]
             self.autoRemove = self.options["autoRemove"]
             self.leeks_needed = self.options["leekWinCount"]
-            self.grade_needed = int(self.options["scoreGradeNeeded"]) + 2  # Add 2 to match the games internals
+            self.grade_needed = int(self.options["scoreGradeNeeded"])
             self.modData = self.options["modData"]
             if self.modData:
                 self.modded = True

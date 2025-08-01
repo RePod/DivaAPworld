@@ -120,14 +120,14 @@ class ScoreGradeNeeded(Choice):
     """Completing a song will require a grade of this value or higher in order to unlock items.
     Accuracy required is based on the song's difficulty (Easy, Normal, Hard, etc..)
     A Perfect requires a full combo, regardless of accuracy.
-
     """
     display_name = "Grade Needed"
-    option_Standard = 0
-    option_Great = 1
-    option_Excellent = 2
-    option_Perfect = 3
-    default = 0
+    option_Cheap = 1
+    option_Standard = 2
+    option_Great = 3
+    option_Excellent = 4
+    option_Perfect = 5
+    default = 2
 
 
 class TotalLeeksAvailable(Range):
