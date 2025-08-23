@@ -371,7 +371,7 @@ class MegaMixContext(CommonContext):
             logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):
-        mod_pv_dbs = [f"{root}\mod_pv_db.txt" for root, _, files in os.walk(self.path) if 'mod_pv_db.txt' in files]
+        mod_pv_dbs = [f"{root}/mod_pv_db.txt" for root, _, files in os.walk(self.path) if 'mod_pv_db.txt' in files]
         restore_originals(mod_pv_dbs)
 
     async def shutdown(self):
