@@ -69,6 +69,7 @@ class MegaMixWorld(World):
     options: MegaMixOptions
 
     topology_present = False
+    ut_can_gen_without_yaml = True
 
     # Necessary Data
     mm_collection = MegaMixCollections()
@@ -84,12 +85,24 @@ class MegaMixWorld(World):
     player_specific_ids = {}
     victory_song_name: str = ""
     victory_song_id: int
-    starting_songs: List[str]
-    included_songs: List[str]
+    starting_songs: List[str] = []
+    included_songs: List[str] = []
+    final_song_ids: set[int] = set()
     needed_token_count: int
     location_count: int
 
     def generate_early(self):
+        re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+        if re_gen_passthrough and self.game in re_gen_passthrough:
+            slot_data: dict[str, any] = re_gen_passthrough[self.game]
+
+            if "finalSongIDs" in slot_data:
+                final = slot_data.get("finalSongIDs", [])
+                songs = [key for key, song in self.mm_collection.song_items.items() if song.songID in final]
+
+                self.included_songs = songs
+                self.location_count = len(songs) * 2
+            return
 
         # Initial search criteria
         lower_rating_threshold, higher_rating_threshold = self.get_difficulty_range()
@@ -203,6 +216,7 @@ class MegaMixWorld(World):
             return MegaMixFixedItem(name, ItemClassification.filler, self.mm_collection.filler_item_names.get(name), self.player)
 
         song = self.mm_collection.song_items.get(name)
+        self.final_song_ids.add(song.songID)
         return MegaMixSongItem(name, self.player, song)
 
     def create_items(self) -> None:
@@ -316,10 +330,15 @@ class MegaMixWorld(World):
 
         return [min_diff, max_diff]
 
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, any]) -> dict[str, any]:
+        return slot_data
+
     def fill_slot_data(self):
         return {
             "victoryLocation": self.victory_song_name,
             "victoryID": self.victory_song_id,
+            "finalSongIDs": self.final_song_ids,
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),

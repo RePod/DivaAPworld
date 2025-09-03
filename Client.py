@@ -22,6 +22,12 @@ from CommonClient import (
     server_loop,
     gui_enabled,
 )
+tracker_loaded = False
+try:
+    from worlds.tracker.TrackerClient import TrackerGameContext as SuperContext
+    tracker_loaded = True
+except ModuleNotFoundError:
+    from CommonClient import CommonContext as SuperContext
 from NetUtils import NetworkItem, ClientStatus, Permission
 
 
@@ -53,10 +59,11 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         logger.info("Base Game + Mod Packs Restored")
 
 
-class MegaMixContext(CommonContext):
+class MegaMixContext(SuperContext):
     """MegaMix Game Context"""
 
     command_processor = DivaClientCommandProcessor
+    tags = {"AP"}
 
     def __init__(self, server_address: Optional[str], password: Optional[str]) -> None:
         super().__init__(server_address, password)
@@ -108,6 +115,7 @@ class MegaMixContext(CommonContext):
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict):
+        super().on_package(cmd, args) # Universal Tracker
 
         if cmd == "Connected":
 
@@ -384,6 +392,8 @@ def launch():
         """
         ctx = MegaMixContext(args.connect, args.password)
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="server loop")
+        if tracker_loaded:
+            ctx.run_generator()
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
