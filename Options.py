@@ -161,6 +161,17 @@ class IncludeSongs(ItemSet):
     display_name = "Include Songs"
 
 
+class IncludeSongsPercentage(Range):
+    """The percentage of the seed explicitly for Include Songs.
+    - At 50% a 100 song seed will reserve up to 50 Include Songs.
+    - If all Include Songs can fit within the given percent they will all appear.
+    - Non-excluded songs not part of this return to the song pool and may still appear."""
+    range_start = 0
+    range_end = 100
+    default = 100
+    display_name = "Include Songs Percentage"
+
+
 class ExcludeSongs(ItemSet):
     """Any song listed here will be excluded from being a part of the seed.
 
@@ -213,6 +224,7 @@ class MegaMixOptions(PerGameCommonOptions):
     leek_count_percentage: TotalLeeksAvailable
     leek_win_count_percentage: LeeksRequiredPercentage
     include_songs: IncludeSongs
+    include_songs_percentage: IncludeSongsPercentage
     exclude_songs: ExcludeSongs
     exclude_singers: Removed
     megamix_mod_data: ModData
