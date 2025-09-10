@@ -176,11 +176,10 @@ class ModData(FreeText):
 
 
 class DivaDeathLink(DeathLink):
-    """
-    Send out a Death Link when you DROPxOUT/MISSxTAKE or fail to reach Grade Needed.
-    Received Death Links subtract a percentage of the total HP pool. Configure how much in the mod's config.toml.
+    """When you die on your own or fail to reach Grade Needed (not both), everyone who enabled Death Link dies.
 
-    WARNING: Non-lethal Death Link makes it harder to get Life Bonuses and may affect result by up to 2%.
+    Received Death Links subtract a percentage of the total HP pool. Adjustable in the game mod's config file.
+    WARNING: Non-lethal Death Link makes it harder to get Life Bonuses and may affect score by up to 2%.
 
     This can be toggled later in the Client with "/deathlink".
     """
@@ -188,8 +187,7 @@ class DivaDeathLink(DeathLink):
 
 
 class DeathLinkAmnesty(Range):
-    """
-    Amount of own deaths needed before sending one Death Link. 0 would be every death, 1 every other, etc.
+    """Amount of additional own deaths needed before sending one Death Link. 0 would be every death, 1 every other, etc.
 
     This can be adjusted later in the Client with "/deathlink #" and no upper limit.
     """
