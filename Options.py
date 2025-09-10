@@ -1,4 +1,5 @@
-from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText, Visibility, Removed
+from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText, \
+    Visibility, Removed, OptionGroup
 from dataclasses import dataclass
 
 
@@ -173,6 +174,23 @@ class ModData(FreeText):
     display_name = "MegaMixModData"
     default = ''
     visibility = Visibility.template | Visibility.spoiler
+
+
+megamix_option_groups = [
+    OptionGroup("Song Choice", [
+        AllowMegaMixDLCSongs,
+        IncludeSongs,
+        ExcludeSongs,
+        ModData, # hidden by visibility property
+    ]),
+    OptionGroup("Difficulty", [
+        ScoreGradeNeeded,
+        DifficultyModeMin,
+        DifficultyModeMax,
+        DifficultyRatingMin,
+        DifficultyRatingMax,
+    ]),
+]
 
 
 @dataclass

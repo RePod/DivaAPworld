@@ -1,12 +1,12 @@
 #AP
-from worlds.AutoWorld import World
+from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import Component, components, Type, launch_subprocess
 from BaseClasses import Region, Item, ItemClassification, Entrance, Tutorial, MultiWorld
 from Options import PerGameCommonOptions
 import settings
 
 #Local
-from .Options import MegaMixOptions
+from .Options import MegaMixOptions, megamix_option_groups
 from .Items import MegaMixSongItem, MegaMixFixedItem
 from .Locations import MegaMixLocation
 from .MegaMixCollection import MegaMixCollections
@@ -56,6 +56,10 @@ class MegaMixSettings(settings.Group):
     mod_path: ModPath = ModPath("C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods")
 
 
+class MegaMixWebWorld(WebWorld):
+    theme = "ocean"
+    option_groups = megamix_option_groups
+
 class MegaMixWorld(World):
     """Hatsune Miku: Project Diva Mega Mix+ is a rhythm game where you hit notes to the beat of one of 250+ songs.
     Play through a selection of randomly chosen songs, collecting leeks
@@ -69,6 +73,7 @@ class MegaMixWorld(World):
     options: MegaMixOptions
 
     topology_present = False
+    web = MegaMixWebWorld()
 
     # Necessary Data
     mm_collection = MegaMixCollections()
