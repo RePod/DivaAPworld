@@ -118,11 +118,12 @@ class DifficultyRatingMax(Choice):
 
 class ScoreGradeNeeded(Choice):
     """Completing a song will require a grade of this value or higher in order to unlock items.
-    Accuracy required is based on the song's difficulty (Easy, Normal, Hard, etc..)
+    Accuracy required is based on the song's difficulty (Easy, Normal, Hard, etc.)
     A Perfect requires a full combo, regardless of accuracy.
+    A Cheap is completing a song with less than a Standard clear.
     """
     display_name = "Grade Needed"
-    #option_Cheap = 1
+    option_Cheap = 1
     option_Standard = 2
     option_Great = 3
     option_Excellent = 4
