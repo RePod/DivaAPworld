@@ -179,7 +179,7 @@ class ModData(FreeText):
 class DivaDeathLink(DeathLink):
     """When you die on your own or fail to reach Grade Needed (not both), everyone who enabled Death Link dies.
 
-    Received Death Links subtract a percentage of the total HP pool. Adjustable in the game mod's config file.
+    Received Death Links subtract a percentage of total HP. Adjustable in the game mod's config file.
     WARNING: Non-lethal Death Link makes it harder to get Life Bonuses and may affect score by up to 2%.
 
     This can be toggled later in the Client with "/deathlink".
