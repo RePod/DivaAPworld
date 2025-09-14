@@ -98,10 +98,8 @@ class MegaMixWorld(World):
 
             if "finalSongIDs" in slot_data:
                 final = slot_data.get("finalSongIDs", [])
-                songs = [key for key, song in self.mm_collection.song_items.items() if song.songID in final]
-
-                self.included_songs = songs
-                self.location_count = len(songs) * 2
+                self.included_songs = [key for key, song in self.mm_collection.song_items.items() if song.songID in final]
+                self.location_count = len(self.included_songs) * 2
             return
 
         # Initial search criteria
@@ -268,9 +266,7 @@ class MegaMixWorld(World):
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
-        song_select_region = Region("Song Select", self.player, self.multiworld)
-        self.multiworld.regions += [menu_region, song_select_region]
-        menu_region.connect(song_select_region)
+        self.multiworld.regions += [menu_region]
 
         # Make a collection of all songs available for this rando.
         # 1. All starting songs
@@ -287,16 +283,11 @@ class MegaMixWorld(World):
         # Make a region per song/album, then adds 1-2 item locations to them
         for i in range(0, len(all_selected_locations)):
             name = all_selected_locations[i]
-            region = Region(name, self.player, self.multiworld)
-            self.multiworld.regions.append(region)
-            song_select_region.connect(region, name, lambda state, place=name: state.has(place, self.player))
 
-            locations = {}
             for j in range(2):
-                location_name = f"{name}-{j}"
-                locations[location_name] = self.mm_collection.song_locations[location_name]
-
-            region.add_locations(locations, MegaMixLocation)
+                loc = MegaMixLocation(self.player, f"{name}-{j}", self.mm_collection.song_locations[f"{name}-{j}"], menu_region)
+                loc.access_rule = lambda state, place=name: state.has(place, self.player)
+                menu_region.locations.append(loc)
 
     def set_rules(self) -> None:
         self.multiworld.completion_condition[self.player] = lambda state: \
