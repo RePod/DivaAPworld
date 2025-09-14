@@ -280,7 +280,7 @@ class MegaMixWorld(World):
         self.random.shuffle(included_song_copy)
         all_selected_locations.extend(included_song_copy)
 
-        # Adds 2 item locations per song/album to the menu region.
+        # Adds 2 item locations per song to the menu region.
         for name in all_selected_locations:
             for j in range(2):
                 loc = MegaMixLocation(self.player, f"{name}-{j}", self.mm_collection.song_locations[f"{name}-{j}"], menu_region)
