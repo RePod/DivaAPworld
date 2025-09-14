@@ -156,22 +156,20 @@ class MegaMixWorld(World):
         # The ModdedSongs group is shared across all players. Limit to own songs.
         self.starting_songs = [s for s in start_items if s in song_items and
                                not song_items.get(s).modded or song_items.get(s).songID in self.player_specific_ids]
-        self.included_songs = [s for s in include_songs if s in song_items and s not in self.starting_songs and
+        included_songs = [s for s in include_songs if s in song_items and s not in self.starting_songs and
                                not song_items.get(s).modded or song_items.get(s).songID in self.player_specific_ids]
 
-        # Get final song count before create_song_pool to reserve a percentage of included.
-        # This could replace create_song_pool's location_count unless an edge case is found.
-        # TODO: Dedupe the final_songs count.
-        final_songs = [s for s in available_song_keys if s not in start_items
-                       and s not in self.included_songs and s not in exclude_songs]
-        # + 1 for goal.
-        pool_size = min(self.options.starting_song_count.value + self.options.additional_song_count.value,
-                        len(final_songs) + len(self.starting_songs) + len(self.included_songs)) + 1
-        include_size = floor(pool_size * (self.options.include_songs_percentage / 100))
-        self.included_songs = self.random.sample(self.included_songs, k=min(len(self.included_songs), include_size))
+        # Open to suggestions to make includes% make sense without touching create_song_pool.
+        pool = [s for s in available_song_keys if s not in start_items
+                and s not in included_songs and s not in exclude_songs]
+        pool_size = 1 + min(len(pool + self.starting_songs + included_songs),
+                            self.options.starting_song_count.value + self.options.additional_song_count.value)
+        include_size = floor(pool_size * (self.options.include_songs_percentage.value / 100))
 
-        return [s for s in available_song_keys if s not in start_items
-                and s not in self.included_songs and s not in exclude_songs]
+        self.included_songs = self.random.sample(included_songs, k=min(len(included_songs), include_size))
+        pool += [s for s in included_songs if s not in self.included_songs]
+
+        return pool
 
     def create_song_pool(self, available_song_keys: List[str]):
         starting_song_count = self.options.starting_song_count.value
