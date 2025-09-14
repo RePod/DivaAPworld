@@ -1,6 +1,5 @@
 import json
 import yaml
-import pkgutil
 import re
 import os
 import shutil
@@ -8,7 +7,7 @@ import sys
 import settings
 import Utils
 import logging
-from .SymbolFixer import fix_song_name
+import filecmp
 from typing import Any
 
 # Set up logger
@@ -57,8 +56,11 @@ def restore_originals(original_file_paths):
         copy_file_path = os.path.join(directory, copy_filename)
 
         if os.path.exists(copy_file_path):
-            shutil.copyfile(copy_file_path, original_file_path)
-            logger.debug(f"Restored {original_file_path} from {copy_file_path}")
+            if not filecmp.cmp(copy_file_path, original_file_path):
+                shutil.copyfile(copy_file_path, original_file_path)
+                logger.debug(f"Restored {original_file_path} from {copy_file_path}")
+            else:
+                logger.debug(f"Skipping restore on {original_file_path} (matches copy)")
         else:
             logger.debug(f"The copy file {copy_file_path} does not exist.")
 

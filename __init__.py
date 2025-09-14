@@ -2,7 +2,7 @@
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, components, Type, launch_subprocess
 from BaseClasses import Region, Item, ItemClassification, Entrance, Tutorial, MultiWorld
-from Options import PerGameCommonOptions
+from Options import PerGameCommonOptions, OptionError
 import settings
 
 #Local
@@ -115,7 +115,7 @@ class MegaMixWorld(World):
             # If the above fails, we want to adjust the difficulty thresholds.
             # Easier first, then harder
             if lower_rating_threshold <= 1 and higher_rating_threshold >= 10 and len(allowed_difficulties) >= 5:
-                raise Exception("Failed to find enough songs, even with maximum difficulty thresholds.")
+                raise OptionError("Failed to find enough songs, even with maximum difficulty thresholds.")
             elif lower_rating_threshold <= 1:
                 if higher_rating_threshold > 10:
                     # Reset ratings, adjust diff. Maybe buff/nerf initial ratings when lowering/raising diff.
