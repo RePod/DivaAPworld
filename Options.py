@@ -176,7 +176,7 @@ class ModData(FreeText):
     default = ''
     visibility = Visibility.template | Visibility.spoiler
 
- 
+
 class DivaDeathLink(DeathLink):
     """When you die on your own or fail to reach Grade Needed (not both), everyone who enabled Death Link dies.
 
