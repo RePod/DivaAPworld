@@ -151,11 +151,11 @@ class LeeksRequiredPercentage(Range):
 
 
 class IncludeSongsPercentage(Range):
-    """The percentage of the seed explicitly for Include Songs.
+    """The percentage of the seed reserved for Include Songs.
     - At 50% a 100 song seed will reserve up to 50 Include Songs.
-    - If all Include Songs can fit within the given percent they will all appear.
-    - Non-excluded songs not part of this return to the song pool and may still appear.
-    - Include and Exclude a song to have it not return to the song pool."""
+    - If all Include Songs can fit in the given percent they will all appear.
+    - Non-Exclude Songs that are not selected stay in the song pool and can still appear.
+    - Include and Exclude a song to remove it from the song pool completely if not selected."""
     range_start = 0
     range_end = 100
     default = 100
