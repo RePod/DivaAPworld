@@ -119,16 +119,17 @@ class DifficultyRatingMax(Choice):
 
 class ScoreGradeNeeded(Choice):
     """Completing a song will require a grade of this value or higher in order to unlock items.
-    Accuracy required is based on the song's difficulty (Easy, Normal, Hard, etc..)
+    Accuracy required is based on the song's difficulty (Easy, Normal, Hard, etc.)
     A Perfect requires a full combo, regardless of accuracy.
-
+    A Cheap is completing a song with less than a Standard clear.
     """
     display_name = "Grade Needed"
-    option_Standard = 0
-    option_Great = 1
-    option_Excellent = 2
-    option_Perfect = 3
-    default = 0
+    option_Cheap = 1
+    option_Standard = 2
+    option_Great = 3
+    option_Excellent = 4
+    option_Perfect = 5
+    default = 2
 
 
 class TotalLeeksAvailable(Range):
@@ -175,6 +176,28 @@ class ModData(FreeText):
     default = ''
     visibility = Visibility.template | Visibility.spoiler
 
+ 
+class DivaDeathLink(DeathLink):
+    """When you die on your own or fail to reach Grade Needed (not both), everyone who enabled Death Link dies.
+
+    Received Death Links subtract a percentage of total HP. Adjustable in the game mod's config file.
+    WARNING: Non-lethal Death Link makes it harder to get Life Bonuses and may affect score by up to 2%.
+
+    This can be toggled later in the Client with "/deathlink".
+    """
+    display_name = "Death Link"
+
+
+class DeathLinkAmnesty(Range):
+    """Amount of additional own deaths needed before sending one Death Link. 0 would be every death, 1 every other, etc.
+
+    This can be adjusted later in the Client with "/deathlink #" and no upper limit.
+    """
+    display_name = "Death Link Amnesty"
+    range_start = 0
+    range_end = 5
+    default = 0
+
 
 megamix_option_groups = [
     OptionGroup("Song Choice", [
@@ -211,3 +234,5 @@ class MegaMixOptions(PerGameCommonOptions):
     exclude_songs: ExcludeSongs
     exclude_singers: Removed
     megamix_mod_data: ModData
+    death_link: DivaDeathLink
+    death_link_amnesty: DeathLinkAmnesty

@@ -2,7 +2,7 @@
 from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import Component, components, Type, launch_subprocess
 from BaseClasses import Region, Item, ItemClassification, Entrance, Tutorial, MultiWorld
-from Options import PerGameCommonOptions
+from Options import PerGameCommonOptions, OptionError
 import settings
 
 #Local
@@ -74,6 +74,7 @@ class MegaMixWorld(World):
 
     topology_present = False
     web = MegaMixWebWorld()
+    ut_can_gen_without_yaml = True
 
     # Necessary Data
     mm_collection = MegaMixCollections()
@@ -89,12 +90,22 @@ class MegaMixWorld(World):
     player_specific_ids = {}
     victory_song_name: str = ""
     victory_song_id: int
-    starting_songs: List[str]
+    starting_songs: List[str] = []
     included_songs: List[str]
+    final_song_ids: set[int] = set()
     needed_token_count: int
     location_count: int
 
     def generate_early(self):
+        re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+        if re_gen_passthrough and self.game in re_gen_passthrough:
+            slot_data: dict[str, any] = re_gen_passthrough[self.game]
+
+            if "finalSongIDs" in slot_data:
+                final = slot_data.get("finalSongIDs", [])
+                self.included_songs = [key for key, song in self.mm_collection.song_items.items() if song.songID in final]
+                self.location_count = len(self.included_songs) * 2
+            return
 
         # Initial search criteria
         lower_rating_threshold, higher_rating_threshold = self.get_difficulty_range()
@@ -120,7 +131,7 @@ class MegaMixWorld(World):
             # If the above fails, we want to adjust the difficulty thresholds.
             # Easier first, then harder
             if lower_rating_threshold <= 1 and higher_rating_threshold >= 10 and len(allowed_difficulties) >= 5:
-                raise Exception("Failed to find enough songs, even with maximum difficulty thresholds.")
+                raise OptionError("Failed to find enough songs, even with maximum difficulty thresholds.")
             elif lower_rating_threshold <= 1:
                 if higher_rating_threshold > 10:
                     # Reset ratings, adjust diff. Maybe buff/nerf initial ratings when lowering/raising diff.
@@ -208,6 +219,7 @@ class MegaMixWorld(World):
             return MegaMixFixedItem(name, ItemClassification.filler, self.mm_collection.filler_item_names.get(name), self.player)
 
         song = self.mm_collection.song_items.get(name)
+        self.final_song_ids.add(song.songID)
         return MegaMixSongItem(name, self.player, song)
 
     def create_items(self) -> None:
@@ -259,9 +271,7 @@ class MegaMixWorld(World):
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
-        song_select_region = Region("Song Select", self.player, self.multiworld)
-        self.multiworld.regions += [menu_region, song_select_region]
-        menu_region.connect(song_select_region)
+        self.multiworld.regions += [menu_region]
 
         # Make a collection of all songs available for this rando.
         # 1. All starting songs
@@ -275,19 +285,12 @@ class MegaMixWorld(World):
         self.random.shuffle(included_song_copy)
         all_selected_locations.extend(included_song_copy)
 
-        # Make a region per song/album, then adds 1-2 item locations to them
-        for i in range(0, len(all_selected_locations)):
-            name = all_selected_locations[i]
-            region = Region(name, self.player, self.multiworld)
-            self.multiworld.regions.append(region)
-            song_select_region.connect(region, name, lambda state, place=name: state.has(place, self.player))
-
-            locations = {}
+        # Adds 2 item locations per song to the menu region.
+        for name in all_selected_locations:
             for j in range(2):
-                location_name = f"{name}-{j}"
-                locations[location_name] = self.mm_collection.song_locations[location_name]
-
-            region.add_locations(locations, MegaMixLocation)
+                loc = MegaMixLocation(self.player, f"{name}-{j}", self.mm_collection.song_locations[f"{name}-{j}"], menu_region)
+                loc.access_rule = lambda state, item=name: state.has(item, self.player)
+                menu_region.locations.append(loc)
 
     def set_rules(self) -> None:
         self.multiworld.completion_condition[self.player] = lambda state: \
@@ -321,12 +324,19 @@ class MegaMixWorld(World):
 
         return [min_diff, max_diff]
 
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, any]) -> dict[str, any]:
+        return slot_data
+
     def fill_slot_data(self):
         return {
             "victoryLocation": self.victory_song_name,
             "victoryID": self.victory_song_id,
+            "finalSongIDs": self.final_song_ids,
             "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
             "autoRemove": bool(self.options.auto_remove_songs),
+            "deathLink": self.options.death_link.value,
+            "deathLink_Amnesty": self.options.death_link_amnesty.value,
             "modData": {pack: [song[1] for song in songs] for pack, songs in self.player_specific_mod_data.items()},
         }
