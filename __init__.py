@@ -167,7 +167,7 @@ class MegaMixWorld(World):
         include_size = floor(pool_size * (self.options.include_songs_percentage.value / 100))
 
         self.included_songs = self.random.sample(included_songs, k=min(len(included_songs), include_size))
-        pool += [s for s in included_songs if s not in self.included_songs]
+        pool += [s for s in included_songs if s not in self.included_songs and s not in exclude_songs]
 
         return pool
 
