@@ -86,7 +86,7 @@ class MegaMixWorld(World):
     victory_song_name: str = ""
     victory_song_id: int
     starting_songs: List[str] = []
-    included_songs: List[str] = []
+    included_songs: List[str]
     final_song_ids: set[int] = set()
     needed_token_count: int
     location_count: int
@@ -284,7 +284,7 @@ class MegaMixWorld(World):
         for name in all_selected_locations:
             for j in range(2):
                 loc = MegaMixLocation(self.player, f"{name}-{j}", self.mm_collection.song_locations[f"{name}-{j}"], menu_region)
-                loc.access_rule = lambda state, place=name: state.has(place, self.player)
+                loc.access_rule = lambda state, item=name: state.has(item, self.player)
                 menu_region.locations.append(loc)
 
     def set_rules(self) -> None:
