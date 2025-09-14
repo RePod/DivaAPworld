@@ -63,8 +63,9 @@ class MegaMixContext(CommonContext):
 
         self.game = "Hatsune Miku Project Diva Mega Mix+"
         self.path = settings.get_settings()["megamix_options"]["mod_path"]
-        self.mod_pv = self.path + "/ArchipelagoMod/rom/mod_pv_db.txt"
-        self.songResultsLocation = self.path + "/ArchipelagoMod/results.json"
+        self.mod_name = "ArchipelagoMod"
+        self.mod_pv = f"{self.path}/{self.mod_name}/rom/mod_pv_db.txt"
+        self.songResultsLocation = f"{self.path}/{self.mod_name}/results.json"
         self.modData = None
         self.modded = False
         self.freeplay = False
@@ -370,7 +371,12 @@ class MegaMixContext(CommonContext):
             logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):
-        restore_originals(self.mod_pv_list)
+        mod_pv_dbs = [f"{root}/mod_pv_db.txt" for root, _, files in os.walk(self.path) if 'mod_pv_db.txt' in files]
+        restore_originals(mod_pv_dbs)
+
+    async def shutdown(self):
+        await self.restore_songs()
+        await super().shutdown()
 
 
 def launch():
