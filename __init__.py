@@ -164,7 +164,7 @@ class MegaMixWorld(World):
                 and s not in included_songs and s not in exclude_songs]
         pool_size = 1 + min(len(pool + self.starting_songs + included_songs),
                             self.options.starting_song_count.value + self.options.additional_song_count.value)
-        include_size = floor(pool_size * (self.options.include_songs_percentage.value / 100))
+        include_size = pool_size * self.options.include_songs_percentage.value // 100
 
         self.included_songs = self.random.sample(included_songs, k=min(len(included_songs), include_size))
         pool += [s for s in included_songs if s not in self.included_songs and s not in exclude_songs]
@@ -247,7 +247,7 @@ class MegaMixWorld(World):
             return
           
         # Fill given percentage of remaining slots as Useful/non-progression dupes.
-        dupe_count = floor(items_left * (self.options.duplicate_song_percentage / 100))
+        dupe_count = items_left * self.options.duplicate_song_percentage // 100
         items_left -= dupe_count
 
         # This is for the extraordinary case of needing to fill a lot of items.
