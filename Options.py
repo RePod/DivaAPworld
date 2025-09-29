@@ -1,4 +1,5 @@
-from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText, Visibility, Removed
+from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet, PerGameCommonOptions, FreeText, \
+    Visibility, Removed, OptionGroup
 from dataclasses import dataclass
 
 
@@ -208,6 +209,23 @@ class DeathLinkAmnesty(Range):
     range_start = 0
     range_end = 5
     default = 0
+
+
+megamix_option_groups = [
+    OptionGroup("Song Choice", [
+        AllowMegaMixDLCSongs,
+        IncludeSongs,
+        ExcludeSongs,
+        ModData, # hidden by visibility property
+    ]),
+    OptionGroup("Difficulty", [
+        ScoreGradeNeeded,
+        DifficultyModeMin,
+        DifficultyModeMax,
+        DifficultyRatingMin,
+        DifficultyRatingMax,
+    ]),
+]
 
 
 @dataclass
