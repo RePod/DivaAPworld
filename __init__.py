@@ -150,17 +150,26 @@ class MegaMixWorld(World):
         song_items = self.mm_collection.song_items
 
         start_items = self.options.start_inventory.value.keys()
-        include_songs = self.options.include_songs.value
+        include_songs = sorted(self.options.include_songs.value)
         exclude_songs = self.options.exclude_songs.value
 
         # The ModdedSongs group is shared across all players. Limit to own songs.
         self.starting_songs = [s for s in start_items if s in song_items and
                                not song_items.get(s).modded or song_items.get(s).songID in self.player_specific_ids]
-        self.included_songs = [s for s in include_songs if s in song_items and s not in self.starting_songs and
+        included_songs = [s for s in include_songs if s in song_items and s not in self.starting_songs and
                                not song_items.get(s).modded or song_items.get(s).songID in self.player_specific_ids]
 
-        return [s for s in available_song_keys if s not in start_items
-                and s not in include_songs and s not in exclude_songs]
+        # Open to suggestions to make includes% make sense without touching create_song_pool.
+        pool = [s for s in available_song_keys if s not in start_items
+                and s not in included_songs and s not in exclude_songs]
+        pool_size = 1 + min(len(pool + self.starting_songs + included_songs),
+                            self.options.starting_song_count.value + self.options.additional_song_count.value)
+        include_size = pool_size * self.options.include_songs_percentage.value // 100
+
+        self.included_songs = self.random.sample(included_songs, k=min(len(included_songs), include_size))
+        pool += [s for s in included_songs if s not in self.included_songs and s not in exclude_songs]
+
+        return pool
 
     def create_song_pool(self, available_song_keys: List[str]):
         starting_song_count = self.options.starting_song_count.value
@@ -238,7 +247,7 @@ class MegaMixWorld(World):
             return
           
         # Fill given percentage of remaining slots as Useful/non-progression dupes.
-        dupe_count = floor(items_left * (self.options.duplicate_song_percentage / 100))
+        dupe_count = items_left * self.options.duplicate_song_percentage // 100
         items_left -= dupe_count
 
         # This is for the extraordinary case of needing to fill a lot of items.

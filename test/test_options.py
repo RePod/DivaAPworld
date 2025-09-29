@@ -73,6 +73,35 @@ class TestOptionIncludesOverflow(MegaMixTestBase):
         self.assertTrue(pool.issubset(world.options.include_songs.value))
 
 
+@classvar_matrix(percent=[10, 39, 99, 100])
+class TestIncludesPercentage(MegaMixTestBase):
+    """Set include_ and exclude_songs to an item group (MikuSongs) and verify the percentage of the seed for them.
+    Excluding the same songs guarantees they cannot appear in the song pool again."""
+    percent: ClassVar[int]
+    options = {
+        "allow_megamix_dlc_songs": True,
+        "duplicate_song_percentage": 0,
+        "starting_song_count": 10,
+        "additional_song_count": 40,
+    }
+
+    def test_includes_percentage(self):
+        group_miku = self.world.item_name_groups["MikuSongs"]
+        self.options["include_songs_percentage"] = self.percent
+        self.options["include_songs"] = group_miku
+        self.options["exclude_songs"] = group_miku
+        self.world_setup()
+
+        pool = {song.name for song in self.world.multiworld.itempool if song.code >= 10}
+        pool.update(self.world.starting_songs)
+        pool.add(self.world.victory_song_name)
+
+        match = {song for song in pool if song in group_miku}
+        count = len(pool) * self.percent // 100
+
+        self.assertEqual(len(match), count)
+
+
 class TestOptionExcludes(MegaMixTestBase):
     """Set exclude_songs and test the multiworld item pool for their absence."""
     options = {
