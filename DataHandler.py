@@ -164,13 +164,17 @@ def extract_mod_data_to_json() -> list[Any]:
 
                         # Process each mod_data block
                         for _ in matches:
-                            for single_yaml in yaml.safe_load_all(file_content):
-                                mod_data_content = single_yaml.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data", None)
+                            try:
+                                for single_yaml in yaml.safe_load_all(file_content):
+                                    mod_data_content = single_yaml.get("Hatsune Miku Project Diva Mega Mix+", {}).get("megamix_mod_data", None)
 
-                                if isinstance(mod_data_content, dict) or not mod_data_content:
-                                    continue
+                                    if isinstance(mod_data_content, dict) or not mod_data_content:
+                                        continue
 
-                                all_mod_data.append(json.loads(mod_data_content))
+                                    print(mod_data_content)
+                                    all_mod_data.append(json.loads(mod_data_content))
+                            except Exception as e:
+                                logger.warning(f"Failed to extract mod data from {item}\n{e}")
 
     total = sum(len(pack) for packList in all_mod_data for pack in packList.values())
     logger.debug(f"Found {total} songs")

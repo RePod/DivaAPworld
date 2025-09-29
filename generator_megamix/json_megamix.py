@@ -58,7 +58,7 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
         mod_pv_db = input_file.read()
     mod_pv_db = set(re.findall(rf'^(?:#ARCH#)?pv_(\d+)\.(song_name_en|difficulty)(?:\.([^.]+)\.(\d|length)\.?(level|script_file_name|attribute\.extra)?)?=(.*)$', mod_pv_db, re.MULTILINE))
 
-    for line in mod_pv_db:
+    for line in sorted(mod_pv_db):
         song_id, song_prop, diff_rating, diff_index_length, diff_prop, value = line
         songs.setdefault(song_id, ["", int(song_id), 0])
         diff_lockout.setdefault(song_id, [False] * 5)
@@ -85,8 +85,9 @@ def process_single_mod(mod_pv_db_path: str, mod_dir: str) -> tuple[set[int], lis
                 match diff_prop:
                     case "level" if not diff_lockout[song_id][diff_index]:
                         songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, float(".".join(value.split("_")[2:4])))
-                    case "script_file_name" if song_id not in base_game_ids: # 99% covers. Good luck everyone.
+                    case "script_file_name" if int(song_id) not in base_game_ids: # 99% covers. Good luck everyone.
                         if not os.path.isfile(os.path.join(mod_dir, value)): # Verify DSC exists
+                            print(f"{song_id} No {difficulties[diff_index]} DSC at {value}")
                             diff_lockout[song_id][diff_index] = True
                             songs[song_id][2] = shift_difficulty(songs[song_id][2], diff_index, 31.0)
 
