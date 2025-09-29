@@ -267,12 +267,21 @@ class MegaMixContext(SuperContext):
             if os.path.isfile(file_path):
                 modified = os.path.getmtime(file_path)
                 if modified > last_modified:
-                    self.death_link_amnesty_count += 1
                     last_modified = modified
-                    if self.death_link_amnesty_count > self.death_link_amnesty:
-                        self.death_link_amnesty_count = 0
-                        if self.death_link:
-                            await self.send_death(f"The Disappearance of {self.player_names[self.slot]}")
+                    await self.send_death()
+
+
+    async def send_death(self, death_text: str = ""):
+        if not self.death_link:
+            return
+
+        if not death_text:
+            death_text = f"The Disappearance of {self.player_names[self.slot]}"
+
+        self.death_link_amnesty_count += 1
+        if self.death_link_amnesty_count > self.death_link_amnesty:
+            self.death_link_amnesty_count = 0
+            await super().send_death(death_text)
 
 
     def on_deathlink(self, data: dict[str, any]):
@@ -314,8 +323,8 @@ class MegaMixContext(SuperContext):
         else:
             logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
 
-            if self.death_link and not song_data.get('deathLinked', False):
-                await self.send_death(f"The Disappearance of {self.player_names[self.slot]}")
+            if not song_data.get('deathLinked', False):
+                await self.send_death()
 
     async def end_goal(self):
         message = [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
