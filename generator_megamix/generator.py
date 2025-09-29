@@ -88,7 +88,7 @@ class DivaJSONGenerator(ThemedApp):
                 ).open()
 
         for label in self.labels:
-            # The split may need to be Linux-aware in the future.
+            # The split may need to be /-aware in the future.
             if import_dml and label.text.split("\\")[0] not in dml_config:
                 continue
             elif search:
