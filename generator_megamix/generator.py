@@ -52,7 +52,7 @@ class DivaJSONGenerator(ThemedApp):
             if not 'mod_pv_db.txt' in files:
                 continue
 
-            folder_name = str(Path(root).parent.relative_to(mods_folder))   
+            folder_name = str(Path(root).parent.relative_to(mods_folder))
 
             if folder_name == self.self_mod_name:
                 continue
@@ -88,7 +88,8 @@ class DivaJSONGenerator(ThemedApp):
                 ).open()
 
         for label in self.labels:
-            if import_dml and label.text not in dml_config:
+            # The split may need to be Linux-aware in the future.
+            if import_dml and label.text.split("\\")[0] not in dml_config:
                 continue
             elif search:
                 if "/" == search[0] == search[-1]:
