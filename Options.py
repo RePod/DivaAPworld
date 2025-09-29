@@ -214,6 +214,7 @@ class DeathLinkAmnesty(Range):
 megamix_option_groups = [
     OptionGroup("Song Choice", [
         AllowMegaMixDLCSongs,
+        IncludeSongsPercentage,
         IncludeSongs,
         ExcludeSongs,
         ModData, # hidden by visibility property
