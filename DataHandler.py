@@ -8,7 +8,7 @@ import settings
 import Utils
 import logging
 import filecmp
-from typing import Any, Dict
+from typing import Any
 
 # Set up logger
 logging.basicConfig(level=logging.DEBUG)
