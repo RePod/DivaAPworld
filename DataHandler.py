@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 def game_paths() -> dict[str, str]:
     """Build relevant paths based on the game exe and, if available, the mod loader config."""
+
     exe_path = settings.get_settings()["megamix_options"]["game_exe"]
     game_path = os.path.dirname(exe_path)
     mods_path = os.path.join(game_path, "mods")
