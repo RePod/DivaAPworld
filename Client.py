@@ -4,8 +4,8 @@ import colorama
 import os
 import json
 import time
-import settings
 from .DataHandler import (
+    game_paths,
     load_json_file,
     erase_song_list,
     song_unlock,
@@ -73,7 +73,7 @@ class MegaMixContext(SuperContext):
         super().__init__(server_address, password)
 
         self.game = "Hatsune Miku Project Diva Mega Mix+"
-        self.path = settings.get_settings()["megamix_options"]["mod_path"]
+        self.path = game_paths().get("mods")
         self.mod_name = "ArchipelagoMod"
         self.mod_pv = f"{self.path}/{self.mod_name}/rom/mod_pv_db.txt"
         self.songResultsLocation = f"{self.path}/{self.mod_name}/results.json"

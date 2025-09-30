@@ -43,15 +43,17 @@ components.append(Component(
 ))
 
 class MegaMixSettings(settings.Group):
-    class ModPath(settings.LocalFolderPath):
+    class GameExe(settings.LocalFilePath):
         """
-        Mod folder location for Hatsune Miku Project DIVA Mega Mix+. Usually ends with "/mods".
+        Path to the HMPDMM+'s game exe. Usually ends with "DivaMegaMix.exe"
         Players (Mega Mix Clients) must have this set correctly in THEIR host.yaml.
         Generating and hosting do not rely on this.
         """
-        description = "Hatsune Miku Project DIVA Mega Mix+ mods folder"
+        description = "Hatsune Miku Project DIVA Mega Mix+ game executable"
+        is_exe = True
+        md5s = ["813e1befae1776d4fafdf907e509b28b"] # 1.03
 
-    mod_path: ModPath = ModPath("C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/mods")
+    game_exe: GameExe = GameExe("C:/Program Files (x86)/Steam/steamapps/common/Hatsune Miku Project DIVA Mega Mix Plus/DivaMegaMix.exe")
 
 
 class MegaMixWebWorld(WebWorld):

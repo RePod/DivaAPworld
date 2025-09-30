@@ -15,7 +15,7 @@ import Utils
 import settings
 from .json_megamix import process_mods, ConflictException
 from .. import MegaMixWorld
-from ..DataHandler import restore_originals
+from ..DataHandler import restore_originals, game_paths
 
 
 class AssociatedMDLabel(MDLabel):
@@ -38,7 +38,7 @@ class DivaJSONGenerator(ThemedApp):
     pack_list_scroll: ScrollBox = ObjectProperty(None)
     filter_input: MDTextField = ObjectProperty(None)
 
-    mods_folder = settings.get_settings()["megamix_options"]["mod_path"]
+    mods_folder = game_paths().get("mods")
     self_mod_name = "ArchipelagoMod" # Hardcoded. Fetch from Client or something.
     labels = []
 
