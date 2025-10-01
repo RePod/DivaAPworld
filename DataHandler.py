@@ -171,7 +171,6 @@ def extract_mod_data_to_json() -> list[Any]:
                                     if isinstance(mod_data_content, dict) or not mod_data_content:
                                         continue
 
-                                    print(mod_data_content)
                                     all_mod_data.append(json.loads(mod_data_content))
                             except Exception as e:
                                 logger.warning(f"Failed to extract mod data from {item}\n{e}")

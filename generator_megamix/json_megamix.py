@@ -1,6 +1,6 @@
 import json
 import os.path
-import pathlib
+from pathlib import Path
 import re
 
 from ..SymbolFixer import fix_song_name
@@ -22,7 +22,7 @@ base_game_ids = { # Excluded: 700, 701
 class ConflictException(Exception):
     pass
 
-def process_mods(mod_pv_dbs_path_list: list[str]) -> tuple[int, str]:
+def process_mods(mods_folder: str, mod_pv_dbs_path_list: list[str]) -> tuple[int, str]:
     """
     Accumulates song metadata across the provided mod_pv_dbs and returns JSON.
 
@@ -33,8 +33,10 @@ def process_mods(mod_pv_dbs_path_list: list[str]) -> tuple[int, str]:
     unique_seen_ids = {}
 
     for mod_path in mod_pv_dbs_path_list:
-        mod_dir = pathlib.Path(mod_path).parents[1]
-        mod_folder = os.path.basename(mod_dir).replace("'", "''")
+        mod_dir = Path(mod_path).parents[1]
+        mod_folder = str(Path(mod_dir).relative_to(mods_folder))
+        mod_folder = mod_folder.replace("'", "''")
+
         song_pack_ids, song_pack_list = process_single_mod(mod_path, str(mod_dir))
 
         # Beyond overkill, beyond useful.
