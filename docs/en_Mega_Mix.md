@@ -23,10 +23,6 @@ DLC can be toggled on in the options.
 - If you are unfamiliar with Diva modding, here's a helpful guide, I recommend the mod manager over manual: https://docs.google.com/document/d/1jvG_RGMe_FtlduvD8WwXdfA85I1O4Tde0DfRDM4aeWk/edit
 - To play AP with modded songs, follow this guide here: https://docs.google.com/document/d/17NwFcPzmt5fnXz0GBvrJTlF40fCNcv052kWpM0OQ66o/edit?usp=sharing
 
-### Eden Core Specifics (Modded)
-- If using Eden Core, Eden Core must be at the end of the mod loading order after Archipelago.
-- If using Eden Core, and it is included in your modded Json, it goes before Archipelago in the mod load order like other mods
-
 ### Useful Information
 
 - To refresh the song list in game, you need to press the reload key.
@@ -64,4 +60,3 @@ DLC can be toggled on in the options.
 - Whenever you get sent a song, to have it show up in the song list you must reload the game with the reload key, it's not a bug if a song doesn't appear until after a reload. However if a song still doesn't appear after a reload please report it in the discord.
 - Make sure the client is connected when you beat a song or it won't count the location as checked until you do it again while connected.
 - Please make sure you're using the latest version of either Diva Mod Loader, or Diva Mod Manager
-- To use the mod with SongLimitPatch or other mods that use SLP (such as EdenCore), in the config.toml file (ArchipelagoMod/config.toml), set the dll option to ArchipelagoModSLP.dll, swap back to the normal DLL if not using a SongLimitPatch mod.
