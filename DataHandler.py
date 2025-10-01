@@ -14,6 +14,29 @@ from typing import Any
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+
+def game_paths() -> dict[str, str]:
+    """Build relevant paths based on the game exe and, if available, the mod loader config."""
+
+    exe_path = settings.get_settings()["megamix_options"]["game_exe"]
+    game_path = os.path.dirname(exe_path)
+    mods_path = os.path.join(game_path, "mods")
+
+    # Seemingly no TOML parser in frozen AP
+    dml_config = os.path.join(game_path, "config.toml")
+    if os.path.isfile(dml_config):
+        with open(dml_config, "r") as f:
+            mod_line = re.search(r"""^mods\s*=\s*['"](.*?)['"]""", f.read())
+            if mod_line:
+                mods_path = os.path.join(game_path, mod_line.group(1))
+
+    return {
+        "exe": exe_path,
+        "game": game_path,
+        "mods": mods_path
+    }
+
+
 # File Handling
 def load_json_file(file_name: str) -> dict:
     """Import a JSON file, either from a zipped package or directly from the filesystem."""
