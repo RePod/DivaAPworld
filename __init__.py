@@ -57,7 +57,18 @@ class MegaMixSettings(settings.Group):
 
 
 class MegaMixWebWorld(WebWorld):
+    tutorials = [
+        Tutorial(
+            tutorial_name="Multiworld Setup Guide",
+            description="Does anybody read these or do they just click their preferred language?",
+            language="English",
+            file_name="setup_en.md",
+            link="setup/en",
+            authors=["Cynichill"]
+        )
+    ]
     theme = "ocean"
+    bug_report_page = "https://github.com/Cynichill/DivaAPworld/issues"
     option_groups = megamix_option_groups
 
 class MegaMixWorld(World):
