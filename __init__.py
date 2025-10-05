@@ -280,17 +280,7 @@ class MegaMixWorld(World):
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions += [menu_region]
 
-        # Make a collection of all songs available for this rando.
-        # 1. All starting songs
-        # 2. All other songs shuffled
-        # Doing it in this order ensures that starting songs are first in line to getting 2 locations.
-        # Final song is excluded as for the purpose of this rando, it doesn't matter.
-
-        all_selected_locations = self.starting_songs.copy()
-        included_song_copy = self.included_songs.copy()
-
-        self.random.shuffle(included_song_copy)
-        all_selected_locations.extend(included_song_copy)
+        all_selected_locations = self.starting_songs + self.included_songs
 
         # Adds 2 item locations per song to the menu region.
         for name in all_selected_locations:
