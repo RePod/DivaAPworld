@@ -64,7 +64,7 @@ To increase the success of seed generation the difficulty settings are conservat
 
 If you do not like the results of the difficulty expansion consider less restrictive settings.
 
-Starting (`starting_songs`) and Included songs (`include_songs`) will *always* ignore difficulty settings.
+Starting (`start_inventory`) and Included songs (`include_songs`) will *always* ignore difficulty settings.
 
 ### My settings are too long or difficult
 **Note: You can play any available difficulty for the same checks.**
