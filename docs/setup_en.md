@@ -69,7 +69,7 @@ Starting (`starting_songs`) and Included songs (`include_songs`) will *always* i
 ### My settings are too long or difficult
 **Note: You can play any available difficulty for the same checks.**
 
-In the [AP mod folder](#Resulting-file-structure) open `results.json` with a text editor. If it does not exist play a song first.
+In the [AP mod folder](#Resulting-basic-file-structure) open `results.json` with a text editor. If it does not exist play a song first.
 
 Given `Song I Want To Beat [5678]`:
 - Change the number after `pvId` to `5678` 
@@ -78,12 +78,12 @@ Given `Song I Want To Beat [5678]`:
 Save the file while the **Mega Mix Client** is open and connected.
 
 ### Newly received songs are not appearing in game
-While on the song list press ***F7*** or the defined `reload` key in the [mod's config](#Resulting-file-structure) to reload the game. 
+While on the song list press ***F7*** or the defined `reload` key in the [mod's config](#Resulting-basic-file-structure) to reload the game. 
 
 ### Modded songs are not appearing in game
 Install [ExPatch](#Optional-Quality-of-Life-Mods). Extreme/Extra Extreme only modded songs are common.
 
-Similar to the [mod's config](#Resulting-file-structure), ensure `enabled = true` in a pack's `config.toml`.
+Similar to the [mod's config](#Resulting-basic-file-structure), ensure `enabled = true` in a pack's `config.toml`.
 
 ### Songs still aren't appearing
 Run `/restore_songs` in the **Mega Mix Client**, reload, and play manually (honor system).
