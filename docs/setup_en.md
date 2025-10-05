@@ -14,7 +14,7 @@ This is a minimal setup to get started. Mod managers exist that may make certain
    - See 3 for locating `DivaMegaMix.exe`
 2. Install the Archipelago Mod listed under [Requirements.](#requirements)
 3. Upon starting the **Mega Mix Client** you will be prompted to select `DivaMegaMix.exe`:
-   - Right-click the game entry in Steam, **Manage > Browse local files**.
+   - Right-click the game entry in Steam, **Manage > Browse local files**
    - `DivaMegaMix.exe` (extension may be hidden) is what you will need to navigate to and select
    - You may be able to ***Ctrl+C*** the game EXE and paste its path into the original prompt's text input
 4. Play! (requires a [YAML and generation](tutorial/Archipelago/setup_en))
