@@ -287,13 +287,14 @@ class MegaMixWorld(World):
 
         # Traps after dupes, contrary to MD
         trap_count = items_left * self.options.trap_percentage // 100
-        items_left -= trap_count
 
         enabled_traps = list(self.options.traps_enabled.value)
         if enabled_traps and trap_count:
             for _ in range(0, trap_count):
                 trap = self.create_item(self.random.choice(enabled_traps))
                 self.multiworld.itempool.append(trap)
+
+            items_left -= trap_count  # subtract only if there are enabled traps
 
         # Generic filler. Anything dupes and traps didn't cover.
         filler_count = items_left
