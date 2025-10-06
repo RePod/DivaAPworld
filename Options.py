@@ -41,7 +41,9 @@ class AllowMegaMixDLCSongs(Toggle):
 
 
 class AutoRemoveCleared(Toggle):
-    """If true, automatically removes cleared songs from the song list on refresh"""
+    """If true, automatically removes cleared songs from the song list on refresh.
+
+    This can be done later manually with "/remove_cleared" or toggled with "/auto_remove" in the Client."""
     display_name = "Auto Remove Songs"
 
 

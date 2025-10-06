@@ -34,11 +34,11 @@ from NetUtils import NetworkItem, ClientStatus, Permission
 
 class DivaClientCommandProcessor(ClientCommandProcessor):
     def _cmd_uncleared(self):
-        """Lists all RECEIVED songs that have checks behind them"""
+        """List received songs with available checks and the goal song if unlocked"""
         asyncio.create_task(self.ctx.get_uncleared())
 
     def _cmd_leek(self):
-        """Tells you how many Leeks you have, and how many you need for the goal song"""
+        """Display number of Leeks obtained, how many needed, and the goal song"""
         asyncio.create_task(self.ctx.get_leek_info())
 
     def _cmd_auto_remove(self):
@@ -46,7 +46,7 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         asyncio.create_task(self.ctx.toggle_remove_songs())
 
     def _cmd_remove_cleared(self):
-        """Removes cleared songs from in-game list"""
+        """Remove cleared songs from in-game list"""
         asyncio.create_task(self.ctx.remove_songs())
 
     def _cmd_freeplay(self):
@@ -54,13 +54,15 @@ class DivaClientCommandProcessor(ClientCommandProcessor):
         asyncio.create_task(self.ctx.freeplay_toggle())
 
     def _cmd_restore_songs(self):
-        """Restores songs to their original state for intended use"""
+        """Restore songs to their pre-Archipelago state, automatic on release or Client close
+        Use as a failsafe for songs not appearing and play on the honor system"""
         logger.info("Restoring..")
         asyncio.create_task(self.ctx.restore_songs())
         logger.info("Base Game + Mod Packs Restored")
 
     def _cmd_deathlink(self, amnesty = ""):
-        """Toggle Death Link on and off or provide a number >= 0 to change Amnesty."""
+        """Toggle Death Link on and off or provide a number >= 0 to change Amnesty.
+        Lethality can be adjusted in the mod's config.toml"""
         asyncio.create_task(self.ctx.toggle_deathlink(amnesty))
 
 
