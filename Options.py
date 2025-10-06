@@ -2,6 +2,8 @@ from Options import Toggle, Option, Range, Choice, DeathLink, ItemSet, OptionSet
     Visibility, Removed, OptionGroup
 from dataclasses import dataclass
 
+from .MegaMixCollection import MegaMixCollections
+
 
 class StartingSongs(Range):
     """The number of songs that will be automatically unlocked at the start of a run."""
@@ -24,8 +26,8 @@ class AdditionalSongs(Range):
 
 class DuplicateSongPercentage(Range):
     """
-    Percentage of duplicate songs to place in remaining filler slots.
-    Duplicate songs are considered Useful and thus out of logic.
+    After placing required items, the percentage of remaining filler slots to become duplicate song items.
+    Duplicate songs are considered Useful thus out of logic and may speed up completion time.
     """
     range_start = 0
     range_end = 100
@@ -211,6 +213,24 @@ class DeathLinkAmnesty(Range):
     default = 0
 
 
+class TrapsEnabled(OptionSet):
+    """Control which Traps can be placed in the item pool."""
+    display_name = "Traps Enabled"
+    valid_keys = {trap for trap in MegaMixCollections.trap_items.keys()}
+    default = valid_keys
+
+
+class TrapPercentage(Range):
+    """
+    After placing required items and duplicate songs, the percentage of remaining filler slots to become traps.
+    If duplicate songs percentage is at 100, this option has no effect.
+    """
+    display_name = "Trap Percentage"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+
 megamix_option_groups = [
     OptionGroup("Song Choice", [
         AllowMegaMixDLCSongs,
@@ -225,6 +245,12 @@ megamix_option_groups = [
         DifficultyModeMax,
         DifficultyRatingMin,
         DifficultyRatingMax,
+    ]),
+    OptionGroup("", [
+        DivaDeathLink,
+        DeathLinkAmnesty,
+        TrapsEnabled,
+        TrapPercentage,
     ]),
 ]
 
@@ -246,7 +272,11 @@ class MegaMixOptions(PerGameCommonOptions):
     include_songs_percentage: IncludeSongsPercentage
     include_songs: IncludeSongs
     exclude_songs: ExcludeSongs
-    exclude_singers: Removed
     megamix_mod_data: ModData
     death_link: DivaDeathLink
     death_link_amnesty: DeathLinkAmnesty
+    traps_enabled: TrapsEnabled
+    trap_percentage: TrapPercentage
+
+    # Deprecated
+    exclude_singers: Removed

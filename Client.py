@@ -4,6 +4,7 @@ import colorama
 import os
 import json
 import time
+from pathlib import Path
 from .DataHandler import (
     game_paths,
     load_json_file,
@@ -70,6 +71,7 @@ class MegaMixContext(SuperContext):
     tags = {"AP"}
 
     def __init__(self, server_address: Optional[str], password: Optional[str]) -> None:
+        dir(self)
         super().__init__(server_address, password)
 
         self.game = "Hatsune Miku Project Diva Mega Mix+"
@@ -79,6 +81,9 @@ class MegaMixContext(SuperContext):
         self.songResultsLocation = f"{self.path}/{self.mod_name}/results.json"
         self.deathLinkInLocation = f"{self.path}/{self.mod_name}/death_link_in"
         self.deathLinkOutLocation = f"{self.path}/{self.mod_name}/death_link_out"
+        self.trapSuddenLocation = f"{self.path}/{self.mod_name}/sudden"
+        self.trapHiddenLocation = f"{self.path}/{self.mod_name}/hidden"
+        self.trapIconLocation = f"{self.path}/{self.mod_name}/icontrap"
         self.modData = None
         self.modded = False
         self.freeplay = False
@@ -213,6 +218,12 @@ class MegaMixContext(SuperContext):
                     elif network_item.item == 2:
                         # Maybe move static items out of MegaMixCollection instead of hard coding?
                         pass
+                    elif network_item.item == 4:
+                        Path(self.trapHiddenLocation).touch()
+                    elif network_item.item == 5:
+                        Path(self.trapSuddenLocation).touch()
+                    elif network_item.item == 9:
+                        Path(self.trapIconLocation).touch()
                     else:
                         ids_to_packs.setdefault(self.song_id_to_pack(network_item.item), []).append(network_item.item)
 
@@ -286,7 +297,6 @@ class MegaMixContext(SuperContext):
 
     def on_deathlink(self, data: dict[str, any]):
         super().on_deathlink(data)
-        from pathlib import Path
         Path(self.deathLinkInLocation).touch()
 
 

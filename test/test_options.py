@@ -144,3 +144,15 @@ class TestOptionExcludeItemGroups(MegaMixTestBase):
         intersect = pool.intersection(group_songs)
         self.assertEqual(0, len(intersect), f"0 songs from {self.group} expected, got {len(intersect)}: {intersect}")
         self.assertEqual(len(group_songs) + len(pool), len(self.world.mm_collection.song_items))
+
+
+class TestTrapsFull(MegaMixTestBase):
+    """Set trap settings to extremes and """
+    options = {
+        "duplicate_song_percentage": 0,
+        "trap_percentage": 100,
+    }
+
+    def test_traps_full(self):
+        world = self.get_world()
+        # TODO

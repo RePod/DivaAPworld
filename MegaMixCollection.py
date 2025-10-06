@@ -25,6 +25,14 @@ class MegaMixCollections:
         "SAFE": 1,
     }
 
+    # IDs 3-9 available. 10 is "Love is War [1]".
+    trap_items: dict[str, int] = {
+        #"High Speed Trap": 3,
+        "Hidden Trap": 4,
+        "Sudden Trap": 5,
+        "Icon Trap": 9,
+    }
+
     def __init__(self) -> None:
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, self.filler_item_names, self.song_items)
         self.location_names_to_id = ChainMap(self.song_locations)

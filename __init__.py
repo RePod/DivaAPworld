@@ -227,6 +227,9 @@ class MegaMixWorld(World):
         if name in self.mm_collection.filler_item_names:
             return MegaMixFixedItem(name, ItemClassification.filler, self.mm_collection.filler_item_names.get(name), self.player)
 
+        if name in self.mm_collection.trap_items:
+            return MegaMixFixedItem(name, ItemClassification.trap, self.mm_collection.trap_items.get(name), self.player)
+
         song = self.mm_collection.song_items.get(name)
         self.final_song_ids.add(song.songID)
         return MegaMixSongItem(name, self.player, song)
@@ -271,6 +274,17 @@ class MegaMixWorld(World):
             item.classification = ItemClassification.useful
             self.multiworld.itempool.append(item)
 
+        # Traps after dupes, contrary to MD
+        trap_count = items_left * self.options.trap_percentage // 100
+        items_left -= trap_count
+
+        enabled_traps = list(self.options.traps_enabled.value)
+        if enabled_traps and trap_count:
+            for _ in range(0, trap_count):
+                trap = self.create_item(self.random.choice(enabled_traps))
+                self.multiworld.itempool.append(trap)
+
+        # Generic filler. Anything dupes and traps didn't cover.
         filler_count = items_left
         items_left -= filler_count
 
