@@ -5,7 +5,7 @@
   - [Extra Song Pack](https://store.steampowered.com/app/1887030/Hatsune_Miku_Project_DIVA_Mega_Mix_Extra_Song_Pack/) (optional, recommended, cheaper bundled)
   - The game can be played in Archipelago without the Extra Song Pack DLC.
 - [DivaModLoader](https://github.com/blueskythlikesclouds/DivaModLoader?tab=readme-ov-file#installation)
-- [[GB]](https://gamebanana.com/mods/514140) Archipelago Mod
+- [[GB]](https://gamebanana.com/mods/514140) [[DMA]](https://divamodarchive.com/post/279) Archipelago Mod
 
 ## First Time Setup
 This is a minimal setup to get started. Mod managers exist that may make certain steps easier, but you use them at your discretion.
