@@ -73,7 +73,6 @@ class MegaMixContext(SuperContext):
     tags = {"AP"}
 
     def __init__(self, server_address: Optional[str], password: Optional[str]) -> None:
-        dir(self)
         super().__init__(server_address, password)
 
         self.game = "Hatsune Miku Project Diva Mega Mix+"
