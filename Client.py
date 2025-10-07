@@ -220,11 +220,14 @@ class MegaMixContext(SuperContext):
                         # Maybe move static items out of MegaMixCollection instead of hard coding?
                         pass
                     elif network_item.item == 4:
-                        Path(self.trapHiddenLocation).touch()
+                        if not os.path.isfile(self.trapHiddenLocation):
+                            Path(self.trapHiddenLocation).touch()
                     elif network_item.item == 5:
-                        Path(self.trapSuddenLocation).touch()
+                        if not os.path.isfile(self.trapSuddenLocation):
+                            Path(self.trapSuddenLocation).touch()
                     elif network_item.item == 9:
-                        Path(self.trapIconLocation).touch()
+                        if not os.path.isfile(self.trapIconLocation):
+                            Path(self.trapIconLocation).touch()
                     else:
                         ids_to_packs.setdefault(self.song_id_to_pack(network_item.item), []).append(network_item.item)
 
