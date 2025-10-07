@@ -21,12 +21,12 @@ class TestVictorySong(MegaMixTestBase):
 
         self.assertEqual(name_victory, name_mmc, "Victory Song name and MMC song name do not match")
 
+
 class TestGoalSong(MegaMixTestBase):
-    """Test the goal_song option despite not being in test_options or test_plando."""
+    """Test the goal_song option with a single candidate."""
 
     options = {
         "goal_song": "Love is War [1]",
-        "exclude_songs": "Love is War [1]", # So it can't appear otherwise. It must be the Goal Song and not in the pool.
         "allow_megamix_dlc_songs": True,
         "additional_song_count": 300, # Consume all base+DLC songs
     }
@@ -42,5 +42,25 @@ class TestGoalSong(MegaMixTestBase):
         world = self.get_world()
 
         # There might be a helper function I missed.
-        self.assertFalse(self.options.get("goal_song") in [item.name for item in world.multiworld.itempool
-                                                           if item.player == self.player])
+        self.assertFalse(self.options.get("goal_song") in [item.name for item in world.multiworld.itempool],
+                         "Goal song is in the item pool.")
+
+
+class TestGoalSongMulti(MegaMixTestBase):
+    """Test the goal_song option when more than one is provided."""
+
+    options = {
+        "goal_song": {"Love is War [1]", "The World is Mine [2]"},
+        "allow_megamix_dlc_songs": True,
+        "additional_song_count": 300,  # Consume all base+DLC songs
+    }
+
+    def test_goal_songs_return_to_pool(self):
+        """Verify Goal Song candidates other than the one chosen return to the song pool."""
+        world = self.get_world()
+
+        returners = self.options.get("goal_song")
+        returners.remove(world.victory_song_name)
+
+        self.assertTrue(returners.issubset({item.name for item in world.multiworld.itempool}),
+                        "Some unselected goal songs are not in the item pool.")
