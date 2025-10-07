@@ -20,3 +20,27 @@ class TestVictorySong(MegaMixTestBase):
         name_mmc = [song for song in song_items if song_items[song].code == world.victory_song_id].pop()
 
         self.assertEqual(name_victory, name_mmc, "Victory Song name and MMC song name do not match")
+
+class TestGoalSong(MegaMixTestBase):
+    """Test the goal_song option despite not being in test_options or test_plando."""
+
+    options = {
+        "goal_song": "Love is War [1]",
+        "exclude_songs": "Love is War [1]", # So it can't appear otherwise. It must be the Goal Song and not in the pool.
+        "allow_megamix_dlc_songs": True,
+        "additional_song_count": 300, # Consume all base+DLC songs
+    }
+
+    def test_goal_song(self):
+        """Verify the specified Goal Song is, in fact, the goal song."""
+        world = self.get_world()
+
+        self.assertEqual(self.options.get("goal_song"), world.victory_song_name)
+
+    def test_goal_song_not_in_pool(self):
+        """Verify the specified Goal Song is not also in the item pool."""
+        world = self.get_world()
+
+        # There might be a helper function I missed.
+        self.assertFalse(self.options.get("goal_song") in [item.name for item in world.multiworld.itempool
+                                                           if item.player == self.player])
