@@ -85,7 +85,6 @@ class MegaMixWorld(World):
 
     topology_present = False
     web = MegaMixWebWorld()
-    ut_can_gen_without_yaml = False
 
     # Necessary Data
     mm_collection = MegaMixCollections()
