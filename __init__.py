@@ -348,5 +348,6 @@ class MegaMixWorld(World):
             "autoRemove": bool(self.options.auto_remove_songs),
             "deathLink": self.options.death_link.value,
             "deathLink_Amnesty": self.options.death_link_amnesty.value,
-            "modData": {pack: [song[1] for song in songs] for pack, songs in self.player_specific_mod_data.items()},
+            "modData": {pack: [song[1] for song in songs if song[1] in self.final_song_ids]
+                        for pack, songs in self.player_specific_mod_data.items()},
         }
