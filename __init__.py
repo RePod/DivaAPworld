@@ -227,7 +227,9 @@ class MegaMixWorld(World):
                     break
                 self.included_songs.append(available_song_keys.pop())
 
-        self.victory_song_id = self.mm_collection.song_items.get(self.victory_song_name).code
+        victory_song = self.mm_collection.song_items.get(self.victory_song_name)
+        self.victory_song_id = victory_song.code
+        self.final_song_ids.add(victory_song.songID)
         self.location_count = 2 * (len(self.starting_songs) + len(self.included_songs))
 
     def create_item(self, name: str) -> Item:
