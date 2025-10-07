@@ -54,7 +54,7 @@ class DivaJSONGenerator(ThemedApp):
 
             folder_name = str(Path(root).parent.relative_to(mods_folder))
 
-            if folder_name == self.self_mod_name:
+            if folder_name.startswith(self.self_mod_name):
                 continue
 
             self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
