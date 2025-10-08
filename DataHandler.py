@@ -10,10 +10,11 @@ import logging
 import filecmp
 from typing import Any
 
+from .generator_megamix.json_megamix import dlc_ids
+
 # Set up logger
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 
 def game_paths() -> dict[str, str]:
     """Build relevant paths based on the game exe and, if available, the mod loader config."""
@@ -21,6 +22,7 @@ def game_paths() -> dict[str, str]:
     exe_path = settings.get_settings()["megamix_options"]["game_exe"]
     game_path = os.path.dirname(exe_path)
     mods_path = os.path.join(game_path, "mods")
+    dlc_path = os.path.join(game_path, "diva_dlc00.cpk")
 
     # Seemingly no TOML parser in frozen AP
     dml_config = os.path.join(game_path, "config.toml")
@@ -33,7 +35,8 @@ def game_paths() -> dict[str, str]:
     return {
         "exe": exe_path,
         "game": game_path,
-        "mods": mods_path
+        "mods": mods_path,
+        "dlc": dlc_path,
     }
 
 
@@ -99,8 +102,9 @@ def generate_modded_paths(processed_data, base_path):
     return list(modded_paths)
 
 
-def freeplay_song_list(file_paths, skip_ids: list[int], freeplay: bool):
+def freeplay_song_list(file_paths, skip_ids: set[int], freeplay: bool):
     processed_ids = "|".join([str(x // 10).zfill(3) for x in skip_ids])
+    has_dlc = os.path.isfile(game_paths().get("dlc"))
 
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
@@ -111,6 +115,9 @@ def freeplay_song_list(file_paths, skip_ids: list[int], freeplay: bool):
             else:
                 file_data = modify_mod_pv(file_data, processed_ids)
                 file_data = remove_song(file_data, rf"(?!({processed_ids})\.)\d+")
+            if not has_dlc:
+                padded = "|".join([str(x).zfill(3) for x in dlc_ids])
+                file_data = remove_song(file_data, padded)
             file.seek(0)
             file.write(file_data)
             file.truncate()
@@ -127,7 +134,7 @@ def erase_song_list(file_paths):
             file.truncate()
 
 
-def song_unlock(file_path, item_id, lock_status, song_pack):
+def song_unlock(file_path: str, item_id: set, lock_status: bool, song_pack: str):
     """Unlock a song based on its id"""
 
     # Select the appropriate action based on lock status
