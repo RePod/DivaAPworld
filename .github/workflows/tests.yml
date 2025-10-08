@@ -5,17 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       fuzzer_run:
-        description: 'Skip Fuzzer'
-        type: boolean
-        required: true
-        default: false
-      fuzzer_iters:
-        description: 'Fuzzer Iterations'
-        type: number
-        required: true
-        default: '100'
-      unittests_skip:
-        description: 'Skip Unittests'
+        description: 'Create a new APWorld release'
         type: boolean
         required: true
         default: false
@@ -54,13 +44,11 @@ jobs:
           uv run python Launcher.py --update_settings
 
       - name: World | Fuzzer
-        if: "${{ inputs.fuzzer_skip != 'true' }}"
         run: |
           curl "https://raw.githubusercontent.com/Eijebong/Archipelago-fuzzer/${{ env.UPSTREAM_REF_FUZZER }}/fuzz.py" > fuzz.py
           uv run python fuzz.py -g megamix -j 2 -r 100
 
       - name: World | General tests
-        if: "${{ inputs.unittests_skip != 'true' }}"
         run: uv run pytest test/general worlds/megamix
 
       - name: Archipelago | Generate template
