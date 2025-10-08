@@ -41,17 +41,23 @@ class TestGoalSong(MegaMixTestBase):
         """Verify the specified Goal Song is not also in the item pool."""
         world = self.get_world()
 
-        # There might be a helper function I missed.
-        self.assertFalse(self.options.get("goal_song") in [item.name for item in world.multiworld.itempool],
-                         "Goal song is in the item pool.")
+        pool = {item.name for item in world.multiworld.itempool}
+        pool.update(world.starting_songs)
+
+        self.assertFalse(self.options.get("goal_song") in pool, "Goal song should not be in the item pool.")
 
 
 class TestGoalSongMulti(MegaMixTestBase):
     """Test the goal_song option when more than one is provided."""
 
     options = {
-        "goal_song": {"Love is War [1]", "The World is Mine [2]"},
+        "goal_song": {"Love is War [1]", "The World is Mine [2]", "That One Second in Slow Motion [3]", "Jaded [4]", "Melt [5]",
+            "Far Away [6]", "Strobo Nights [7]", "Star Story [8]", "Last Night, Good Night [9]", "Packaged [10]",
+            "Rain With A Chance of Sweet*Drops [11]", "Marginal [12]", "Grumpy Waltz [13]", "Miracle Paint [14]",
+            "Dreaming Leaf [15]", "VOC@LOID in Love [16]", "A Song of Wastelands, Forests, and Magic [17]",
+            "Song of Life [18]", "moon [20]", "Beware of the Miku Miku Germs [21]"},
         "allow_megamix_dlc_songs": True,
+        "start": 300,  # Consume all base+DLC songs
         "additional_song_count": 300,  # Consume all base+DLC songs
     }
 
@@ -62,5 +68,7 @@ class TestGoalSongMulti(MegaMixTestBase):
         returners = self.options.get("goal_song")
         returners.remove(world.victory_song_name)
 
-        self.assertTrue(returners.issubset({item.name for item in world.multiworld.itempool}),
-                        "Some unselected goal songs are not in the item pool.")
+        pool = {item.name for item in world.multiworld.itempool}
+        pool.update(world.starting_songs)
+
+        self.assertTrue(returners.issubset(pool), f"Some unselected goal songs are not in the item pool.")
