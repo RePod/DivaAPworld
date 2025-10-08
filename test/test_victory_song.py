@@ -64,6 +64,9 @@ class TestGoalSongMulti(MegaMixTestBase):
         """Verify Goal Song candidates other than the one chosen return to the song pool."""
         world = self.get_world()
 
+        self.assertTrue(world.victory_song_name in self.options.get("goal_song"),
+                        "Goal song not from group of candidates.")
+
         returners = self.options.get("goal_song")
         returners.remove(world.victory_song_name)
 
