@@ -60,7 +60,7 @@ jobs:
 
       - name: World | General tests
         if: "${{ inputs.unittests_skip != 'true' }}"
-        run: un run pytest test/general worlds/megamix
+        run: uv run pytest test/general worlds/megamix
         
   build:
     runs-on: ubuntu-latest
