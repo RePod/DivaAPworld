@@ -48,7 +48,7 @@ class TestGoalSong(MegaMixTestBase):
 
 
 class TestGoalSongMulti(MegaMixTestBase):
-    """Test the goal_song option when more than one is provided."""
+    """Test the goal_song option with multiple candidates."""
 
     options = {
         "goal_song": {"Love is War [1]", "The World is Mine [2]", "That One Second in Slow Motion [3]", "Jaded [4]", "Melt [5]",
