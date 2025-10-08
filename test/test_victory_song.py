@@ -57,7 +57,6 @@ class TestGoalSongMulti(MegaMixTestBase):
             "Dreaming Leaf [15]", "VOC@LOID in Love [16]", "A Song of Wastelands, Forests, and Magic [17]",
             "Song of Life [18]", "moon [20]", "Beware of the Miku Miku Germs [21]"},
         "allow_megamix_dlc_songs": True,
-        "start": 300,  # Consume all base+DLC songs
         "additional_song_count": 300,  # Consume all base+DLC songs
     }
 
