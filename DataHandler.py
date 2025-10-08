@@ -116,8 +116,8 @@ def freeplay_song_list(file_paths, skip_ids: set[int], freeplay: bool):
                 file_data = modify_mod_pv(file_data, processed_ids)
                 file_data = remove_song(file_data, rf"(?!({processed_ids})\.)\d+")
             if not has_dlc:
-                padded = "|".join([str(x).zfill(3) for x in dlc_ids])
-                file_data = remove_song(file_data, padded)
+                padded_dlc_ids = "|".join([str(x).zfill(3) for x in dlc_ids])
+                file_data = remove_song(file_data, padded_dlc_ids)
             file.seek(0)
             file.write(file_data)
             file.truncate()
@@ -137,14 +137,22 @@ def erase_song_list(file_paths):
 def song_unlock(file_path: str, item_id: set, lock_status: bool, song_pack: str):
     """Unlock a song based on its id"""
 
-    # Select the appropriate action based on lock status
-    action = modify_mod_pv if not lock_status else remove_song
     song_ids = "|".join([str(x // 10).zfill(3) for x in item_id])
     if song_pack is not None:
         file_path = f"{file_path}/{song_pack}/rom/mod_pv_db.txt"
 
     with open(file_path, 'r+', encoding='utf-8') as file:
-        pv_db = action(file.read(), song_ids)
+        pv_db = file.read()
+
+        if lock_status:
+            pv_db = modify_mod_pv(pv_db, song_ids)
+        else:
+            pv_db = remove_song(pv_db, song_ids)
+
+        if not os.path.isfile(game_paths().get("dlc")):
+            padded_dlc_ids = "|".join([str(x).zfill(3) for x in dlc_ids])
+            pv_db = remove_song(pv_db, padded_dlc_ids)
+
         file.seek(0)
         file.write(pv_db)
         file.truncate()
