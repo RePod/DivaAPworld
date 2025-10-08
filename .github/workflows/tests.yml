@@ -21,6 +21,9 @@ on:
         default: false
   schedule:
     - cron: "0 0 * * 0"
+    
+env:
+  UPSTREAM_REF_FUZZER: bc563630a634f3f53f1975c9af7694db2efaee0d # 0.2.2
 
 jobs:
   tests:
@@ -33,25 +36,51 @@ jobs:
         with:
           path: worlds/megamix
     
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
+          version: "latest"
           python-version: 3.12
-          cache: 'pip'
+          enable-cache: true
 
       - name: Archipelago | Setup
         run: |
           find ./worlds -mindepth 1 -maxdepth 1 -type d -regextype posix-extended ! -regex '.*/(megamix|generic|alttp)' -exec rm -rf {} \;
-          python -m pip install --upgrade pip
-          pip install pytest pytest-subtests pytest-xdist
-          python ModuleUpdate.py --yes --force --append "WebHostLib/requirements.txt"
-          python Launcher.py --update_settings  # make sure host.yaml exists for tests
+          uv venv
+          uv pip install pip pytest pytest-subtests pytest-xdist
+          find -name requirements.txt | xargs -n1 uv pip install -r
+          #uv run cythonize -a -i _speedups.pyx # 3.11-
+          uv run python ModuleUpdate.py --yes --force --append "WebHostLib/requirements.txt"
+          uv run python Launcher.py --update_settings   
 
       - name: World | Fuzzer
-        if: "${{ inputs.fuzzer_skip != 'true' }}"
         run: |
-          curl "https://raw.githubusercontent.com/Eijebong/Archipelago-fuzzer/refs/heads/main/fuzz.py" > fuzz.py
-          python fuzz.py -g megamix -j 2 -r 100
+          curl "https://raw.githubusercontent.com/Eijebong/Archipelago-fuzzer/${{ env.UPSTREAM_REF_FUZZER }}/fuzz.py" > fuzz.py
+          uv run python fuzz.py -g megamix -j 2 -r 100
 
       - name: World | General tests
         if: "${{ inputs.unittests_skip != 'true' }}"
-        run: pytest test/general worlds/megamix
+        run: un run pytest test/general worlds/megamix
+        
+  build:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Archipelago | Generate template
+        run: |
+            uv run python Launcher.py "Generate Template Options"
+            cp "./Players/Templates/Hatsune Miku Project Diva Mega Mix+.yaml" .
+            
+      - name: World | Zip
+        run: |
+          rm -rf worlds/megamix/.git* worlds/megamix/*.yaml worlds/megamix/.idea worlds/megamix/sorted_mod_pv_db.txt
+          find worlds/megamix/ -type d -iname '__pycache__' -exec rm -r {} +
+          7z a -tzip -mm=deflate -mfb=256 -mx9 -mtc- -mta- -mtm- megamix.apworld ./worlds/megamix/
+
+      - name: World | Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-apworld
+          path: |
+            megamix.apworld
+            Hatsune Miku Project Diva Mega Mix+.yaml
