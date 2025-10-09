@@ -10,7 +10,7 @@ import logging
 import filecmp
 from typing import Any
 
-from .generator_megamix.json_megamix import dlc_ids
+from .MegaMixSongData import dlc_ids
 
 # Set up logger
 logging.basicConfig(level=logging.DEBUG)
