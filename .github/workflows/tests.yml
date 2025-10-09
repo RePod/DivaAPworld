@@ -55,6 +55,10 @@ jobs:
         run: |
             uv run python Launcher.py "Generate Template Options"
             cp "./Players/Templates/Hatsune Miku Project Diva Mega Mix+.yaml" .
+            
+      - name: Archipelago | Update archipelago.json
+        run: |
+            PYTHONPATH=. uv run .github/workflows/manifest.py
 
       - name: World | Zip
         run: |
