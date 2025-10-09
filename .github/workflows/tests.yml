@@ -58,7 +58,7 @@ jobs:
             
       - name: Archipelago | Update archipelago.json
         run: |
-            PYTHONPATH=. uv run python .github/workflows/manifest.py
+            PYTHONPATH=. uv run python worlds/megamix/.github/workflows/manifest.py
 
       - name: World | Zip
         run: |
