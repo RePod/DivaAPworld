@@ -146,10 +146,8 @@ class DivaJSONGenerator(ThemedApp):
 
         json_length = round(len(mod_pv_db_json) / 1024, 2)
 
-        try:
+        if Utils.is_windows:
             Clipboard.copy(mod_pv_db_json)
-        except Exception as e:
-            print(e)
 
         MDDialog(
             MDDialogHeadlineText(text="Generated mod string"),
