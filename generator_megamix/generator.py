@@ -128,11 +128,8 @@ class DivaJSONGenerator(ThemedApp):
         try:
             count, mod_pv_db_json = process_mods(self.mods_folder, mod_pv_db_paths_list)
         except ConflictException as e:
-            try:
+            if Utils.is_windows:
                 Clipboard.copy(str(e))
-            except Exception as f:
-                # Trust no one. Not even yourself.
-                print(f)
 
             MDDialog(
                 MDDialogIcon(icon="alert"),
@@ -140,7 +137,7 @@ class DivaJSONGenerator(ThemedApp):
                 MDDialogContentContainer(
                     MDDialogSupportingText(text=
                                            "This is common for packs that target the base game or add covers.\n"
-                                           "The following has been copied to the clipboard.\n\n"
+                                           "If not automatically copied to your clipboard you may copy the error from the box below.\n\n"
                                            f"{str(e)}"),
                     MDScrollView(MDTextField(text=str(e), multiline=True, readonly=True), size_hint_y=None)
                 )
@@ -155,9 +152,12 @@ class DivaJSONGenerator(ThemedApp):
             print(e)
 
         MDDialog(
-            MDDialogHeadlineText(text="Copied mod string to clipboard"),
+            MDDialogHeadlineText(text="Generated mod string"),
             MDDialogContentContainer(
-                MDDialogSupportingText(text=f"{len(checked_packs)} pack(s) ({json_length} KiB)\n{count} unique song IDs"),
+                MDDialogSupportingText(text=
+                                       f"If not automatically copied to your clipboard you may copy it from the box below.\n\n"
+                                       f"{len(checked_packs)} pack(s) ({json_length} KiB)\n"
+                                       f"{count} unique song IDs\n"),
                 MDScrollView(MDTextField(text=mod_pv_db_json, multiline=True, readonly=True), size_hint_y=None)
             )
         ).open()
