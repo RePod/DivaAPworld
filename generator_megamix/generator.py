@@ -130,6 +130,7 @@ class DivaJSONGenerator(ThemedApp):
         except ConflictException as e:
             if Utils.is_windows:
                 Clipboard.copy(str(e))
+            print(str(e))
 
             MDDialog(
                 MDDialogIcon(icon="alert"),
@@ -148,6 +149,7 @@ class DivaJSONGenerator(ThemedApp):
 
         if Utils.is_windows:
             Clipboard.copy(mod_pv_db_json)
+        print(mod_pv_db_json)
 
         MDDialog(
             MDDialogHeadlineText(text="Generated mod string"),
