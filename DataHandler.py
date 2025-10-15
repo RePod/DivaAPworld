@@ -1,3 +1,4 @@
+import functools
 import json
 import yaml
 import re
@@ -16,6 +17,7 @@ from .MegaMixSongData import dlc_ids
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+@functools.cache
 def game_paths() -> dict[str, str]:
     """Build relevant paths based on the game exe and, if available, the mod loader config."""
 
@@ -124,17 +126,15 @@ def freeplay_song_list(file_paths, skip_ids: set[int], freeplay: bool):
 
 
 def erase_song_list(file_paths):
-    search = re.compile(r"^(pv_(?!(144|700)\.)\d+\.difficulty\.(?:easy|normal|hard|extreme)\.length=\d)$", re.MULTILINE)
-
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
-            file_data = re.sub(search, r"#ARCH#\g<1>", file.read())
+            file_data = remove_song(file.read(), "\d+")
             file.seek(0)
             file.write(file_data)
             file.truncate()
 
 
-def song_unlock(file_path: str, item_id: set, lock_status: bool, song_pack: str):
+def song_unlock(file_path: str, item_id: set, locked: bool, song_pack: str):
     """Unlock a song based on its id"""
 
     song_ids = "|".join([str(x // 10).zfill(3) for x in item_id])
@@ -144,10 +144,10 @@ def song_unlock(file_path: str, item_id: set, lock_status: bool, song_pack: str)
     with open(file_path, 'r+', encoding='utf-8') as file:
         pv_db = file.read()
 
-        if lock_status:
-            pv_db = modify_mod_pv(pv_db, song_ids)
-        else:
+        if locked:
             pv_db = remove_song(pv_db, song_ids)
+        else:
+            pv_db = modify_mod_pv(pv_db, song_ids)
 
         if not os.path.isfile(game_paths().get("dlc")):
             padded_dlc_ids = "|".join([str(x).zfill(3) for x in dlc_ids])
