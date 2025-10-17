@@ -14,7 +14,6 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 import typing
-import json
 from typing import List
 from math import floor
 
@@ -338,6 +337,9 @@ class MegaMixWorld(World):
         difficulty_bounds = [min(minimum_difficulty, maximum_difficulty), max(minimum_difficulty, maximum_difficulty)]
 
         return difficulty_bounds
+
+    def write_spoiler_header(self, spoiler_handle: typing.TextIO):
+        spoiler_handle.write(f"Selected Goal Song:              {self.victory_song_name}")
 
     @staticmethod
     def get_available_difficulties(song_difficulty_min: int, song_difficulty_max: int) -> List[int]:
