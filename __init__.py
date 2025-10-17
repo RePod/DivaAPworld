@@ -168,7 +168,7 @@ class MegaMixWorld(World):
         start_items = self.options.start_inventory.value.keys()
         include_songs = sorted(self.options.include_songs.value)
         exclude_songs = self.options.exclude_songs.value
-        goal_songs = sorted(self.options.goal_song.value)
+        goal_songs = sorted(self.options.goal_song.value.intersection(set(available_song_keys)))
 
         # The ModdedSongs group is shared across all players. Limit to own songs.
         self.starting_songs = [s for s in start_items if s in song_items and
