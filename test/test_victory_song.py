@@ -70,12 +70,14 @@ class TestGoalNoDLC(MegaMixTestBase):
     """Test the goal_song option when a DLC song is chosen but DLC is disabled."""
 
     options = {
-        "goal_song": "How'd It Get To Be Like This? [409]",
         "allow_megamix_dlc_songs": False,
         "additional_song_count": 251,
     }
 
-    def test_goal_songs_return_to_pool(self):
+    def test_goal_song_no_dlc(self):
         """Verify Goal Song is not a DLC song when DLC is disabled."""
-        self.assertNotEqual(self.options.get("goal_song"), self.world.victory_song_name,
-                            "DLC is disabled but a requested DLC song is the goal song.")
+        self.options["goal_song"] = self.world.item_name_groups["DLCSongs"]
+        self.world_setup()
+
+        self.assertFalse(self.world.mm_collection.song_items.get(self.world.victory_song_name).DLC,
+                         f"DLC is disabled, but the goal song is DLC: {self.world.victory_song_name}")
