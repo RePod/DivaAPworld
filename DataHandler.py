@@ -97,7 +97,7 @@ def restore_originals(original_file_paths):
 def generate_modded_paths(processed_data, base_path):
     # Extract unique pack names from processed_data
     logger.debug(processed_data)
-    unique_pack_names = {pack_name.replace('/', "'") for pack_name, songs in processed_data.items()}
+    unique_pack_names = {pack_name for pack_name, songs in processed_data.items()}
     logger.debug(unique_pack_names)
     # Create modded paths based on the unique pack names
     modded_paths = {f"{base_path}/{pack_name}/rom/mod_pv_db.txt" for pack_name in unique_pack_names}
