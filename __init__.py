@@ -14,7 +14,6 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 import typing
-import json
 from typing import List
 from math import floor
 
@@ -167,12 +166,21 @@ class MegaMixWorld(World):
         start_items = self.options.start_inventory.value.keys()
         include_songs = sorted(self.options.include_songs.value)
         exclude_songs = self.options.exclude_songs.value
+        goal_songs = sorted(self.options.goal_song.value.intersection(set(available_song_keys)))
 
         # The ModdedSongs group is shared across all players. Limit to own songs.
         self.starting_songs = [s for s in start_items if s in song_items and
                                not song_items.get(s).modded or song_items.get(s).songID in self.player_specific_ids]
         included_songs = [s for s in include_songs if s in song_items and s not in self.starting_songs and
                                not song_items.get(s).modded or song_items.get(s).songID in self.player_specific_ids]
+
+        # Handle goal before inc%
+        if goal_songs:
+            self.victory_song_name = self.random.choice(goal_songs)
+            if self.victory_song_name in self.starting_songs:
+                self.starting_songs.remove(self.victory_song_name)
+            if self.victory_song_name in included_songs:
+                included_songs.remove(self.victory_song_name)
 
         # Open to suggestions to make includes% make sense without touching create_song_pool.
         pool = [s for s in available_song_keys if s not in start_items
@@ -196,12 +204,13 @@ class MegaMixWorld(World):
         if included_song_count > additional_song_count:
             # If so, we want to thin the list, thus let's get starter songs while we are at it.
             self.random.shuffle(self.included_songs)
-            self.victory_song_name = self.included_songs.pop()
+            if not self.victory_song_name:
+                self.victory_song_name = self.included_songs.pop()
             while len(self.included_songs) > additional_song_count:
                 next_song = self.included_songs.pop()
                 if len(self.starting_songs) < starting_song_count:
                     self.starting_songs.append(next_song)
-        else:
+        elif not self.victory_song_name:
             # If not, choose a random victory song from the available songs
             chosen_song = self.random.randrange(0, len(available_song_keys) + included_song_count)
             if chosen_song < included_song_count:
@@ -210,6 +219,8 @@ class MegaMixWorld(World):
             else:
                 self.victory_song_name = available_song_keys[chosen_song - included_song_count]
                 del available_song_keys[chosen_song - included_song_count]
+        elif self.victory_song_name in available_song_keys:
+            available_song_keys.remove(self.victory_song_name)
 
         # Next, make sure the starting songs are fulfilled
         if len(self.starting_songs) < starting_song_count:
@@ -327,6 +338,9 @@ class MegaMixWorld(World):
         difficulty_bounds = [min(minimum_difficulty, maximum_difficulty), max(minimum_difficulty, maximum_difficulty)]
 
         return difficulty_bounds
+
+    def write_spoiler_header(self, spoiler_handle: typing.TextIO):
+        spoiler_handle.write(f"Selected Goal Song:              {self.victory_song_name}")
 
     @staticmethod
     def get_available_difficulties(song_difficulty_min: int, song_difficulty_max: int) -> List[int]:
