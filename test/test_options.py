@@ -156,3 +156,16 @@ class TestTrapsFull(MegaMixTestBase):
     def test_traps_full(self):
         world = self.get_world()
         # TODO
+class TestOptionNoDLC(MegaMixTestBase):
+    options = {
+        "allow_megamix_dlc_songs": False,
+        "additional_song_count": 251,
+    }
+
+    def test_no_dlc(self):
+        pool = {song.name for song in self.world.multiworld.itempool if song.code >= 10}
+        pool.update(self.world.starting_songs)
+        pool.add(self.world.victory_song_name)
+        dlc = {song for song in pool if self.world.mm_collection.song_items.get(song).DLC}
+
+        self.assertEqual(0, len(dlc), f"DLC is disabled, got {len(dlc)} in the item pool.")

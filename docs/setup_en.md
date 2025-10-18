@@ -42,7 +42,9 @@ Hatsune Miku Project DIVA Mega Mix Plus\
 
 Open the **Mega Mix JSON Generator** from the Archipelago Launcher.
 
-Checked song packs will be included in the song selection pool and have their visibility in-game controlled when using the **Mega Mix Client**. *Enabled* but unchecked packs will not be included in the pool and may remain visible in-game. Disable these manually.
+Checked song packs will be included in the song selection pool and have their visibility in-game controlled when using the **Mega Mix Client**. Packs left unchecked will not be included in the selection pool and may remain visible in-game. Disable these manually, such as in their `config.toml`, if you do not want to see them.
+
+When done checking packs click **Generate Mod String**. Linux users that experience clipboard issues *may* need to run the Archipelago Launcher and JSON Generator through a command line to get the output there.
 
 ### Adding the output to your YAML
 On the line for `megamix_mod_data` paste and format it as such:
@@ -64,7 +66,7 @@ To increase the success of seed generation the difficulty settings are conservat
 
 If you do not like the results of the difficulty expansion consider less restrictive settings.
 
-Starting (`start_inventory`) and Included songs (`include_songs`) will *always* ignore difficulty settings.
+Starting (`start_inventory`), Included (`include_songs`), and the Goal Song (`goal_song`) will *always* ignore difficulty settings.
 
 ### My settings are too long or difficult
 **Note: You can play any available difficulty for the same checks.**
