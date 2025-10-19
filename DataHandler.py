@@ -128,7 +128,7 @@ def freeplay_song_list(file_paths, skip_ids: set[int], freeplay: bool):
 def erase_song_list(file_paths):
     for file_path in file_paths:
         with open(file_path, 'r+', encoding='utf-8') as file:
-            file_data = remove_song(file.read(), "\d+")
+            file_data = remove_song(file.read(), r"\d+")
             file.seek(0)
             file.write(file_data)
             file.truncate()
