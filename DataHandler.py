@@ -55,12 +55,22 @@ def load_json_file(file_name: str) -> dict:
         return {}
 
 
-def freeplay_song_list(file_paths, skip_ids: set[int], freeplay: bool):
+def freeplay_song_list(song_list: str, skip_ids: set[int], freeplay: bool):
     pass
 
 
-def song_unlock(file_path: str, item_id: set, locked: bool, song_pack: str):
-    pass
+def song_unlock(song_list: str, song_ids: set[int], append = False, freeplay = False):
+    song_ids = sorted([s for s in song_ids])
+
+    try:
+        with open(song_list, 'a' if append else 'w', encoding='utf-8', newline='') as file:
+            if freeplay:
+                file.write("-\n")
+            if append:
+                file.write("\n")
+            file.write("\n".join(str(s) for s in song_ids))
+    except Exception as e:
+        logger.debug(f"Error writing to {song_list}: {e}")
 
 
 def extract_mod_data_to_json() -> list[Any]:
