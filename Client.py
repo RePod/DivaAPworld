@@ -8,11 +8,7 @@ from pathlib import Path
 from .DataHandler import (
     game_paths,
     load_json_file,
-    erase_song_list,
     song_unlock,
-    generate_modded_paths,
-    create_copies,
-    restore_originals,
     freeplay_song_list,
 )
 from CommonClient import (
@@ -153,7 +149,6 @@ class MegaMixContext(SuperContext):
                 self.modded = True
                 self.mod_pv_list = generate_modded_paths(self.modData, self.path)
             self.mod_pv_list.append(self.mod_pv)
-            create_copies(self.mod_pv_list)
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
 
             self.death_link = self.options.get("deathLink", False)
@@ -193,7 +188,6 @@ class MegaMixContext(SuperContext):
             self.item_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["item_name_to_id"]
             self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
 
-            erase_song_list(self.mod_pv_list)
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())
 
@@ -445,7 +439,6 @@ class MegaMixContext(SuperContext):
 
     async def restore_songs(self):
         mod_pv_dbs = [f"{root}/mod_pv_db.txt" for root, _, files in os.walk(self.path) if 'mod_pv_db.txt' in files]
-        restore_originals(mod_pv_dbs)
 
     async def shutdown(self):
         await self.restore_songs()
