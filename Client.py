@@ -424,7 +424,7 @@ class MegaMixContext(SuperContext):
             logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):
-        os.remove(self.songListLocation)
+        song_unlock(self.songListLocation, {0})
 
     async def shutdown(self):
         await self.restore_songs()
