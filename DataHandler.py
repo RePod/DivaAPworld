@@ -59,13 +59,11 @@ def freeplay_song_list(song_list: str, skip_ids: set[int], freeplay: bool):
     pass
 
 
-def song_unlock(song_list: str, song_ids: set[int], append = False, freeplay = False):
+def song_unlock(song_list: str, song_ids: set[int], append = False):
     song_ids = sorted([s for s in song_ids])
 
     try:
         with open(song_list, 'a' if append else 'w', encoding='utf-8', newline='') as file:
-            if freeplay:
-                file.write("-\n")
             if append:
                 file.write("\n")
             file.write("\n".join(str(s) for s in song_ids))

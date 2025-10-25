@@ -191,7 +191,6 @@ class MegaMixContext(SuperContext):
     async def receive_item(self):
         async with self.critical_section_lock:
             incoming_songs = set()
-            first_run = 0 == len(self.previous_received)
 
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
@@ -214,7 +213,8 @@ class MegaMixContext(SuperContext):
                     else:
                         incoming_songs.add(int(network_item.item) // 10)
 
-            song_unlock(self.songListLocation, incoming_songs, not first_run)
+            song_unlock(self.songListLocation, incoming_songs, len(self.prev_found) != 0)
+            self.check_goal()
 
 
     def check_goal(self):
@@ -229,7 +229,7 @@ class MegaMixContext(SuperContext):
                 self.sent_unlock_message = True
                 logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
 
-            song_unlock(self.songListLocation, {self.goal_id}, False)
+            song_unlock(self.songListLocation, {self.goal_id // 10}, True)
 
 
     async def watch_json_file(self, file_name: str):
@@ -397,6 +397,7 @@ class MegaMixContext(SuperContext):
                            if s.item >= 10 and s.item // 10 not in finished_songs}
 
         song_unlock(self.songListLocation, uncleared_songs, False)
+        self.check_goal()
 
         logger.info("Removed songs!")
 
@@ -405,15 +406,15 @@ class MegaMixContext(SuperContext):
 
         # Default to showing received (freeplay = false)
         song_ids = {i.item // 10 for i in self.previous_received if i.item >= 10}
+        if self.leeks_obtained >= self.leeks_needed:
+            song_ids.add(self.goal_id // 10)
 
         if self.freeplay:
             song_ids = {location_id // 10 for location_id in sorted(self.location_ids)[::self.checks_per_song]
                         if location_id // 10 not in song_ids}
-            song_ids.add(self.goal_id)
-            song_ids = {i * -1 for i in song_ids}
-        else:
-            if self.leeks_obtained >= self.leeks_needed:
-                song_ids.add(self.goal_id)
+            if self.leeks_obtained < self.leeks_needed:
+                song_ids.add(self.goal_id // 10)
+            song_ids.add(0)
 
         song_unlock(self.songListLocation, song_ids)
 
