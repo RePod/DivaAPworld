@@ -125,7 +125,7 @@ class MegaMixWorld(World):
             # In most cases this should only need to run once
 
             allowed_difficulties = list(range(lower_diff_threshold, higher_diff_threshold + 1))
-            available_song_keys = self.mm_collection.get_songs_with_settings(self.options.allow_megamix_dlc_songs, self.player_specific_ids, allowed_difficulties, lower_rating_threshold, higher_rating_threshold)
+            available_song_keys = self.mm_collection.get_songs_with_settings(bool(self.options.allow_megamix_dlc_songs.value), self.player_specific_ids, allowed_difficulties, lower_rating_threshold, higher_rating_threshold)
 
             available_song_keys = self.handle_plando(available_song_keys)
             #print(f"{lower_rating_threshold}~{higher_rating_threshold}* {allowed_difficulties}", len(available_song_keys))
@@ -348,8 +348,8 @@ class MegaMixWorld(World):
         # Generate the number_to_option_value dictionary using the formula
         number_to_option_value = {i: 1 + i * 0.5 if i % 2 != 0 else int(1 + i * 0.5) for i in range(19)}
 
-        minimum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_min, None)
-        maximum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_max, None)
+        minimum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_min.value, None)
+        maximum_difficulty = number_to_option_value.get(self.options.song_difficulty_rating_max.value, None)
         difficulty_bounds = [min(minimum_difficulty, maximum_difficulty), max(minimum_difficulty, maximum_difficulty)]
 
         return difficulty_bounds
