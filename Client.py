@@ -11,7 +11,6 @@ from .DataHandler import (
     song_unlock,
 )
 from CommonClient import (
-    CommonContext,
     ClientCommandProcessor,
     get_base_parser,
     logger,
@@ -93,9 +92,6 @@ class MegaMixContext(SuperContext):
         self.item_name_to_ap_id = None
         self.item_ap_id_to_name = None
         self.checks_per_song = 2
-        self.found_checks = []
-        self.missing_checks = []  # Stores all location checks found, for filtering
-        self.prev_found = []
 
         self.seed_name = None
         self.options = None
@@ -133,8 +129,6 @@ class MegaMixContext(SuperContext):
 
             self.sent_unlock_message = False
             self.leeks_obtained = 0
-            self.missing_checks = args["missing_locations"]
-            self.prev_found = args["checked_locations"]
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
             self.goal_song = self.options["victoryLocation"]
@@ -306,7 +300,7 @@ class MegaMixContext(SuperContext):
         location_checks = set(range(location_id, location_id + self.checks_per_song))
 
         if not location_id == self.goal_id:
-            if location_checks.issubset(set(self.prev_found)):
+            if location_checks.issubset(set(self.checked_locations)):
                 logger.info("No checks to send: Song checks previously sent or collected")
                 return
 
@@ -321,10 +315,8 @@ class MegaMixContext(SuperContext):
 
             logger.info("Cleared song with appropriate grade!")
 
-            for i in range(2):
-                self.found_checks.append(location_id + i)
-
-            asyncio.create_task(self.send_checks())
+            locations = {i for i in range(location_id, location_id + self.checks_per_song)}
+            asyncio.create_task(self.send_checks(locations))
         else:
             logger.info(f"Song {song_data.get('pvName')} was not beaten with a high enough grade")
 
@@ -341,21 +333,15 @@ class MegaMixContext(SuperContext):
 
         await self.send_msgs(message)
 
-    async def send_checks(self):
-        message = [{"cmd": 'LocationChecks', "locations": self.found_checks}]
+    async def send_checks(self, locations: set):
+        message = [{"cmd": 'LocationChecks', "locations": locations}]
         await self.send_msgs(message)
-        self.remove_found_checks()
-        self.found_checks.clear()
         if self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
-    def remove_found_checks(self):
-        self.prev_found += self.found_checks
-        self.missing_checks = [item for item in self.missing_checks if item not in self.found_checks]
-
     async def get_uncleared(self):
         prev_items = {item.item // 10 for item in self.previous_received}
-        missing_locations = {loc // 10 for loc in self.missing_checks if loc // 10 in prev_items}
+        missing_locations = {loc // 10 for loc in self.missing_locations if loc // 10 in prev_items}
 
         for location in missing_locations:
             logger.info(f"{self.location_ap_id_to_name[location * 10][:-2]} is uncleared")
