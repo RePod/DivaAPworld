@@ -128,8 +128,8 @@ class DivaJSONGenerator(ThemedApp):
         try:
             count, mod_pv_db_json = process_mods(self.mods_folder, mod_pv_db_paths_list)
         except ConflictException as e:
-            if Utils.is_windows:
-                Clipboard.copy(str(e))
+            #if Utils.is_windows:
+            #    Clipboard.copy(str(e))
             print(str(e))
 
             MDDialog(
@@ -138,7 +138,7 @@ class DivaJSONGenerator(ThemedApp):
                 MDDialogContentContainer(
                     MDDialogSupportingText(text=
                                            "This is common for packs that target the base game or add covers.\n"
-                                           "If not automatically copied to your clipboard you may copy the error from the box below.\n\n"
+                                           "The conflicting packs/songs may be copied manually from the box below.\n\n"
                                            "This is NOT intended to be used for megamix_mod_data in the YAML.\n"),
                     MDScrollView(MDTextField(text=str(e), multiline=True, readonly=True), size_hint_y=None)
                 )
