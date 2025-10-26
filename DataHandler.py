@@ -53,13 +53,11 @@ def load_json_file(file_name: str) -> dict:
         return {}
 
 
-def song_unlock(song_list: str, song_ids: set[int], append = False):
+def song_unlock(song_list: str, song_ids: set[int]):
     song_ids = sorted([s for s in song_ids])
 
     try:
-        with open(song_list, 'a' if append else 'w', encoding='utf-8', newline='') as file:
-            if append:
-                file.write("\n")
+        with open(song_list, 'w', encoding='utf-8', newline='') as file:
             file.write("\n".join(str(s) for s in song_ids))
     except Exception as e:
         logger.debug(f"Error writing to {song_list}: {e}")
