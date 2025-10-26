@@ -9,7 +9,6 @@ from .DataHandler import (
     game_paths,
     load_json_file,
     song_unlock,
-    freeplay_song_list,
 )
 from CommonClient import (
     CommonContext,
@@ -190,8 +189,6 @@ class MegaMixContext(SuperContext):
 
     async def receive_item(self):
         async with self.critical_section_lock:
-            incoming_songs = set()
-
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
                     self.previous_received.append(network_item)
@@ -210,12 +207,25 @@ class MegaMixContext(SuperContext):
                     elif network_item.item == 9:
                         if not os.path.isfile(self.trapIconLocation):
                             Path(self.trapIconLocation).touch()
-                    else:
-                        incoming_songs.add(int(network_item.item) // 10)
+            self.update_song_list()
 
-            song_unlock(self.songListLocation, incoming_songs, len(self.prev_found) != 0)
-            self.check_goal()
+    def update_song_list(self, remove = False):
+        base_ids = {i.item // 10 for i in self.previous_received}
+        song_list = {i for i in self.server_locations if i // 10 in base_ids}
+        if self.leeks_obtained >= self.leeks_needed:
+            song_list.add(self.goal_id)
 
+        if self.freeplay:
+            song_list = {location_id for location_id in self.location_ids if location_id not in song_list}
+            if self.leeks_obtained < self.leeks_needed:
+                song_list.add(self.goal_id)
+            song_list.add(0)
+        elif remove or self.autoRemove:
+            song_list -= self.checked_locations
+
+        song_list = {s // 10 for s in song_list}
+        # TODO: Cache song_list, if same skip.
+        song_unlock(self.songListLocation, song_list)
 
     def check_goal(self):
         if not self.leek_label:
@@ -229,7 +239,7 @@ class MegaMixContext(SuperContext):
                 self.sent_unlock_message = True
                 logger.info(f"Got enough leeks! Unlocking goal song: {self.goal_song}")
 
-            song_unlock(self.songListLocation, {self.goal_id // 10}, True)
+            self.update_song_list()
 
 
     async def watch_json_file(self, file_name: str):
@@ -344,37 +354,15 @@ class MegaMixContext(SuperContext):
         self.missing_checks = [item for item in self.missing_checks if item not in self.found_checks]
 
     async def get_uncleared(self):
+        prev_items = {item.item // 10 for item in self.previous_received}
+        missing_locations = {loc // 10 for loc in self.missing_checks if loc // 10 in prev_items}
 
-        prev_items = []
-        missing_locations = set()  # Convert to set if it's not already
-        logged_pairs = set()  # To keep track of logged pairs
-
-        # Get a list of all item names that have been received
-        for network_item in self.previous_received:
-            item_id = network_item.item // 10
-            prev_items.append(item_id)
-
-        for location in self.missing_checks:
-            # Change location name to match item name
-            if location not in missing_locations:
-                if location // 10 in prev_items:
-                    missing_locations.add(location)
-
-        # Now log pairs of locations
         for location in missing_locations:
-            pair_last_digit = location % 2
-            paired_location = location - pair_last_digit + (1 - pair_last_digit)  # Flip last digit
-
-            # Only log if the pair hasn't been logged yet
-            pair_key = (min(location, paired_location), max(location, paired_location))
-            if pair_key not in logged_pairs:
-                logger.info(f"{self.location_ap_id_to_name[location][:-2]} is uncleared")
-                logged_pairs.add(pair_key)
+            logger.info(f"{self.location_ap_id_to_name[location * 10][:-2]} is uncleared")
 
         if self.leeks_obtained >= self.leeks_needed:
             logger.info(f"Goal song: {self.goal_song} is unlocked.")
 
-        # Check goal and if missingLocations is empty
         if not missing_locations:
             logger.info("All available songs cleared")
 
@@ -392,31 +380,12 @@ class MegaMixContext(SuperContext):
             logger.info("Auto Remove Set to Off")
 
     async def remove_songs(self):
-        finished_songs = {songID // 10 for songID in self.prev_found[::self.checks_per_song]}
-        uncleared_songs = {s.item // 10 for s in self.previous_received
-                           if s.item >= 10 and s.item // 10 not in finished_songs}
-
-        song_unlock(self.songListLocation, uncleared_songs, False)
-        self.check_goal()
-
+        self.update_song_list(remove=True)
         logger.info("Removed songs!")
 
     async def freeplay_toggle(self):
         self.freeplay = not self.freeplay
-
-        # Default to showing received (freeplay = false)
-        song_ids = {i.item // 10 for i in self.previous_received if i.item >= 10}
-        if self.leeks_obtained >= self.leeks_needed:
-            song_ids.add(self.goal_id // 10)
-
-        if self.freeplay:
-            song_ids = {location_id // 10 for location_id in sorted(self.location_ids)[::self.checks_per_song]
-                        if location_id // 10 not in song_ids}
-            if self.leeks_obtained < self.leeks_needed:
-                song_ids.add(self.goal_id // 10)
-            song_ids.add(0)
-
-        song_unlock(self.songListLocation, song_ids)
+        self.update_song_list()
 
         if self.freeplay:
             logger.info("Restored non-AP songs!")

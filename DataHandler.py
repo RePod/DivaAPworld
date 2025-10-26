@@ -55,10 +55,6 @@ def load_json_file(file_name: str) -> dict:
         return {}
 
 
-def freeplay_song_list(song_list: str, skip_ids: set[int], freeplay: bool):
-    pass
-
-
 def song_unlock(song_list: str, song_ids: set[int], append = False):
     song_ids = sorted([s for s in song_ids])
 
