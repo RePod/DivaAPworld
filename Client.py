@@ -402,6 +402,10 @@ class MegaMixContext(SuperContext):
         if self.death_link and not self.watch_death_link_task:
             self.watch_death_link_task = asyncio.create_task(self.watch_death_link_out(self.deathLinkOutLocation))
 
+    def make_gui(self):
+        ui = super().make_gui()
+        ui.base_title = "Mega Mix Client"
+        return ui
 
 def launch():
     """
