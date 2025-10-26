@@ -17,7 +17,7 @@ import Utils
 import settings
 from .json_megamix import process_mods, ConflictException
 from .. import MegaMixWorld
-from ..DataHandler import restore_originals, game_paths
+from ..DataHandler import game_paths, song_unlock
 
 
 class AssociatedMDLabel(MDLabel):
@@ -139,7 +139,7 @@ class DivaJSONGenerator(ThemedApp):
                     MDDialogSupportingText(text=
                                            "This is common for packs that target the base game or add covers.\n"
                                            "If not automatically copied to your clipboard you may copy the error from the box below.\n\n"
-                                           f"{str(e)}"),
+                                           "This is NOT intended to be used for megamix_mod_data in the YAML.\n"),
                     MDScrollView(MDTextField(text=str(e), multiline=True, readonly=True), size_hint_y=None)
                 )
             ).open()
@@ -170,9 +170,14 @@ class DivaJSONGenerator(ThemedApp):
         MDSnackbar(MDSnackbarText(text=message)).open()
 
     def process_restore_originals(self):
-        mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in [label.text for label in self.labels] + [self.self_mod_name]]
         try:
-            restore_originals(mod_pv_dbs)
+            from ..DataHandler import restore_originals
+            mod_pv_dbs = [f"{self.mods_folder}/{pack}/rom/mod_pv_db.txt" for pack in [label.text for label in self.labels] + [self.self_mod_name]]
+            restore_originals(mod_pv_dbs) # See function docstring
+
+            song_list = f"{self.mods_folder}/{self.self_mod_name}/song_list.txt"
+            song_unlock(song_list, {0})
+
             self.show_snackbar("Song packs restored")
         except Exception as e:
             self.show_snackbar(str(e))

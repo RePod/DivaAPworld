@@ -49,6 +49,26 @@ def load_json_file(file_name: str) -> dict:
         return {}
 
 
+def restore_originals(original_file_paths):
+    """Remove this function at earliest convenience. This is to allow older world users to fix their mod_pv_db for a
+    time until they can be reasonably expected to have migrated."""
+
+    import filecmp, shutil
+
+    logger.warning(f"restore_originals: {restore_originals.__doc__}")
+
+    for original_file_path in original_file_paths:
+        directory, filename = os.path.split(original_file_path)
+        name, ext = os.path.splitext(filename)
+        copy_filename = f"{name}COPY{ext}"
+        copy_file_path = os.path.join(directory, copy_filename)
+
+        if os.path.exists(copy_file_path):
+            if not filecmp.cmp(copy_file_path, original_file_path):
+                shutil.copyfile(copy_file_path, original_file_path)
+            os.remove(copy_file_path)
+
+
 def song_unlock(song_list: str, song_ids: set[int]):
     song_ids = sorted([s for s in song_ids])
 

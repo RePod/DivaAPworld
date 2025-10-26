@@ -378,6 +378,10 @@ class MegaMixContext(SuperContext):
             logger.info("Removed non-AP songs!")
 
     async def restore_songs(self):
+        from .DataHandler import restore_originals, song_unlock
+        mod_pv_dbs = [f"{self.path}/{pack}/rom/mod_pv_db.txt" for pack in os.listdir(".")]
+        restore_originals(mod_pv_dbs)  # See function docstring
+
         song_unlock(self.songListLocation, {0})
 
     async def shutdown(self):
