@@ -342,11 +342,13 @@ class MegaMixContext(SuperContext):
             await self.remove_songs()
 
     async def get_uncleared(self):
-        prev_items = {item.item for item in self.previous_received}
-        missing_locations = {loc for loc in self.missing_locations if loc in prev_items}
+        prev_items = {i for item in self.previous_received for i in (item.item, item.item + 1)}
+        missing_locations = {loc // 10 for loc in self.missing_locations if loc in prev_items}
 
-        for location in missing_locations:
-            logger.info(f"{self.location_ap_id_to_name[location][:-2]} is uncleared")
+        remap = self.options.get("modRemap", {})
+        for location in sorted(missing_locations):
+            location = remap.get(str(location), location * 10)
+            logger.info(f"{self.item_ap_id_to_name[location]} is uncleared")
 
         if self.leeks_obtained >= self.leeks_needed:
             logger.info(f"Goal song: {self.goal_song} is unlocked.")
