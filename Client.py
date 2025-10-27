@@ -95,6 +95,7 @@ class MegaMixContext(SuperContext):
 
         self.seed_name = None
         self.options = None
+        self.remap = None
 
         self.goal_song = None
         self.goal_id = None
@@ -131,6 +132,7 @@ class MegaMixContext(SuperContext):
             self.leeks_obtained = 0
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
+            self.remap = self.options.get("modRemap", {})
             self.goal_song = self.options["victoryLocation"]
             self.goal_id = self.options["victoryID"]
             self.autoRemove = self.options["autoRemove"]
@@ -139,7 +141,7 @@ class MegaMixContext(SuperContext):
             self.modData = self.options["modData"]
             if self.modData:
                 self.modded = True
-            self.restore_songs() # TODO: Remove, see function.
+            asyncio.create_task(self.restore_songs()) # TODO: Remove, see function.
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
 
             self.death_link = self.options.get("deathLink", False)
@@ -297,7 +299,9 @@ class MegaMixContext(SuperContext):
             logger.info("No checks to send at BK but seeing this means your Client is OK!")
             return
 
-        location_id = int(song_data.get('pvId') * 10)
+        # Check for remaps
+        song_id = song_data.get('pvId')
+        location_id = self.remap.get(str(song_id), song_id * 10)
         location_checks = set(range(location_id, location_id + self.checks_per_song))
 
         if not location_id == self.goal_id:
@@ -334,17 +338,17 @@ class MegaMixContext(SuperContext):
         await self.send_msgs(message)
 
     async def send_checks(self, locations: set):
-        message = [{"cmd": 'LocationChecks', "locations": locations}]
-        await self.send_msgs(message)
+        await self.check_locations(locations)
         if self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
     async def get_uncleared(self):
-        prev_items = {item.item // 10 for item in self.previous_received}
-        missing_locations = {loc // 10 for loc in self.missing_locations if loc // 10 in prev_items}
+        prev_items = {i for item in self.previous_received for i in (item.item, item.item + 1)}
+        missing_locations = {loc // 10 for loc in self.missing_locations if loc in prev_items}
 
-        for location in missing_locations:
-            logger.info(f"{self.location_ap_id_to_name[location * 10][:-2]} is uncleared")
+        for location in sorted(missing_locations):
+            location = self.remap.get(str(location), location * 10)
+            logger.info(f"{self.item_ap_id_to_name[location]} is uncleared")
 
         if self.leeks_obtained >= self.leeks_needed:
             logger.info(f"Goal song: {self.goal_song} is unlocked.")
