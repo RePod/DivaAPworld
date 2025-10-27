@@ -17,7 +17,7 @@ This is a minimal setup to get started. Mod managers exist that may make certain
    - Right-click the game entry in Steam, **Manage > Browse local files**
    - `DivaMegaMix.exe` (extension may be hidden) is what you will need to navigate to and select
    - You may be able to ***Ctrl+C*** the game EXE and paste its path into the original prompt's text input
-4. Play! (requires a [YAML and generation](tutorial/Archipelago/setup_en))
+4. Play! (requires a [YAML and generation](/tutorial/Archipelago/setup_en))
 
 ### Resulting basic file structure
 ```
