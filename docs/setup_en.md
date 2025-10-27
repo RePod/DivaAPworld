@@ -11,13 +11,14 @@
 This is a minimal setup to get started. Mod managers exist that may make certain steps easier, but you use them at your discretion.
 
 1. If not already installed, [follow DivaModLoader's installation steps.](https://github.com/blueskythlikesclouds/DivaModLoader?tab=readme-ov-file#installation)
-   - See 3 for locating `DivaMegaMix.exe`
+   - See below for locating `DivaMegaMix.exe`
 2. Install the Archipelago Mod listed under [Requirements.](#requirements)
-3. Upon starting the **Mega Mix Client** you will be prompted to select `DivaMegaMix.exe`:
+3. Start the **Mega Mix Client** from the Archipelago Launcher
+4. You will be prompted to select `DivaMegaMix.exe`:
    - Right-click the game entry in Steam, **Manage > Browse local files**
    - `DivaMegaMix.exe` (extension may be hidden) is what you will need to navigate to and select
    - You may be able to ***Ctrl+C*** the game EXE and paste its path into the original prompt's text input
-4. Play! (requires a [YAML and generation](/tutorial/Archipelago/setup_en))
+5. Play! (requires a [YAML and generation](/tutorial/Archipelago/setup_en))
 
 ### Resulting basic file structure
 ```
@@ -45,17 +46,13 @@ Please read descriptions before installing. These may not be relevant to you or 
 ## Mod Songs
 **Note: Currently, using mod songs requires the seed to be [generated locally](/tutorial/Archipelago/setup_en#generating-a-multiplayer-game), not on the website. Hosting on the website afterwards is fine.**
 
- - Open the **Mega Mix JSON Generator** from the Archipelago Launcher.
- - Check song packs you would like to appear in your song selection pool. Unchecked packs will be hidden in the game by default while playing Archipelago.
- - When done checking packs click **Generate Mod String**.
+1. Open the **Mega Mix JSON Generator** from the Archipelago Launcher.
+2. Check song packs you would like to appear in your song selection pool. Unchecked packs will be hidden in the game by default while playing Archipelago.
+3. When done checking packs click **Generate Mod String**.
+4. In your YAML on the line for `megamix_mod_data` paste and format it as such:
+   - `megamix_mod_data: '{"MyFirstSongPack":[["MyFirstSong",144,224]]}'`
 
 Linux users that experience clipboard issues *may* need to run the Archipelago Launcher and JSON Generator through a command line to get the output there.
-
-### Adding the output to your YAML
-On the line for `megamix_mod_data` paste and format it as such:
-```YAML
-megamix_mod_data: '{"MyFirstSongPack":[["MyFirstSong",144,224]]}'
-```
 
 It is recommended to regenerate the mod string when adding or updating packs.
 
