@@ -139,7 +139,7 @@ class MegaMixContext(SuperContext):
             self.modData = self.options["modData"]
             if self.modData:
                 self.modded = True
-            self.restore_songs() # TODO: Remove, see function.
+            asyncio.create_task(self.restore_songs()) # TODO: Remove, see function.
             asyncio.create_task(self.send_msgs([{"cmd": "GetDataPackage", "games": ["Hatsune Miku Project Diva Mega Mix+"]}]))
 
             self.death_link = self.options.get("deathLink", False)
@@ -298,7 +298,7 @@ class MegaMixContext(SuperContext):
             return
 
         location_id = int(song_data.get('pvId') * 10)
-        location_checks = set(range(location_id, location_id + self.checks_per_song))
+        location_checks = set(range(location_id, location_id + 10))
 
         if not location_id == self.goal_id:
             if location_checks.issubset(set(self.checked_locations)):
@@ -334,17 +334,16 @@ class MegaMixContext(SuperContext):
         await self.send_msgs(message)
 
     async def send_checks(self, locations: set):
-        message = [{"cmd": 'LocationChecks', "locations": locations}]
-        await self.send_msgs(message)
+        await self.check_locations(locations)
         if self.autoRemove and not self.freeplay:
             await self.remove_songs()
 
     async def get_uncleared(self):
-        prev_items = {item.item // 10 for item in self.previous_received}
-        missing_locations = {loc // 10 for loc in self.missing_locations if loc // 10 in prev_items}
+        prev_items = {item.item for item in self.previous_received}
+        missing_locations = {loc for loc in self.missing_locations if loc in prev_items}
 
         for location in missing_locations:
-            logger.info(f"{self.location_ap_id_to_name[location * 10][:-2]} is uncleared")
+            logger.info(f"{self.location_ap_id_to_name[location][:-2]} is uncleared")
 
         if self.leeks_obtained >= self.leeks_needed:
             logger.info(f"Goal song: {self.goal_song} is unlocked.")
