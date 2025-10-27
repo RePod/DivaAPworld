@@ -95,6 +95,7 @@ class MegaMixContext(SuperContext):
 
         self.seed_name = None
         self.options = None
+        self.remap = None
 
         self.goal_song = None
         self.goal_id = None
@@ -131,6 +132,7 @@ class MegaMixContext(SuperContext):
             self.leeks_obtained = 0
             self.location_ids = set(args["missing_locations"] + args["checked_locations"])
             self.options = args["slot_data"]
+            self.remap = self.options.get("modRemap", {})
             self.goal_song = self.options["victoryLocation"]
             self.goal_id = self.options["victoryID"]
             self.autoRemove = self.options["autoRemove"]
@@ -299,8 +301,7 @@ class MegaMixContext(SuperContext):
 
         # Check for remaps
         song_id = song_data.get('pvId')
-        remap = self.options.get("modRemap", {})
-        location_id = remap.get(str(song_id), song_id * 10)
+        location_id = self.remap.get(str(song_id), song_id * 10)
         location_checks = set(range(location_id, location_id + self.checks_per_song))
 
         if not location_id == self.goal_id:
@@ -345,9 +346,8 @@ class MegaMixContext(SuperContext):
         prev_items = {i for item in self.previous_received for i in (item.item, item.item + 1)}
         missing_locations = {loc // 10 for loc in self.missing_locations if loc in prev_items}
 
-        remap = self.options.get("modRemap", {})
         for location in sorted(missing_locations):
-            location = remap.get(str(location), location * 10)
+            location = self.remap.get(str(location), location * 10)
             logger.info(f"{self.item_ap_id_to_name[location]} is uncleared")
 
         if self.leeks_obtained >= self.leeks_needed:
