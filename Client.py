@@ -297,8 +297,11 @@ class MegaMixContext(SuperContext):
             logger.info("No checks to send at BK but seeing this means your Client is OK!")
             return
 
-        location_id = int(song_data.get('pvId') * 10)
-        location_checks = set(range(location_id, location_id + 10))
+        # Check for remaps
+        song_id = song_data.get('pvId')
+        remap = self.options.get("modRemap", {})
+        location_id = remap.get(str(song_id), song_id * 10)
+        location_checks = set(range(location_id, location_id + self.checks_per_song))
 
         if not location_id == self.goal_id:
             if location_checks.issubset(set(self.checked_locations)):
