@@ -186,6 +186,7 @@ class MegaMixContext(SuperContext):
 
     async def receive_item(self):
         async with self.critical_section_lock:
+            update = False
             for network_item in self.items_received:
                 if network_item not in self.previous_received:
                     self.previous_received.append(network_item)
@@ -204,7 +205,10 @@ class MegaMixContext(SuperContext):
                     elif network_item.item == 9:
                         if not os.path.isfile(self.trapIconLocation):
                             Path(self.trapIconLocation).touch()
-            self.update_song_list()
+                    elif network_item.item >= 10:
+                        update = True
+            if update:
+                    self.update_song_list()
 
     def update_song_list(self, remove = False):
         base_ids = {i.item // 10 for i in self.previous_received}
