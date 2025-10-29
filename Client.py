@@ -163,7 +163,7 @@ class MegaMixContext(SuperContext):
         if cmd == "RoomInfo":
             self.seed_name = args['seed_name']
 
-        elif cmd == "DataPackage":
+        if cmd == "DataPackage":
             if not self.location_ids:
                 # Connected package not recieved yet, wait for datapackage request after connected package
                 return
@@ -180,6 +180,10 @@ class MegaMixContext(SuperContext):
 
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())
+
+        if cmd == "RoomUpdate":
+            if "checked_locations" in args:
+                self.update_song_list()
 
     async def receive_item(self, index: int = 0):
         if index == 0:
@@ -205,7 +209,8 @@ class MegaMixContext(SuperContext):
                 elif network_item.item >= 10:
                     update = True
 
-            self.update_song_list()
+            if update:
+                self.update_song_list()
 
     def update_song_list(self, remove = False):
         base_ids = {i.item // 10 for i in self.items_received}
