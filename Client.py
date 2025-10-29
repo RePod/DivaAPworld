@@ -82,7 +82,6 @@ class MegaMixContext(SuperContext):
         self.modData = None
         self.modded = False
         self.freeplay = False
-        self.previous_received = []
         self.sent_unlock_message = False
 
         self.items_handling = 0b001 | 0b010 | 0b100  #Receive items from other worlds, starting inv, and own items
@@ -159,8 +158,7 @@ class MegaMixContext(SuperContext):
                 time.sleep(1)
 
         if cmd == "ReceivedItems":
-            # If receiving an item, only append that item
-            asyncio.create_task(self.receive_item())
+            asyncio.create_task(self.receive_item(args.get("index", 0)))
 
         if cmd == "RoomInfo":
             self.seed_name = args['seed_name']
@@ -170,7 +168,6 @@ class MegaMixContext(SuperContext):
                 # Connected package not recieved yet, wait for datapackage request after connected package
                 return
             self.leeks_obtained = 0
-            self.previous_received = []
 
             self.location_name_to_ap_id = args["data"]["games"]["Hatsune Miku Project Diva Mega Mix+"]["location_name_to_id"]
             self.location_name_to_ap_id = {
@@ -184,34 +181,34 @@ class MegaMixContext(SuperContext):
             # If receiving data package, resync previous items
             asyncio.create_task(self.receive_item())
 
-    async def receive_item(self):
+    async def receive_item(self, index: int = 0):
+        if index == 0:
+            self.leeks_obtained = 0
+
         async with self.critical_section_lock:
             update = False
-            for network_item in self.items_received:
-                if network_item not in self.previous_received:
-                    self.previous_received.append(network_item)
-                    if network_item.item == 1:
-                        self.leeks_obtained += 1
-                        self.check_goal()
-                    elif network_item.item == 2:
-                        # Maybe move static items out of MegaMixCollection instead of hard coding?
-                        pass
-                    elif network_item.item == 4:
-                        if not os.path.isfile(self.trapHiddenLocation):
-                            Path(self.trapHiddenLocation).touch()
-                    elif network_item.item == 5:
-                        if not os.path.isfile(self.trapSuddenLocation):
-                            Path(self.trapSuddenLocation).touch()
-                    elif network_item.item == 9:
-                        if not os.path.isfile(self.trapIconLocation):
-                            Path(self.trapIconLocation).touch()
-                    elif network_item.item >= 10:
-                        update = True
+            for network_item in self.items_received[index:]:
+                if network_item.item == 1:
+                    self.leeks_obtained += 1
+                    self.check_goal()
+                elif network_item.item == 2:
+                    pass # Filler
+                elif network_item.item == 4:
+                    if not os.path.isfile(self.trapHiddenLocation):
+                        Path(self.trapHiddenLocation).touch()
+                elif network_item.item == 5:
+                    if not os.path.isfile(self.trapSuddenLocation):
+                        Path(self.trapSuddenLocation).touch()
+                elif network_item.item == 9:
+                    if not os.path.isfile(self.trapIconLocation):
+                        Path(self.trapIconLocation).touch()
+                elif network_item.item >= 10:
+                    update = True
             if update:
-                    self.update_song_list()
+                self.update_song_list()
 
     def update_song_list(self, remove = False):
-        base_ids = {i.item // 10 for i in self.previous_received}
+        base_ids = {i.item // 10 for i in self.items_received}
         song_list = {i for i in self.server_locations if i // 10 in base_ids}
         if self.leeks_obtained >= self.leeks_needed:
             song_list.add(self.goal_id)
@@ -347,7 +344,7 @@ class MegaMixContext(SuperContext):
             await self.remove_songs()
 
     async def get_uncleared(self):
-        prev_items = {i for item in self.previous_received for i in (item.item, item.item + 1)}
+        prev_items = {i for item in self.items_received for i in (item.item, item.item + 1)}
         missing_locations = {loc // 10 for loc in self.missing_locations if loc in prev_items}
 
         for location in sorted(missing_locations):
