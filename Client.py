@@ -204,8 +204,8 @@ class MegaMixContext(SuperContext):
                         Path(self.trapIconLocation).touch()
                 elif network_item.item >= 10:
                     update = True
-            if update:
-                self.update_song_list()
+
+            self.update_song_list()
 
     def update_song_list(self, remove = False):
         base_ids = {i.item // 10 for i in self.items_received}
