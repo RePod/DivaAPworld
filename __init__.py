@@ -245,7 +245,7 @@ class MegaMixWorld(World):
     def create_item(self, name: str) -> Item:
 
         if name == self.mm_collection.LEEK_NAME:
-            return MegaMixFixedItem(name, ItemClassification.progression_skip_balancing, self.mm_collection.LEEK_CODE, self.player)
+            return MegaMixFixedItem(name, ItemClassification.progression_deprioritized_skip_balancing, self.mm_collection.LEEK_CODE, self.player)
 
         elif name == self.mm_collection.FILLER_NAME:
             return MegaMixFixedItem(name, ItemClassification.filler, self.mm_collection.FILLER_CODE, self.player)
