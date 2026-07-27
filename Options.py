@@ -108,8 +108,19 @@ class ScoreGradeNeeded(Choice):
     default = 2
 
 
+class GoalMode(Choice):
+    """How the Goal Song is unlocked.
+
+    Leeks: The original mode where you collect Leeks from the item pool.
+    Percent: Reach a percentage of checks done. More room in the item pool for other things.
+    """
+    display_name = "Goal Mode"
+    option_Leeks = 0
+    option_Percentage = 1
+
+
 class TotalLeeksAvailable(Range):
-    """The percentage of Leeks to add to the pool based on the total number of Starting and Additional Songs.
+    """If Goal Mode is Leeks, the percentage of Leeks to add to the pool based on the total number of Starting and Additional Songs.
     A higher available Leek percentage leads to more consistent game lengths, but individual Leeks will be less important.
 
     Example: (5 Starting + 40 Additional Songs) * 20% Leeks Total = 9 Leeks will be available
@@ -124,13 +135,24 @@ class TotalLeeksAvailable(Range):
 
 
 class LeeksRequiredPercentage(Range):
-    """The percentage of available Leeks in the item pool that are needed to unlock the Goal Song.
+    """If Goal Mode is Leeks, the percentage of available Leeks in the item pool that are needed to unlock the Goal Song.
 
     Example: (5 Starting + 40 Additional Songs) * 20% Leeks Total * 80% Leeks Needed = 7 out of 9 Leeks needed to goal"""
     range_start = 50
     range_end = 100
     default = 80
     display_name = "Leek Percentage Needed to Win"
+
+
+class GoalPercentage(Range):
+    """If Goal Mode is Percentage, the percentage of checks done to unlock the Goal Song.
+    - Highly influenced by rooms that use collect or send_location.
+    - It is recommended to have little to no Duplicate Songs.
+    """
+    display_name = "Goal Percentage"
+    range_start = 35
+    range_end = 100
+    default = 39
 
 
 class GoalSongs(ItemSet):
@@ -219,6 +241,8 @@ megamix_option_groups = [
         StartingSongs,
         AdditionalSongs,
         DuplicateSongPercentage,
+        GoalMode,
+        GoalPercentage,
         TotalLeeksAvailable,
         LeeksRequiredPercentage,
     ]),
@@ -256,8 +280,10 @@ class MegaMixOptions(PerGameCommonOptions):
     song_difficulty_rating_min: DifficultyRatingMin
     song_difficulty_rating_max: DifficultyRatingMax
     grade_needed: ScoreGradeNeeded
+    goal_mode: GoalMode
     leek_count_percentage: TotalLeeksAvailable
     leek_win_count_percentage: LeeksRequiredPercentage
+    goal_percentage: GoalPercentage
     goal_song: GoalSongs
     include_songs_percentage: IncludeSongsPercentage
     include_songs: IncludeSongs

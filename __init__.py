@@ -4,7 +4,7 @@ from worlds.LauncherComponents import Component, components, Type, launch_subpro
 from BaseClasses import Region, Item, ItemClassification, Tutorial
 from Options import PerGameCommonOptions, OptionError
 import settings
-from rule_builder.rules import Has
+from rule_builder.rules import Has, HasFromListUnique
 
 #Local
 from .Options import MegaMixOptions, megamix_option_groups
@@ -273,12 +273,14 @@ class MegaMixWorld(World):
 
         items_left = len(self.multiworld.get_unfilled_locations(self.player))
 
-        for _ in range(0, self.get_leek_count()):
-            self.multiworld.itempool.append(self.create_item(self.mm_collection.LEEK_NAME))
+        if self.options.goal_mode.value == self.options.goal_mode.option_Leeks:
+            for _ in range(0, self.get_leek_count()):
+                self.multiworld.itempool.append(self.create_item(self.mm_collection.LEEK_NAME))
+            items_left -= self.get_leek_count()
 
         self.multiworld.itempool.extend(self.create_item(song) for song in self.included_songs)
 
-        items_left -= self.get_leek_count() + len(self.included_songs)
+        items_left -= len(self.included_songs)
         if items_left <= 0:
             return
 
@@ -326,10 +328,17 @@ class MegaMixWorld(World):
                 menu_region.locations.append(loc)
 
     def set_rules(self) -> None:
-        self.set_completion_rule(
-            Has(self.mm_collection.LEEK_NAME, self.get_leek_win_count())
-            & Has("Progressive HP", self.prog_hp_added)
-        )
+        goal = Has("Progressive HP", self.prog_hp_added)
+
+        match self.options.goal_mode.value:
+            case self.options.goal_mode.option_Leeks:
+                goal &= Has(self.mm_collection.LEEK_NAME, self.get_leek_win_count())
+
+            case self.options.goal_mode.option_Percentage:
+                goal &= HasFromListUnique(*self.included_songs,
+                                          count=len(self.included_songs) * self.options.goal_percentage.value // 100)
+
+        self.set_completion_rule(goal)
 
     def get_leek_count(self) -> int:
         """Number of Leeks to be placed in the item pool based on user option and final song count."""
@@ -370,10 +379,13 @@ class MegaMixWorld(World):
         return slot_data
 
     def fill_slot_data(self):
+        goalCondition = self.get_leek_win_count() #if self.options.goal_mode.value == self.se
+
         return {
             "victoryID": self.victory_song_id,
             "finalSongIDs": self.final_song_ids,
-            "leekWinCount": self.get_leek_win_count(),
+            "goalMode": self.options.goal_mode.value,
+            "goalCondition": goalCondition,
             "scoreGradeNeeded": self.options.grade_needed.value,
             "death_link": True, # APCpp requires this key name to set the tag
             "modData": {pack: [[song[0], song[1]] for song in songs if song[1] in self.final_song_ids]
