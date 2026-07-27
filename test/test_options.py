@@ -167,3 +167,13 @@ class TestOptionNoDLC(MegaMixTestBase):
         dlc = {song for song in pool if self.world.mm_collection.song_items.get(song).DLC}
 
         self.assertEqual(0, len(dlc), f"DLC is disabled, got {len(dlc)} in the item pool.")
+
+
+class TestGoalModes(MegaMixTestBase):
+    options = {
+        "goal_mode": "percentage"
+    }
+
+    def test_no_leeks(self):
+        leeks = sum(1 for item in self.world.multiworld.itempool if item.code == self.world.mm_collection.LEEK_CODE)
+        self.assertEqual(0, leeks, f"Percentage Goal Mode should have 0 leeks, got {leeks}.")
