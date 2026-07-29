@@ -31,6 +31,7 @@ class MegaMixCollections:
         "Hidden Trap": 4,
         "Sudden Trap": 5,
         # "High Speed Trap": 6,
+        "Stutter Trap": 8,
         "Icon Trap": 9,
     }
 
