@@ -55,14 +55,14 @@ class MegaMixCollections:
                             not isinstance(song, list)
                             or not list(map(type, song)) == [str, int, int]
                             or song[1] <= 0 or song[2] <= 0
+                            or song[1] in base_game_ids
+                            or pack.startswith("#SKIP#") # user-defined skip without regenerating the string
+                            or song[0].startswith("#SKIP#") # user-defined skip without regenerating the string
                         ):
-                            logger.warning(f"Skipping {pack} {song}")
+                            logger.debug(f"Skipping {pack} {song}")
                             continue
 
                         song_id = song[1]
-
-                        if song_id in base_game_ids:
-                            continue
 
                         song_name = format_song_name(song[0], song_id)
                         item_id = (song_id * 10)
