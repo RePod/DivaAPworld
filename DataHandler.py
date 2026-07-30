@@ -104,7 +104,8 @@ def get_player_specific_ids(mod_data: str, remap: dict[int, dict[str, list]]) ->
     try:
         parsed = json.loads(mod_data)
         mod_json_schema.validate(parsed)
-        player_specific = {song[1]: song[0] for pack, songs in parsed.items() for song in songs}
+        player_specific = {song[1]: song[0] for pack, songs in parsed.items() for song in songs
+                           if not pack.startswith("#SKIP#") and not song[0].startswith("#SKIP#")}
     except SchemaError as e:
         raise OptionError(f"Failed to extract player specific IDs (schema)\n{e}")
     except Exception as e: # JSONDecodeError, UnicodeDecodeError
