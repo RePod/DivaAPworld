@@ -30,7 +30,7 @@ class AdditionalSongs(Range):
 class DuplicateSongPercentage(Range):
     """
     After placing required items (Leeks and songs), the percentage of remaining filler slots to become duplicate song items.
-    Duplicate songs are considered Useful thus out of logic and may speed up completion time.
+    Duplicate songs are progressive like their original but classified as Useful thus out of logic and may speed up completion time.
     """
     range_start = 0
     range_end = 100
