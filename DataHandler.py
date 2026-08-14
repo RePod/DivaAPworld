@@ -106,7 +106,7 @@ def get_player_specific_ids(player_name: str, mod_data: str, remap: dict[int, di
         mod_json_schema.validate(parsed)
         player_specific = {song[1]: song[0] for pack, songs in parsed.items() for song in songs}
     except (SchemaError, orjson.JSONDecodeError, UnicodeDecodeError, Exception) as e:
-        raise OptionError(f"Failed to extract player specific IDs for {player_name} ({type(e).__name__})\n{e}")
+        raise OptionError(f"Failed to extract player-specific mod data for {player_name} ({type(e).__name__})\n{e}")
 
     conflicts = remap.keys() & player_specific.keys()
 
