@@ -125,7 +125,7 @@ class MegaMixWorld(World):
         # Initial search criteria
         lower_rating_threshold, higher_rating_threshold = self.get_difficulty_range()
         lower_diff_threshold, higher_diff_threshold = self.get_available_difficulties(self.options.song_difficulty_min.value, self.options.song_difficulty_max.value)
-        self.player_mod_data, self.player_mod_ids, self.player_mod_remap = get_player_specific_ids(self.options.megamix_mod_data.value, self.mm_collection.mod_remaps)
+        self.player_mod_data, self.player_mod_ids, self.player_mod_remap = get_player_specific_ids(self.player_name, self.options.megamix_mod_data.value, self.mm_collection.mod_remaps)
 
         while True:
             # In most cases this should only need to run once

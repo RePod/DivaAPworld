@@ -97,7 +97,7 @@ def extract_mod_data_to_json() -> list[dict[str, list[tuple[str,int,int]]]]:
     return all_mod_data
 
 
-def get_player_specific_ids(mod_data: str, remap: dict[int, dict[str, list]]) -> (dict, set, dict):
+def get_player_specific_ids(player_name: str, mod_data: str, remap: dict[int, dict[str, list]]) -> (dict, set, dict):
     if not mod_data:
         return {}, set(), {}
 
@@ -106,9 +106,9 @@ def get_player_specific_ids(mod_data: str, remap: dict[int, dict[str, list]]) ->
         mod_json_schema.validate(parsed)
         player_specific = {song[1]: song[0] for pack, songs in parsed.items() for song in songs}
     except SchemaError as e:
-        raise OptionError(f"Failed to extract player specific IDs (schema)\n{e}")
+        raise OptionError(f"Failed to extract player specific IDs for {player_name} (schema)\n{e}")
     except Exception as e: # JSONDecodeError, UnicodeDecodeError
-        raise OptionError(f"Failed to extract player specific IDs\n{e}")
+        raise OptionError(f"Failed to extract player specific IDs for {player_name}\n{e}")
 
     conflicts = remap.keys() & player_specific.keys()
 
