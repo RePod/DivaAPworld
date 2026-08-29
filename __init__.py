@@ -379,13 +379,17 @@ class MegaMixWorld(World):
         return slot_data
 
     def fill_slot_data(self):
-        goalCondition = self.get_leek_win_count() #if self.options.goal_mode.value == self.se
+        goal_key = "leekWinCount"
+        goal_val = self.get_leek_win_count()
+
+        if self.options.goal_mode.value == self.options.goal_mode.option_Percentage:
+            goal_key = "locWinCount"
+            goal_val = self.options.goal_percentage.value
 
         return {
+            goal_key: goal_val,
             "victoryID": self.victory_song_id,
             "finalSongIDs": self.final_song_ids,
-            "goalMode": self.options.goal_mode.value,
-            "goalCondition": goalCondition,
             "scoreGradeNeeded": self.options.grade_needed.value,
             "death_link": True, # APCpp requires this key name to set the tag
             "modData": {pack: [[song[0], song[1]] for song in songs if song[1] in self.final_song_ids]
