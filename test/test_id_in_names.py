@@ -13,7 +13,7 @@ class IDNames(MegaMixTestBase):
         As of writing, song item IDs start at 10. 1-9 are reserved for non-song items."""
         world = self.get_world()
 
-        quick = [name for name, locID in world.item_name_to_id.items() if not re.search(self.item_regex, name) and locID >= 10]
+        quick = [name for name, locID in world.item_name_to_id.items() if not re.search(self.item_regex, name) and locID >= 100]
         self.assertEqual(0, len(quick), f"Item names without song IDs: {quick}")
 
     def test_loc_names_have_id(self):
