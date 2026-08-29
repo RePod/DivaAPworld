@@ -15,7 +15,7 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 from typing import ClassVar, TextIO
-from math import floor
+from math import floor, ceil
 
 
 def launch_json_generator():
@@ -102,6 +102,8 @@ class MegaMixWorld(World):
             slot_data: dict[str, any] = re_gen_passthrough[self.game]
 
             self.options.progressive_hp.value = 1 + int(slot_data.get("progHP", 0))
+            if "locWinCount" in slot_data:
+                self.options.goal_mode.value = self.options.goal_mode.option_Percentage
 
             # Inject mod data, remap as needed
             from .SymbolFixer import format_song_name
@@ -335,10 +337,16 @@ class MegaMixWorld(World):
                 goal &= Has(self.mm_collection.LEEK_NAME, self.get_leek_win_count())
 
             case self.options.goal_mode.option_Percentage:
-                goal &= HasFromListUnique(*self.included_songs,
-                                          count=len(self.included_songs) * self.options.goal_percentage.value // 100)
+                goal &= HasFromListUnique(*self.included_songs, count=self.get_loc_win_count())
 
         self.set_completion_rule(goal)
+
+    def get_loc_win_count(self) -> int:
+        """Number of locations checked to be in Go Mode. For UT, return the song count rounded up."""
+        re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+        if re_gen_passthrough and self.game in re_gen_passthrough:
+            return ceil(re_gen_passthrough[self.game].get("locWinCount") / 2)
+        return 2 * len(self.starting_songs + self.included_songs) * self.options.goal_percentage.value // 100
 
     def get_leek_count(self) -> int:
         """Number of Leeks to be placed in the item pool based on user option and final song count."""
@@ -384,14 +392,13 @@ class MegaMixWorld(World):
 
         if self.options.goal_mode.value == self.options.goal_mode.option_Percentage:
             goal_key = "locWinCount"
-            goal_val = self.options.goal_percentage.value
+            goal_val = self.get_loc_win_count()
 
         return {
             goal_key: goal_val,
             "victoryID": self.victory_song_id,
             "finalSongIDs": self.final_song_ids,
             "scoreGradeNeeded": self.options.grade_needed.value,
-            "death_link": True, # APCpp requires this key name to set the tag
             "modData": {pack: [[song[0], song[1]] for song in songs if song[1] in self.final_song_ids]
                         for pack, songs in self.player_mod_data.items()},
             "modRemap": self.player_mod_remap,
