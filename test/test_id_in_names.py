@@ -37,7 +37,7 @@ class IDNames(MegaMixTestBase):
 
             given_id = int(match.group('id'))
 
-            self.assertEqual(given_id, (itemID // 10), f"Song ID in item name does not match item ID: {name}")
+            self.assertEqual(given_id, (itemID // 100), f"Song ID in item name does not match item ID: {name}")
 
     def test_verify_loc_names_for_id(self):
         """Verify the ID in a location name matches its location ID.
@@ -50,4 +50,4 @@ class IDNames(MegaMixTestBase):
 
             given_id = int(match.group('id'))
 
-            self.assertEqual(given_id, (locID // 10), f"Song ID in location name does not match location ID: {name}")
+            self.assertEqual(given_id, (locID // 100), f"Song ID in location name does not match location ID: {name}")

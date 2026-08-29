@@ -110,7 +110,7 @@ class MegaMixWorld(World):
             for pack, items in slot_data.get("modData", {}).items():
                 for name, song_id in items:
                     formatted_name = format_song_name(name, song_id)
-                    item_id = remap.get(str(song_id), song_id * 10)
+                    item_id = remap.get(str(song_id), song_id * 100)
 
                     self.mm_collection.song_items[formatted_name] = SongData(item_id, song_id, set(), False, True, [])
                     for i in range(2):
@@ -239,7 +239,7 @@ class MegaMixWorld(World):
                 self.included_songs.append(available_song_keys.pop())
 
         victory_song = self.mm_collection.song_items.get(self.victory_song_name)
-        self.victory_song_id = (victory_song.code // 10) * 10
+        self.victory_song_id = (victory_song.code // 100) * 100
         self.final_song_ids.add(victory_song.songID)
 
     def create_item(self, name: str) -> Item:
