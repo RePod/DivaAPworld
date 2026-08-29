@@ -337,16 +337,16 @@ class MegaMixWorld(World):
                 goal &= Has(self.mm_collection.LEEK_NAME, self.get_leek_win_count())
 
             case self.options.goal_mode.option_Percentage:
-                goal &= HasFromListUnique(*self.included_songs, count=self.get_loc_win_count())
+                goal &= HasFromListUnique(*self.included_songs, count=ceil(self.get_loc_win_count() / 2))
 
         self.set_completion_rule(goal)
 
     def get_loc_win_count(self) -> int:
-        """Number of locations checked to be in Go Mode. For UT, return the song count rounded up."""
+        """Number of locations checked to be in Go Mode."""
         re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
         if re_gen_passthrough and self.game in re_gen_passthrough:
-            return ceil(re_gen_passthrough[self.game].get("locWinCount") / 2)
-        return 2 * len(self.starting_songs + self.included_songs) * self.options.goal_percentage.value // 100
+            return re_gen_passthrough[self.game].get("locWinCount")
+        return len(self.starting_songs + self.included_songs) * self.options.goal_percentage.value // 100
 
     def get_leek_count(self) -> int:
         """Number of Leeks to be placed in the item pool based on user option and final song count."""
