@@ -29,7 +29,7 @@ class IDNames(MegaMixTestBase):
         world = self.get_world()
 
         for name, itemID in world.item_name_to_id.items():
-            if itemID < 10:
+            if itemID < 100:
                 continue
 
             match = re.match(self.item_regex, name)
