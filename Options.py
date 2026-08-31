@@ -206,7 +206,7 @@ class ProgressiveHP(Range):
     - Non-lethal Death Link applies to max available HP
     - For finer control use "Progressive HP" in start_inventory or start_inventory_from_pool
 
-    WARNING: Currently the only logic for this is needing full HP for the Goal Song.
+    WARNING: The logic for this is needing full HP for the Goal Song.
     """
     range_start = 1
     range_end = 20
