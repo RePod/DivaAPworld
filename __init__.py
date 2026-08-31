@@ -4,7 +4,7 @@ from worlds.LauncherComponents import Component, components, Type, launch_subpro
 from BaseClasses import Region, Item, ItemClassification, Tutorial
 from Options import PerGameCommonOptions, OptionError
 import settings
-from rule_builder.rules import Has
+from rule_builder.rules import Has, HasFromListUnique
 
 #Local
 from .Options import MegaMixOptions, megamix_option_groups
@@ -15,7 +15,7 @@ from .DataHandler import get_player_specific_ids
 
 #Python
 from typing import ClassVar, TextIO
-from math import floor
+from math import floor, ceil
 
 
 def launch_json_generator():
@@ -102,6 +102,8 @@ class MegaMixWorld(World):
             slot_data: dict[str, any] = re_gen_passthrough[self.game]
 
             self.options.progressive_hp.value = 1 + int(slot_data.get("progHP", 0))
+            if "locWinCount" in slot_data:
+                self.options.goal_mode.value = self.options.goal_mode.option_Percentage
 
             # Inject mod data, remap as needed
             from .SymbolFixer import format_song_name
@@ -273,12 +275,14 @@ class MegaMixWorld(World):
 
         items_left = len(self.multiworld.get_unfilled_locations(self.player))
 
-        for _ in range(0, self.get_leek_count()):
-            self.multiworld.itempool.append(self.create_item(self.mm_collection.LEEK_NAME))
+        if self.options.goal_mode.value == self.options.goal_mode.option_Leeks:
+            for _ in range(0, self.get_leek_count()):
+                self.multiworld.itempool.append(self.create_item(self.mm_collection.LEEK_NAME))
+            items_left -= self.get_leek_count()
 
         self.multiworld.itempool.extend(self.create_item(song) for song in self.included_songs)
 
-        items_left -= self.get_leek_count() + len(self.included_songs)
+        items_left -= len(self.included_songs)
         if items_left <= 0:
             return
 
@@ -326,10 +330,23 @@ class MegaMixWorld(World):
                 menu_region.locations.append(loc)
 
     def set_rules(self) -> None:
-        self.set_completion_rule(
-            Has(self.mm_collection.LEEK_NAME, self.get_leek_win_count())
-            & Has("Progressive HP", self.prog_hp_added)
-        )
+        goal = Has("Progressive HP", self.prog_hp_added)
+
+        match self.options.goal_mode.value:
+            case self.options.goal_mode.option_Leeks:
+                goal &= Has(self.mm_collection.LEEK_NAME, self.get_leek_win_count())
+
+            case self.options.goal_mode.option_Percentage:
+                goal &= HasFromListUnique(*self.included_songs, count=ceil(self.get_loc_win_count() / 2))
+
+        self.set_completion_rule(goal)
+
+    def get_loc_win_count(self) -> int:
+        """Number of locations checked to be in Go Mode."""
+        re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+        if re_gen_passthrough and self.game in re_gen_passthrough:
+            return re_gen_passthrough[self.game].get("locWinCount")
+        return len(self.starting_songs + self.included_songs) * self.options.goal_percentage.value // 100
 
     def get_leek_count(self) -> int:
         """Number of Leeks to be placed in the item pool based on user option and final song count."""
@@ -370,12 +387,18 @@ class MegaMixWorld(World):
         return slot_data
 
     def fill_slot_data(self):
+        goal_key = "leekWinCount"
+        goal_val = self.get_leek_win_count()
+
+        if self.options.goal_mode.value == self.options.goal_mode.option_Percentage:
+            goal_key = "locWinCount"
+            goal_val = self.get_loc_win_count()
+
         return {
+            goal_key: goal_val,
             "victoryID": self.victory_song_id,
             "finalSongIDs": self.final_song_ids,
-            "leekWinCount": self.get_leek_win_count(),
             "scoreGradeNeeded": self.options.grade_needed.value,
-            "death_link": True, # APCpp requires this key name to set the tag
             "modData": {pack: [[song[0], song[1]] for song in songs if song[1] in self.final_song_ids]
                         for pack, songs in self.player_mod_data.items()},
             "modRemap": self.player_mod_remap,
