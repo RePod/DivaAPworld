@@ -13,10 +13,12 @@ class MegaMixSongSet(ItemSet):
     """For options that expect songs, map IDs to their name before verify. 1 becomes Love is War [1]"""
     @staticmethod
     def song_id_to_name(song_id: int) -> str:
-        song = next((name for name, data in SONG_DATA.items() if data.songID == song_id), None)
-        if not song:
+        candidates = [name for name, data in SONG_DATA.items() if data.songID == song_id]
+        if len(candidates) > 1:
+            raise OptionError(f"Multiple candidates found for ID {song_id}. This player or all players should specify it by its full name.\nCandidates: {candidates}")
+        elif len(candidates) == 0:
             raise OptionError(f"Could not find song with ID {song_id}.")
-        return song
+        return candidates[0]
 
     @classmethod
     def from_text(cls, text: str):
