@@ -181,7 +181,7 @@ class TestGoalModes(MegaMixTestBase):
 @classvar_matrix(song_set=["Love is War [1]", ["Love is War [1]"], "1", 1,])
 class TestMegaMixSongSet(MegaMixTestBase):
     run_default_tests = False
-    song_set: ClassVar[str | int | list[str]]
+    song_set: ClassVar[str | int | list[str|int]]
 
     def test_mega_mix_song_set(self):
         self.options["goal_song"] = self.song_set
