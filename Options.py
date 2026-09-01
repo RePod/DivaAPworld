@@ -1,7 +1,7 @@
 import typing
 
 from Options import Toggle, Range, Choice, ItemSet, OptionSet, PerGameCommonOptions, FreeText, Visibility, \
-    OptionGroup, StartInventoryPool
+    OptionGroup, StartInventoryPool, OptionError
 from dataclasses import dataclass
 
 from .MegaMixCollection import MegaMixCollections
@@ -13,7 +13,10 @@ class MegaMixSongSet(ItemSet):
     """For options that expect songs, map IDs to their name before verify. 1 becomes Love is War [1]"""
     @staticmethod
     def song_id_to_name(song_id: int) -> str:
-        return next((name for name, data in SONG_DATA.items() if data.songID == song_id))
+        song = next((name for name, data in SONG_DATA.items() if data.songID == song_id), None)
+        if not song:
+            raise OptionError(f"Could not find song with ID {song_id}.")
+        return song
 
     @classmethod
     def from_text(cls, text: str):
