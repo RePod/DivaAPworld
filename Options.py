@@ -15,7 +15,8 @@ class MegaMixSongSet(ItemSet):
     def song_id_to_name(song_id: int) -> str:
         candidates = [name for name, data in SONG_DATA.items() if data.songID == song_id]
         if len(candidates) > 1:
-            raise OptionError(f"Multiple candidates found for ID {song_id}. This player or all players should specify it by its full name.\nCandidates: {candidates}")
+            raise OptionError(f"Multiple candidates found for ID {song_id}. This player or all players should specify it by its full name."
+                              f"\nCandidates: {candidates}")
         elif len(candidates) == 0:
             raise OptionError(f"Could not find song with ID {song_id}.")
         return candidates[0]
