@@ -33,6 +33,7 @@ class MegaMixCollections:
         "Slow Trap": 33,
         "Stutter Trap": 34,
         "Icon Trap": 35,
+        "PSP Trap": 36,
     }
 
     song_items: dict[str, SongData] = {}
