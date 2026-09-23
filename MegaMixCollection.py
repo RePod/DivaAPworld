@@ -41,7 +41,7 @@ class MegaMixCollections:
 
     def __init__(self) -> None:
         self.item_names_to_id = ChainMap({self.LEEK_NAME: self.LEEK_CODE}, {self.FILLER_NAME: self.FILLER_CODE},
-                                         {self.PROG_HP_NAME: self.PROG_HP_CODE}, self.song_items, self.trap_items)
+                                         {self.PROG_HP_NAME: self.PROG_HP_CODE}, self.trap_items)
         self.location_names_to_id = ChainMap(self.song_locations)
 
         self.song_items = SONG_DATA
@@ -57,7 +57,7 @@ class MegaMixCollections:
                 for pack, songs in data_dict.items():
                     for song in songs:
                         if (
-                            not isinstance(song, list)
+                            not isinstance(song, tuple)
                             or not list(map(type, song)) == [str, int, int]
                             or song[1] <= 0 or song[2] <= 0
                         ):
@@ -73,7 +73,7 @@ class MegaMixCollections:
                         item_id = (song_id * 100)
 
                         if song_name in self.song_items:
-                            logger.debug(f"{song_name} previously mapped to base ID, skipping")
+                            #logger.warning(f"{song_name} previously mapped to base ID, skipping")
                             continue
 
                         # Remap up to 49 ID conflicts using the free slots (2~99) between item/loc IDs.
@@ -103,13 +103,15 @@ class MegaMixCollections:
                         while len(diff_info) < 5:
                             diff = song[2] & 15
                             half = bool(song[2] >> 4 & 1)
-                            # there might be a perf difference over time between this VS reversing after it's full, deque, etc
                             diff_info.insert(0, diff + (.5 if half else 0.0))
                             song[2] >>= 5
 
                         self.song_items[song_name] = SongData(item_id, song_id, set(), song_id in dlc_ids, True, diff_info)
 
-        self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
+        for name, data in self.song_items.items():
+            code = data.code
+            if code is not None:
+                self.item_names_to_id[name] = code
 
         for song_name, song_data in self.song_items.items():
             for i in range(2):
@@ -139,7 +141,7 @@ class MegaMixCollections:
 
         return filtered_list
 
-    def get_item_name_groups(self) -> dict[str, set]:
+    def get_item_name_groups(self) -> dict[str, set[str]]:
         base_songs = {name: data for name, data in self.song_items.items() if not data.modded}
         groups = {
             "BaseSongs": {name for name, data in base_songs.items() if not data.DLC},
@@ -154,7 +156,7 @@ class MegaMixCollections:
 
             "Grasssanity": {name for name,data in base_songs.items() if data.songID in grasssanity},
 
-            "Traps": self.trap_items.keys()
+            "Traps": set(self.trap_items)
         }
 
         # Experimental since all players share this group. Filtered in handle_plando.

@@ -69,7 +69,7 @@ class TestGoalSongMulti(MegaMixTestBase):
 class TestGoalNoDLC(MegaMixTestBase):
     """Test the goal_song option when a DLC song is chosen but DLC is disabled."""
 
-    options = {
+    options: dict[str, int | bool | set[str]] = {
         "allow_megamix_dlc_songs": False,
         "additional_song_count": 251,
     }

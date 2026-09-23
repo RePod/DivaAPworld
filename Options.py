@@ -29,12 +29,12 @@ class MegaMixSongSet(ItemSet):
 
     @classmethod
     def from_any(cls, data: typing.Any):
-        if is_iterable_except_str(data):
+        if isinstance(data, list) or isinstance(data, set):
             for i, v in enumerate(data):
                 if type(v) is int or (type(v) is str and v.isdigit()):
                     data[i] = cls.song_id_to_name(int(v))
             return cls(data)
-        if type(data) is int:
+        if isinstance(data, int):
             return cls.from_text(str(data))
         return cls.from_text(str(data))
 

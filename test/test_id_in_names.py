@@ -34,6 +34,7 @@ class IDNames(MegaMixTestBase):
 
             match = re.match(self.item_regex, name)
             self.assertIsNotNone(match, f"Failed to match item_regex to item name: {name}")
+            assert match is not None
 
             given_id = int(match.group('id'))
 
@@ -47,6 +48,7 @@ class IDNames(MegaMixTestBase):
         for name, locID in world.location_name_to_id.items():
             match = re.match(self.location_regex, name)
             self.assertIsNotNone(match, f"Failed to match location_regex to location name: {name}")
+            assert match is not None
 
             given_id = int(match.group('id'))
 

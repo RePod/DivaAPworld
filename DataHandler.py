@@ -84,6 +84,9 @@ def extract_mod_data_to_json() -> list[dict[str, list[tuple[str,int,int]]]]:
                         continue
 
                     parsed = orjson.loads(mod_data_content)
+                    # Shut up PyCharm by converting list[str|int] to tuple[str,int,int]
+                    parsed = {pack: [tuple(song) for song in songs] for pack, songs in parsed.items()}
+
                     mod_json_schema.validate(parsed)
                     all_mod_data.append(parsed)
         except Exception as e:

@@ -78,7 +78,7 @@ class TestIncludesPercentage(MegaMixTestBase):
     """Set include_ and exclude_songs to an item group (MikuSongs) and verify the percentage of the seed for them.
     Excluding the same songs guarantees they cannot appear in the song pool again."""
     percent: ClassVar[int]
-    options = {
+    options: dict[str, int | bool | list[str]] = {
         "allow_megamix_dlc_songs": True,
         "duplicate_song_percentage": 0,
         "starting_song_count": 10,
@@ -86,7 +86,7 @@ class TestIncludesPercentage(MegaMixTestBase):
     }
 
     def test_includes_percentage(self):
-        group_miku = self.world.item_name_groups["MikuSongs"]
+        group_miku = list(self.world.item_name_groups["MikuSongs"])
         self.options["include_songs_percentage"] = self.percent
         self.options["include_songs"] = group_miku
         self.options["exclude_songs"] = group_miku
@@ -127,14 +127,14 @@ class TestOptionExcludeItemGroups(MegaMixTestBase):
     """Set exclude_songs to an item group and test the multiworld item pool for their absence."""
     run_default_tests = False # Greatly speeds up testing time
     group: ClassVar[str]
-    options = {
+    options: dict[str, int | bool | list[str]] = {
         "allow_megamix_dlc_songs": True,
         "additional_song_count": 251,
     }
 
     def test_exclude_group(self):
         group_songs = self.world.item_name_groups[self.group]
-        self.options["exclude_songs"] = group_songs
+        self.options["exclude_songs"] = list(group_songs)
         self.world_setup()
 
         pool = {song.name for song in self.world.multiworld.itempool if song.code >= 100}
