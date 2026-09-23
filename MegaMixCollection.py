@@ -34,6 +34,7 @@ class MegaMixCollections:
         "Stutter Trap": 34,
         "Icon Trap": 35,
         "PSP Trap": 36,
+        "SFX Trap": 37,
     }
 
     song_items: dict[str, SongData] = {}
