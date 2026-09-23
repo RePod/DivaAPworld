@@ -57,8 +57,8 @@ class MegaMixCollections:
                 for pack, songs in data_dict.items():
                     for song in songs:
                         if (
-                            not isinstance(song, list)
-                            or not list(map(type, song)) == [str, int, int]
+                            # not isinstance(song, list) or
+                            not list(map(type, song)) == [str, int, int]
                             or song[1] <= 0 or song[2] <= 0
                         ):
                             logger.warning(f"Skipping {pack} {song}")
@@ -73,7 +73,7 @@ class MegaMixCollections:
                         item_id = (song_id * 100)
 
                         if song_name in self.song_items:
-                            logger.debug(f"{song_name} previously mapped to base ID, skipping")
+                            #logger.debug(f"{song_name} previously mapped to base ID, skipping")
                             continue
 
                         # Remap up to 49 ID conflicts using the free slots (2~99) between item/loc IDs.
