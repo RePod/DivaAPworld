@@ -29,11 +29,13 @@ class MegaMixCollections:
     trap_items: dict[str, int] = {
         "Hidden Trap": 30,
         "Sudden Trap": 31,
-        # "High Speed Trap": 32,
+        "HiSpeed Trap": 32,
         "Slow Trap": 33,
         "Stutter Trap": 34,
         "Icon Trap": 35,
         "PSP Trap": 36,
+        "SFX Trap": 37,
+        "NoSpeed Trap": 38,
     }
 
     song_items: dict[str, SongData] = {}
