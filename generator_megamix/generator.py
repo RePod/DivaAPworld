@@ -67,9 +67,18 @@ class DivaJSONGenerator(ThemedApp):
             self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
 
     def find_nc_db_ids(self):
+        checked_packs = [label.text for label in self.labels if label.checkbox.active]
+
+        if not checked_packs:
+            self.show_snackbar("No song packs selected")
+            return
+
         nc_db_ids = set()
 
-        for pack, _ in self.find_db_folder({'nc_db.toml'}):
+        for pack, label in self.find_db_folder({'nc_db.toml'}):
+            if not label in checked_packs:
+                continue
+
             with open(os.path.join(pack, 'nc_db.toml'), 'r') as nc_db:
                 # The power of not vendoring TOML
                 nc_ids = [int(i) for i in re.findall("^id\s*=\s*(\d+)$", nc_db.read(), re.MULTILINE)]
@@ -81,7 +90,7 @@ class DivaJSONGenerator(ThemedApp):
         dialog_export.title = "New Classics Song IDs"
         if self.copy(str(nc_db_ids)):
             dialog_export.desc = "The list was automatically copied to the clipboard.\n\n"
-        dialog_export.desc += f"[b]This contains ALL found IDs which may not be in your mod string![/b]\n\n{len(nc_db_ids)} IDs found.\n"
+        dialog_export.desc += f"[b]This should be used with a mod string containing the same checked packs.[/b]\n\n{len(nc_db_ids)} IDs found.\n"
         dialog_export.field = str(nc_db_ids)
 
         dialog_export.open()
