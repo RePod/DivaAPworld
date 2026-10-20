@@ -75,7 +75,16 @@ class DivaJSONGenerator(ThemedApp):
                 nc_ids = [int(i) for i in re.findall("^id\s*=\s*(\d+)$", nc_db.read(), re.MULTILINE)]
                 nc_db_ids.update(nc_ids)
 
-        print(sorted(nc_db_ids))
+        nc_db_ids = sorted(nc_db_ids)
+
+        dialog_export = Factory.DialogExport()
+        dialog_export.title = "New Classics Song IDs"
+        if self.copy(str(nc_db_ids)):
+            dialog_export.desc = "The list was automatically copied to the clipboard.\n\n"
+        dialog_export.desc += f"[b]This contains ALL found IDs which may not be in your mod string![/b]\n\n{len(nc_db_ids)} IDs found.\n"
+        dialog_export.field = str(nc_db_ids)
+
+        dialog_export.open()
 
     def create_pack_line(self, name: str):
         box = MDBoxLayoutHover()
