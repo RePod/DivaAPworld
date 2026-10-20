@@ -80,7 +80,7 @@ class DivaJSONGenerator(ThemedApp):
                 continue
 
             with open(os.path.join(pack, 'nc_db.toml'), 'r') as nc_db:
-                # The power of not vendoring TOML
+                # Frozen Archipelago doesn't vendor a toml library. Do it ourselves.
                 nc_ids = [int(i) for i in re.findall("^id\s*=\s*(\d+)$", nc_db.read(), re.MULTILINE)]
                 nc_db_ids.update(nc_ids)
 
@@ -90,7 +90,7 @@ class DivaJSONGenerator(ThemedApp):
         dialog_export.title = "New Classics Song IDs"
         if self.copy(str(nc_db_ids)):
             dialog_export.desc = "The list was automatically copied to the clipboard.\n\n"
-        dialog_export.desc += f"[b]This should be used with a mod string containing the same checked packs.[/b]\n\n{len(nc_db_ids)} ID(s) found.\n"
+        dialog_export.desc += f"[b]This should be used with a mod string of the same selected packs.[/b]\n\n{len(nc_db_ids)} ID(s) found.\n"
         dialog_export.field = str(nc_db_ids)
 
         dialog_export.open()
