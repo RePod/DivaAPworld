@@ -63,7 +63,7 @@ class DivaJSONGenerator(ThemedApp):
         self.labels = []
         self.pack_list_scroll.layout.clear_widgets()
 
-        for _, folder_name in self.find_db_folder({'mod_pv_db.txt', 'mod_nc_pv_db.txt'}):
+        for _, folder_name in self.find_db_folder({'mod_pv_db.txt', 'mod_nc_pv_db.txt', 'nc_db.toml'}):
             self.pack_list_scroll.layout.add_widget(self.create_pack_line(folder_name))
 
     def find_nc_db_ids(self):
